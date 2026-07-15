@@ -16,9 +16,7 @@ if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Dest
 local dashStuds = 30
 local dashButtonScreen = nil
 
--- ==========================================
 -- ESP
--- ==========================================
 local ESP_Chams = false
 local ESP_Box = false
 local ESP_Names = false
@@ -27,23 +25,23 @@ local ESP_Vida = false
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 
--- ==========================================
 -- AIMBOT
--- ==========================================
 local Aimbot_Ativado = false
-local Aimbot_UsarFOV = false
+local Aimbot_UsarFOV = true
 local Aimbot_RaioFOV = 100
 local Aimbot_EspessuraFOV = 1.5
 local Aimbot_CorFOV = Color3.fromRGB(255, 255, 255)
 local Aimbot_Suavidade = 0.15
 local Aimbot_ParteAlvo = "Head"
-local Aimbot_TeamCheck = false
+local Aimbot_TeamCheck = true
 local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
-local Aimbot_WallCheck = false
-local Aimbot_PrioridadeDistancia = false
+local Aimbot_WallCheck = true
+local Aimbot_PrioridadeDistancia = true
 
 local JogadoresIgnorados = {}
+
+-- VARIÁVEL LOCAL PARA O DROPDOWN (será atualizada pelo callback)
 local DropdownSelecionado = ""
 
 local FOVCircle = Drawing.new("Circle")
@@ -130,9 +128,6 @@ local function AplicarCorESP(novaCor)
     end
 end
 
--- ==========================================
--- OFFSET DINÂMICO
--- ==========================================
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
     local fovVertical = math.rad(camera.FieldOfView)
@@ -140,9 +135,6 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     return (Aimbot_OffsetPixels / camera.ViewportSize.Y) * alturaTelaStuds
 end
 
--- ==========================================
--- WALL CHECK
--- ==========================================
 local function EstaVisivel(alvoParte)
     local camera = Workspace.CurrentCamera
     local cameraPos = camera.CFrame.Position
@@ -157,9 +149,6 @@ local function EstaVisivel(alvoParte)
     return false
 end
 
--- ==========================================
--- TEAM CHECK
--- ==========================================
 local function SaoDoMesmoTime(jogadorA, jogadorB)
     local teamA = jogadorA.Team
     local teamB = jogadorB.Team
@@ -175,9 +164,6 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
--- ==========================================
--- OBTER MELHOR ALVO
--- ==========================================
 local function ObterJogadorMaisProximoDaMira()
     local melhorAlvo = nil
     local melhorPontuacao = math.huge
@@ -221,9 +207,6 @@ local function ObterJogadorMaisProximoDaMira()
     return melhorAlvo
 end
 
--- ==========================================
--- LOOP PRINCIPAL
--- ==========================================
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
@@ -250,7 +233,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_Tracers and p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -264,7 +246,6 @@ RunService.RenderStepped:Connect(function()
         else if tracer then tracer.Visible = false end end
     end
 
-    -- ESP Vida
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -280,7 +261,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- ==========================================
--- BOTÃO FLUTUANTE DASH
+-- BOTÃO FLUTUANTE
 -- ==========================================
 local function CriarBotaoDash()
    dashButtonScreen = Instance.new("ScreenGui")
@@ -349,40 +330,99 @@ CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
--- Lista de Exclusão
+-- LISTA DE EXCLUSÃO (USANDO CALLBACK PARA ATUALIZAR VARIÁVEL)
 CombatTab:CreateSection("Lista de Exclusão")
+
 local dropdownIgnorar = CombatTab:CreateDropdown({
-   Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Flag = "DropdownIgnorar",
+   Name = "Jogador",
+   Options = ObterListaJogadores(),
+   CurrentOption = "",
+   Flag = "DropdownIgnorar",
    Callback = function(Option)
-      if type(Option) == "string" then DropdownSelecionado = Option
+      -- O callback recebe o valor selecionado
+      if type(Option) == "string" then
+         DropdownSelecionado = Option
       elseif type(Option) == "table" then
+         -- Tenta extrair como string
          local val = Option.Value or Option.CurrentOption or Option[1] or ""
-         if type(val) == "string" then DropdownSelecionado = val end
+         if type(val) == "string" then
+            DropdownSelecionado = val
+         end
+      end
+      print("[DROPDOWN] Selecionado: " .. tostring(DropdownSelecionado))
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "➕ Adicionar à Lista",
+   Callback = function()
+      print("[DEBUG] DropdownSelecionado = " .. tostring(DropdownSelecionado))
+      
+      if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+         JogadoresIgnorados[DropdownSelecionado] = true
+         AtualizarListaIgnorados()
+         Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " adicionado!", Duration = 2})
+      else
+         -- Fallback: tenta pegar do Rayfield.Flags
+         local flag = Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"]
+         if flag then
+            local nome = flag
+            if type(flag) == "table" then
+               nome = flag.Value or flag.CurrentOption or ""
+            end
+            if type(nome) == "string" and nome ~= "" and nome ~= "Nenhum jogador online" then
+               JogadoresIgnorados[nome] = true
+               AtualizarListaIgnorados()
+               Rayfield:Notify({Title = "OK", Content = nome .. " adicionado!", Duration = 2})
+               return
+            end
+         end
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador no dropdown primeiro!", Duration = 3})
       end
    end,
 })
 
-CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
-   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
-      JogadoresIgnorados[DropdownSelecionado] = true; AtualizarListaIgnorados()
-      Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " adicionado!", Duration = 2})
-   else Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3}) end
-end})
+CombatTab:CreateButton({
+   Name = "➖ Remover da Lista",
+   Callback = function()
+      if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+         JogadoresIgnorados[DropdownSelecionado] = nil
+         AtualizarListaIgnorados()
+         Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " removido!", Duration = 2})
+      else
+         local flag = Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"]
+         if flag then
+            local nome = flag
+            if type(flag) == "table" then nome = flag.Value or flag.CurrentOption or "" end
+            if type(nome) == "string" and nome ~= "" and nome ~= "Nenhum jogador online" then
+               JogadoresIgnorados[nome] = nil
+               AtualizarListaIgnorados()
+               Rayfield:Notify({Title = "OK", Content = nome .. " removido!", Duration = 2})
+               return
+            end
+         end
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador no dropdown primeiro!", Duration = 3})
+      end
+   end,
+})
 
-CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
-   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
-      JogadoresIgnorados[DropdownSelecionado] = nil; AtualizarListaIgnorados()
-      Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " removido!", Duration = 2})
-   else Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3}) end
-end})
+CombatTab:CreateButton({
+   Name = "🔄 Atualizar Lista",
+   Callback = function()
+      DropdownSelecionado = ""
+      dropdownIgnorar:Refresh(ObterListaJogadores(), true)
+      Rayfield:Notify({Title = "OK", Content = "Lista atualizada!", Duration = 2})
+   end,
+})
 
-CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function()
-   DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true)
-end})
-
-CombatTab:CreateButton({Name = "🗑️ Limpar Tudo", Callback = function()
-   JogadoresIgnorados = {}; AtualizarListaIgnorados()
-end})
+CombatTab:CreateButton({
+   Name = "🗑️ Limpar Tudo",
+   Callback = function()
+      JogadoresIgnorados = {}
+      AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = "Lista limpa!", Duration = 2})
+   end,
+})
 
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 
@@ -401,7 +441,7 @@ VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
-VisualTab:CreateSection("Cores ESP")
+VisualTab:CreateSection("Cores")
 local cores = {{"🔴 Vermelho", Color3.fromRGB(255,50,50)}, {"🔵 Azul", Color3.fromRGB(50,150,255)}, {"🟢 Verde", Color3.fromRGB(50,255,100)}, {"🟡 Amarelo", Color3.fromRGB(255,220,50)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
 for _, c in ipairs(cores) do VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end}) end
 VisualTab:CreateSection("Luz")
@@ -425,4 +465,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Script completo! Todas as opções começam desativadas.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Selecione um jogador no dropdown e clique em Adicionar. Verifique F9 para debug.", Duration = 5, Image = 4483345998})
