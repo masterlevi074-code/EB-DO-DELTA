@@ -40,8 +40,8 @@ local Aimbot_ParteAlvo = "Head"
 local Aimbot_TeamCheck = true
 local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
-local Aimbot_WallCheck = true -- NOVO: Não mirar através de paredes
-local Aimbot_PrioridadeDistancia = true -- NOVO: Priorizar jogador mais PERTO
+local Aimbot_WallCheck = true
+local Aimbot_PrioridadeDistancia = true
 
 local JogadoresIgnorados = {}
 local JogadorSelecionadoDropdown = ""
@@ -142,7 +142,7 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
 end
 
 -- ==========================================
--- VERIFICAÇÃO DE PAREDE (WALL CHECK)
+-- WALL CHECK
 -- ==========================================
 local function EstaVisivel(alvoParte)
     local camera = Workspace.CurrentCamera
@@ -156,44 +156,74 @@ local function EstaVisivel(alvoParte)
     
     local resultado = Workspace:Raycast(cameraPos, direcao, params)
     
-    -- Se não acertou nada OU acertou o próprio alvo, está visível
-    if not resultado then
-        return true
-    end
+    if not resultado then return true end
     
-    -- Verifica se o que foi atingido pertence ao personagem alvo
     local alvo = alvoParte.Parent
-    if alvo and resultado.Instance:IsDescendantOf(alvo) then
-        return true
-    end
+    if alvo and resultado.Instance:IsDescendantOf(alvo) then return true end
     
-    return false -- Tem parede no caminho
+    return false
 end
 
 -- ==========================================
--- OBTER JOGADOR MAIS PRÓXIMO (PRIORIDADE POR DISTÂNCIA)
+-- TEAM CHECK CORRIGIDO (Múltiplas verificações)
+-- ==========================================
+local function SaoDoMesmoTime(jogadorA, jogadorB)
+    -- Método 1: Team (objeto Team)
+    local teamA = jogadorA.Team
+    local teamB = jogadorB.Team
+    if teamA and teamB and teamA == teamB then
+        return true
+    end
+    
+    -- Método 2: TeamColor (BrickColor)
+    if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
+        if teamA.TeamColor == teamB.TeamColor then
+            return true
+        end
+    end
+    
+    -- Método 3: Verificar Team no Character
+    if jogadorA.Character and jogadorB.Character then
+        local charTeamA = jogadorA.Character:FindFirstChild("Team")
+        local charTeamB = jogadorB.Character:FindFirstChild("Team")
+        if charTeamA and charTeamB and charTeamA == charTeamB then
+            return true
+        end
+    end
+    
+    -- Método 4: Verificar por Folder/Nome do time no Player
+    -- Alguns jogos usam pastas no jogador para times
+    local playerFolderA = jogadorA:FindFirstChild("Team")
+    local playerFolderB = jogadorB:FindFirstChild("Team")
+    if playerFolderA and playerFolderB and playerFolderA == playerFolderB then
+        return true
+    end
+    
+    return false
+end
+
+-- ==========================================
+-- OBTER MELHOR ALVO
 -- ==========================================
 local function ObterJogadorMaisProximoDaMira()
     local melhorAlvo = nil
-    local melhorPontuacao = math.huge -- Menor pontuação = melhor
+    local melhorPontuacao = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
 
-    local meuTime = nil
-    if Aimbot_TeamCheck and localPlayer.Character then
-        meuTime = localPlayer.Character:FindFirstChild("Team")
-    end
-
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             
+            -- Verifica lista de ignorados
             if JogadoresIgnorados[p.Name] then continue end
 
-            if Aimbot_TeamCheck and meuTime then
-                local timeDoAlvo = p.Character:FindFirstChild("Team")
-                if timeDoAlvo and meuTime == timeDoAlvo then continue end
+            -- TEAM CHECK CORRIGIDO
+            if Aimbot_TeamCheck then
+                if SaoDoMesmoTime(localPlayer, p) then
+                    continue -- Pula aliados
+                end
             end
 
             local parteBuscada = Aimbot_ParteAlvo
@@ -204,7 +234,7 @@ local function ObterJogadorMaisProximoDaMira()
             end
 
             if parteBuscada then
-                -- WALL CHECK: Pula se estiver atrás de parede
+                -- Wall Check
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then
                     continue
                 end
@@ -218,18 +248,13 @@ local function ObterJogadorMaisProximoDaMira()
                     local posicaoMouseObjeto = Vector2.new(posicaoTela.X, posicaoTela.Y)
                     local distanciaDaMira = (posicaoMouseObjeto - pontoMiraTela).Magnitude
                     
-                    -- Verifica se está dentro do FOV
                     local dentroFOV = not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV
                     
                     if dentroFOV then
-                        -- SISTEMA DE PONTUAÇÃO: Prioriza quem está MAIS PERTO
-                        -- Mas também considera o quão centralizado está no FOV
                         local pontuacao
                         if Aimbot_PrioridadeDistancia then
-                            -- 70% peso na distância real + 30% peso na distância do centro do FOV
                             pontuacao = (distanciaReal * 0.7) + (distanciaDaMira * 0.3)
                         else
-                            -- Apenas distância do centro do FOV (comportamento antigo)
                             pontuacao = distanciaDaMira
                         end
                         
@@ -376,8 +401,8 @@ local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
 CombatTab:CreateSection("Aimbot")
 CombatTab:CreateToggle({Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:CreateToggle({Name = "Mostrar FOV", CurrentValue = true, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
-CombatTab:CreateToggle({Name = "Team Check", CurrentValue = true, Callback = function(v) Aimbot_TeamCheck = v end})
-CombatTab:CreateToggle({Name = "Wall Check (Não mirar em paredes)", CurrentValue = true, Callback = function(v) Aimbot_WallCheck = v end})
+CombatTab:CreateToggle({Name = "Team Check (Ignorar Aliados)", CurrentValue = true, Callback = function(v) Aimbot_TeamCheck = v end})
+CombatTab:CreateToggle({Name = "Wall Check (Paredes)", CurrentValue = true, Callback = function(v) Aimbot_WallCheck = v end})
 CombatTab:CreateToggle({Name = "Priorizar Mais Perto", CurrentValue = true, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
 
 CombatTab:CreateInput({Name = "Raio FOV", PlaceholderText = "100", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
@@ -395,9 +420,7 @@ local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = Ob
 CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
    pcall(function()
       local n = JogadorSelecionadoDropdown
-      if n and n ~= "" and n ~= "Nenhum jogador online" then
-         JogadoresIgnorados[n] = true; AtualizarListaIgnorados()
-      end
+      if n and n ~= "" and n ~= "Nenhum jogador online" then JogadoresIgnorados[n] = true; AtualizarListaIgnorados() end
    end)
 end})
 CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
@@ -450,4 +473,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Wall Check + Prioridade por distância ATIVADOS! Offset: 40px", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Team Check CORRIGIDO! 4 métodos de verificação de time.", Duration = 5, Image = 4483345998})
