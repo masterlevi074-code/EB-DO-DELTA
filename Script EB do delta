@@ -16,9 +16,7 @@ if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Dest
 local dashStuds = 30
 local dashButtonScreen = nil
 
--- ==========================================
 -- ESP
--- ==========================================
 local ESP_Chams = false
 local ESP_Box = false
 local ESP_Names = false
@@ -27,9 +25,7 @@ local ESP_Vida = false
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 
--- ==========================================
 -- AIMBOT
--- ==========================================
 local Aimbot_Ativado = false
 local Aimbot_UsarFOV = true
 local Aimbot_RaioFOV = 100
@@ -53,7 +49,7 @@ FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
 -- ==========================================
--- FUNÇÕES ESP
+-- FUNÇÕES ESP (mantidas iguais)
 -- ==========================================
 local function AtualizarESP()
     for _, p in pairs(Players:GetPlayers()) do
@@ -129,64 +125,42 @@ local function AplicarCorESP(novaCor)
     end
 end
 
--- ==========================================
--- OFFSET DINÂMICO
--- ==========================================
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
     local fovVertical = math.rad(camera.FieldOfView)
     local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
-    local alturaTelaPixels = camera.ViewportSize.Y
-    return (Aimbot_OffsetPixels / alturaTelaPixels) * alturaTelaStuds
+    return (Aimbot_OffsetPixels / camera.ViewportSize.Y) * alturaTelaStuds
 end
 
--- ==========================================
--- WALL CHECK
--- ==========================================
 local function EstaVisivel(alvoParte)
     local camera = Workspace.CurrentCamera
     local cameraPos = camera.CFrame.Position
-    local direcao = (alvoParte.Position - cameraPos)
-    
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {localPlayer.Character}
     params.IgnoreWater = true
-    
-    local resultado = Workspace:Raycast(cameraPos, direcao, params)
-    
+    local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
     if not resultado then return true end
-    
     local alvo = alvoParte.Parent
     if alvo and resultado.Instance:IsDescendantOf(alvo) then return true end
-    
     return false
 end
 
--- ==========================================
--- TEAM CHECK
--- ==========================================
 local function SaoDoMesmoTime(jogadorA, jogadorB)
     local teamA = jogadorA.Team
     local teamB = jogadorB.Team
     if teamA and teamB and teamA == teamB then return true end
-    
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
         if teamA.TeamColor == teamB.TeamColor then return true end
     end
-    
     if jogadorA.Character and jogadorB.Character then
         local charTeamA = jogadorA.Character:FindFirstChild("Team")
         local charTeamB = jogadorB.Character:FindFirstChild("Team")
         if charTeamA and charTeamB and charTeamA == charTeamB then return true end
     end
-    
     return false
 end
 
--- ==========================================
--- OBTER MELHOR ALVO
--- ==========================================
 local function ObterJogadorMaisProximoDaMira()
     local melhorAlvo = nil
     local melhorPontuacao = math.huge
@@ -197,9 +171,7 @@ local function ObterJogadorMaisProximoDaMira()
 
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-            
             if JogadoresIgnorados[p.Name] then continue end
-
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
 
             local parteBuscada = Aimbot_ParteAlvo
@@ -211,7 +183,6 @@ local function ObterJogadorMaisProximoDaMira()
 
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
-
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
                 local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
                 local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
@@ -219,7 +190,6 @@ local function ObterJogadorMaisProximoDaMira()
                 if visivel then
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
-                    
                     if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
                         local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
                         if pontuacao < melhorPontuacao then
@@ -234,17 +204,13 @@ local function ObterJogadorMaisProximoDaMira()
     return melhorAlvo
 end
 
--- ==========================================
--- LOOP PRINCIPAL
--- ==========================================
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     
     if Aimbot_UsarFOV and FOVCircle then
         FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
-        FOVCircle.Radius = Aimbot_RaioFOV
-        FOVCircle.Thickness = Aimbot_EspessuraFOV
+        FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV
     end
 
     if Aimbot_Ativado then
@@ -256,7 +222,6 @@ RunService.RenderStepped:Connect(function()
             else
                 parteRastrear = alvo.Character:FindFirstChild("Head")
             end
-
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -265,7 +230,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_Tracers and p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -273,15 +237,12 @@ RunService.RenderStepped:Connect(function()
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health > 0 then
                 local posTela, visivel = camera:WorldToViewportPoint(root.Position)
-                if visivel then
-                    tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y)
-                    tracer.Visible = true
+                if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true
                 else tracer.Visible = false end
             else tracer.Visible = false end
         else if tracer then tracer.Visible = false end end
     end
 
-    -- ESP Vida
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -334,6 +295,25 @@ local function ObterListaJogadores()
 end
 
 -- ==========================================
+-- FUNÇÃO AUXILIAR PARA EXTRAIR STRING DE QUALQUER TIPO
+-- ==========================================
+local function ExtrairString(valor)
+    if type(valor) == "string" then
+        return valor
+    elseif type(valor) == "table" then
+        -- Tenta pegar Value, CurrentOption, ou o primeiro elemento
+        if valor.Value and type(valor.Value) == "string" then return valor.Value end
+        if valor.CurrentOption and type(valor.CurrentOption) == "string" then return valor.CurrentOption end
+        for _, v in pairs(valor) do
+            if type(v) == "string" and v ~= "" and v ~= "Nenhum jogador online" then
+                return v
+            end
+        end
+    end
+    return ""
+end
+
+-- ==========================================
 -- RAYFIELD
 -- ==========================================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -366,11 +346,8 @@ CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
--- LISTA DE EXCLUSÃO CORRIGIDA
+-- LISTA DE EXCLUSÃO (CORRIGIDA - trata tabela/string)
 CombatTab:CreateSection("Lista de Exclusão")
-
--- Variável local para o dropdown
-local DropdownValue = ""
 
 local dropdownIgnorar = CombatTab:CreateDropdown({
    Name = "Jogador",
@@ -378,29 +355,26 @@ local dropdownIgnorar = CombatTab:CreateDropdown({
    CurrentOption = "",
    Flag = "DropdownIgnorar",
    Callback = function(Option)
-      DropdownValue = Option or ""
-      print("[DEBUG] Dropdown selecionado: " .. tostring(DropdownValue))
+      -- Não precisa fazer nada, o valor fica no Rayfield.Flags
    end,
 })
 
 CombatTab:CreateButton({
    Name = "➕ Adicionar à Lista",
    Callback = function()
-      print("[DEBUG] Tentando adicionar: " .. tostring(DropdownValue))
-      -- Tenta pegar do DropdownValue primeiro, depois do Rayfield.Flags
-      local nome = DropdownValue
-      if (not nome or nome == "") and Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
-         nome = Rayfield.Flags["DropdownIgnorar"].Value or Rayfield.Flags["DropdownIgnorar"].CurrentOption or ""
-         print("[DEBUG] Pegou do Rayfield.Flags: " .. tostring(nome))
+      local nome = ""
+      
+      -- Pega o valor do flag do Rayfield
+      if Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
+         local flagValue = Rayfield.Flags["DropdownIgnorar"]
+         nome = ExtrairString(flagValue)
       end
       
-      if nome and nome ~= "" and nome ~= "Nenhum jogador online" then
+      if nome ~= "" and nome ~= "Nenhum jogador online" then
          JogadoresIgnorados[nome] = true
          AtualizarListaIgnorados()
-         print("[DEBUG] Adicionado: " .. nome)
          Rayfield:Notify({Title = "OK", Content = nome .. " adicionado!", Duration = 2})
       else
-         print("[DEBUG] Nome inválido: " .. tostring(nome))
          Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador primeiro!", Duration = 2})
       end
    end,
@@ -409,16 +383,16 @@ CombatTab:CreateButton({
 CombatTab:CreateButton({
    Name = "➖ Remover da Lista",
    Callback = function()
-      print("[DEBUG] Tentando remover: " .. tostring(DropdownValue))
-      local nome = DropdownValue
-      if (not nome or nome == "") and Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
-         nome = Rayfield.Flags["DropdownIgnorar"].Value or Rayfield.Flags["DropdownIgnorar"].CurrentOption or ""
+      local nome = ""
+      
+      if Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
+         local flagValue = Rayfield.Flags["DropdownIgnorar"]
+         nome = ExtrairString(flagValue)
       end
       
-      if nome and nome ~= "" and nome ~= "Nenhum jogador online" then
+      if nome ~= "" and nome ~= "Nenhum jogador online" then
          JogadoresIgnorados[nome] = nil
          AtualizarListaIgnorados()
-         print("[DEBUG] Removido: " .. nome)
          Rayfield:Notify({Title = "OK", Content = nome .. " removido!", Duration = 2})
       else
          Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador primeiro!", Duration = 2})
@@ -430,8 +404,6 @@ CombatTab:CreateButton({
    Name = "🔄 Atualizar Lista",
    Callback = function()
       dropdownIgnorar:Refresh(ObterListaJogadores(), true)
-      DropdownValue = ""
-      print("[DEBUG] Lista atualizada")
    end,
 })
 
@@ -440,7 +412,6 @@ CombatTab:CreateButton({
    Callback = function()
       JogadoresIgnorados = {}
       AtualizarListaIgnorados()
-      print("[DEBUG] Lista limpa")
    end,
 })
 
@@ -450,7 +421,6 @@ function AtualizarListaIgnorados()
    local lista = {}
    for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
    ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = #lista == 0 and "Nenhum" or table.concat(lista, "\n")})
-   print("[DEBUG] Lista atualizada: " .. #lista .. " jogadores")
 end
 
 -- Visuais
@@ -486,4 +456,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Lista de exclusão CORRIGIDA! Verifique o console (F9) para debug.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Lista de exclusão CORRIGIDA! Selecione um jogador e clique em Adicionar.", Duration = 5, Image = 4483345998})
