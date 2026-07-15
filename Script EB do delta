@@ -44,7 +44,6 @@ local Aimbot_WallCheck = true
 local Aimbot_PrioridadeDistancia = true
 
 local JogadoresIgnorados = {}
-local JogadorSelecionadoDropdown = ""
 
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = false
@@ -165,38 +164,21 @@ local function EstaVisivel(alvoParte)
 end
 
 -- ==========================================
--- TEAM CHECK CORRIGIDO (Múltiplas verificações)
+-- TEAM CHECK
 -- ==========================================
 local function SaoDoMesmoTime(jogadorA, jogadorB)
-    -- Método 1: Team (objeto Team)
     local teamA = jogadorA.Team
     local teamB = jogadorB.Team
-    if teamA and teamB and teamA == teamB then
-        return true
-    end
+    if teamA and teamB and teamA == teamB then return true end
     
-    -- Método 2: TeamColor (BrickColor)
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
-        if teamA.TeamColor == teamB.TeamColor then
-            return true
-        end
+        if teamA.TeamColor == teamB.TeamColor then return true end
     end
     
-    -- Método 3: Verificar Team no Character
     if jogadorA.Character and jogadorB.Character then
         local charTeamA = jogadorA.Character:FindFirstChild("Team")
         local charTeamB = jogadorB.Character:FindFirstChild("Team")
-        if charTeamA and charTeamB and charTeamA == charTeamB then
-            return true
-        end
-    end
-    
-    -- Método 4: Verificar por Folder/Nome do time no Player
-    -- Alguns jogos usam pastas no jogador para times
-    local playerFolderA = jogadorA:FindFirstChild("Team")
-    local playerFolderB = jogadorB:FindFirstChild("Team")
-    if playerFolderA and playerFolderB and playerFolderA == playerFolderB then
-        return true
+        if charTeamA and charTeamB and charTeamA == charTeamB then return true end
     end
     
     return false
@@ -216,15 +198,9 @@ local function ObterJogadorMaisProximoDaMira()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             
-            -- Verifica lista de ignorados
             if JogadoresIgnorados[p.Name] then continue end
 
-            -- TEAM CHECK CORRIGIDO
-            if Aimbot_TeamCheck then
-                if SaoDoMesmoTime(localPlayer, p) then
-                    continue -- Pula aliados
-                end
-            end
+            if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
 
             local parteBuscada = Aimbot_ParteAlvo
             if parteBuscada == "Torso" then
@@ -234,10 +210,7 @@ local function ObterJogadorMaisProximoDaMira()
             end
 
             if parteBuscada then
-                -- Wall Check
-                if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then
-                    continue
-                end
+                if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
 
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
                 local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -245,19 +218,10 @@ local function ObterJogadorMaisProximoDaMira()
                 
                 if visivel then
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
-                    local posicaoMouseObjeto = Vector2.new(posicaoTela.X, posicaoTela.Y)
-                    local distanciaDaMira = (posicaoMouseObjeto - pontoMiraTela).Magnitude
+                    local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
                     
-                    local dentroFOV = not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV
-                    
-                    if dentroFOV then
-                        local pontuacao
-                        if Aimbot_PrioridadeDistancia then
-                            pontuacao = (distanciaReal * 0.7) + (distanciaDaMira * 0.3)
-                        else
-                            pontuacao = distanciaDaMira
-                        end
-                        
+                    if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
+                        local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
                         if pontuacao < melhorPontuacao then
                             melhorPontuacao = pontuacao
                             melhorAlvo = p
@@ -296,9 +260,7 @@ RunService.RenderStepped:Connect(function()
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
-                local camCFrame = camera.CFrame
-                local cframeAlvoOriginal = CFrame.new(camCFrame.Position, alvoPos)
-                camera.CFrame = camCFrame:Lerp(cframeAlvoOriginal, Aimbot_Suavidade)
+                camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, alvoPos), Aimbot_Suavidade)
             end
         end
     end
@@ -324,16 +286,10 @@ RunService.RenderStepped:Connect(function()
         if p ~= localPlayer and p.Character then
             local head = p.Character:FindFirstChild("Head")
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            if head and hum then
+            if head and hum and ESP_Names then
                 local nameGui = head:FindFirstChild("NoahzinName")
                 if nameGui and nameGui:FindFirstChild("TextLabel") then
-                    if ESP_Names then
-                        if ESP_Vida then
-                            nameGui.TextLabel.Text = string.format("%s [%d/%d]", p.Name, math.floor(hum.Health), math.floor(hum.MaxHealth))
-                        else
-                            nameGui.TextLabel.Text = p.Name
-                        end
-                    end
+                    nameGui.TextLabel.Text = ESP_Vida and string.format("%s [%d/%d]", p.Name, math.floor(hum.Health), math.floor(hum.MaxHealth)) or p.Name
                 end
             end
         end
@@ -347,8 +303,7 @@ local function CriarBotaoDash()
    dashButtonScreen = Instance.new("ScreenGui")
    dashButtonScreen.Name = "DashButtonScreen"; dashButtonScreen.Parent = CoreGui
    local mainButton = Instance.new("TextButton")
-   mainButton.Name = "DashButton"; mainButton.Size = UDim2.new(0, 60, 0, 60)
-   mainButton.Position = UDim2.new(0.85, 0, 0.5, 0)
+   mainButton.Size = UDim2.new(0, 60, 0, 60); mainButton.Position = UDim2.new(0.85, 0, 0.5, 0)
    mainButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
    mainButton.Text = "DASH"; mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
    mainButton.Font = Enum.Font.SourceSansBold; mainButton.TextSize = 14
@@ -367,7 +322,6 @@ end
 
 local function RemoverBotaoDash()
    if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
-   dashButtonScreen = nil
 end
 
 local function ObterListaJogadores()
@@ -391,52 +345,112 @@ local Window = Rayfield:CreateWindow({
 
 -- Principal
 local MainTab = Window:CreateTab("🏠 Principal", 4483362458)
-MainTab:CreateSection("Configurações do Jogador")
-MainTab:CreateToggle({Name = "Ativar Botão de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-MainTab:CreateInput({Name = "Distância do Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
-MainTab:CreateButton({Name = "Resetar Personagem", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
+MainTab:CreateSection("Configurações")
+MainTab:CreateToggle({Name = "Botão de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
+MainTab:CreateInput({Name = "Distância Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 
 -- Combate
 local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
 CombatTab:CreateSection("Aimbot")
 CombatTab:CreateToggle({Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:CreateToggle({Name = "Mostrar FOV", CurrentValue = true, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
-CombatTab:CreateToggle({Name = "Team Check (Ignorar Aliados)", CurrentValue = true, Callback = function(v) Aimbot_TeamCheck = v end})
-CombatTab:CreateToggle({Name = "Wall Check (Paredes)", CurrentValue = true, Callback = function(v) Aimbot_WallCheck = v end})
-CombatTab:CreateToggle({Name = "Priorizar Mais Perto", CurrentValue = true, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
-
+CombatTab:CreateToggle({Name = "Team Check", CurrentValue = true, Callback = function(v) Aimbot_TeamCheck = v end})
+CombatTab:CreateToggle({Name = "Wall Check", CurrentValue = true, Callback = function(v) Aimbot_WallCheck = v end})
+CombatTab:CreateToggle({Name = "Priorizar Perto", CurrentValue = true, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
 CombatTab:CreateInput({Name = "Raio FOV", PlaceholderText = "100", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
 CombatTab:CreateInput({Name = "Suavidade", PlaceholderText = "0.15", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
 CombatTab:CreateInput({Name = "Offset FOV Tela", PlaceholderText = "-40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
-CombatTab:CreateInput({Name = "Offset Mira (pixels)", PlaceholderText = "40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
-
+CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
 CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
--- Exclusão
+-- LISTA DE EXCLUSÃO CORRIGIDA
 CombatTab:CreateSection("Lista de Exclusão")
-local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Callback = function(o) JogadorSelecionadoDropdown = o or "" end})
-CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
-   pcall(function()
-      local n = JogadorSelecionadoDropdown
-      if n and n ~= "" and n ~= "Nenhum jogador online" then JogadoresIgnorados[n] = true; AtualizarListaIgnorados() end
-   end)
-end})
-CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
-   pcall(function()
-      local n = JogadorSelecionadoDropdown
-      if n and n ~= "" then JogadoresIgnorados[n] = nil; AtualizarListaIgnorados() end
-   end)
-end})
-CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function() dropdownIgnorar:Refresh(ObterListaJogadores(), true); JogadorSelecionadoDropdown = "" end})
-CombatTab:CreateButton({Name = "🗑️ Limpar", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
+
+-- Variável local para o dropdown
+local DropdownValue = ""
+
+local dropdownIgnorar = CombatTab:CreateDropdown({
+   Name = "Jogador",
+   Options = ObterListaJogadores(),
+   CurrentOption = "",
+   Flag = "DropdownIgnorar",
+   Callback = function(Option)
+      DropdownValue = Option or ""
+      print("[DEBUG] Dropdown selecionado: " .. tostring(DropdownValue))
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "➕ Adicionar à Lista",
+   Callback = function()
+      print("[DEBUG] Tentando adicionar: " .. tostring(DropdownValue))
+      -- Tenta pegar do DropdownValue primeiro, depois do Rayfield.Flags
+      local nome = DropdownValue
+      if (not nome or nome == "") and Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
+         nome = Rayfield.Flags["DropdownIgnorar"].Value or Rayfield.Flags["DropdownIgnorar"].CurrentOption or ""
+         print("[DEBUG] Pegou do Rayfield.Flags: " .. tostring(nome))
+      end
+      
+      if nome and nome ~= "" and nome ~= "Nenhum jogador online" then
+         JogadoresIgnorados[nome] = true
+         AtualizarListaIgnorados()
+         print("[DEBUG] Adicionado: " .. nome)
+         Rayfield:Notify({Title = "OK", Content = nome .. " adicionado!", Duration = 2})
+      else
+         print("[DEBUG] Nome inválido: " .. tostring(nome))
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador primeiro!", Duration = 2})
+      end
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "➖ Remover da Lista",
+   Callback = function()
+      print("[DEBUG] Tentando remover: " .. tostring(DropdownValue))
+      local nome = DropdownValue
+      if (not nome or nome == "") and Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
+         nome = Rayfield.Flags["DropdownIgnorar"].Value or Rayfield.Flags["DropdownIgnorar"].CurrentOption or ""
+      end
+      
+      if nome and nome ~= "" and nome ~= "Nenhum jogador online" then
+         JogadoresIgnorados[nome] = nil
+         AtualizarListaIgnorados()
+         print("[DEBUG] Removido: " .. nome)
+         Rayfield:Notify({Title = "OK", Content = nome .. " removido!", Duration = 2})
+      else
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador primeiro!", Duration = 2})
+      end
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "🔄 Atualizar Lista",
+   Callback = function()
+      dropdownIgnorar:Refresh(ObterListaJogadores(), true)
+      DropdownValue = ""
+      print("[DEBUG] Lista atualizada")
+   end,
+})
+
+CombatTab:CreateButton({
+   Name = "🗑️ Limpar Tudo",
+   Callback = function()
+      JogadoresIgnorados = {}
+      AtualizarListaIgnorados()
+      print("[DEBUG] Lista limpa")
+   end,
+})
+
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 
 function AtualizarListaIgnorados()
    local lista = {}
    for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
    ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = #lista == 0 and "Nenhum" or table.concat(lista, "\n")})
+   print("[DEBUG] Lista atualizada: " .. #lista .. " jogadores")
 end
 
 -- Visuais
@@ -459,7 +473,6 @@ local ConfigTab = Window:CreateTab("⚙️ Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
-   Aimbot_Ativado = false
    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
    LinhasTracers = {}
    for _, plr in pairs(Players:GetPlayers()) do
@@ -473,4 +486,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Team Check CORRIGIDO! 4 métodos de verificação de time.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Lista de exclusão CORRIGIDA! Verifique o console (F9) para debug.", Duration = 5, Image = 4483345998})
