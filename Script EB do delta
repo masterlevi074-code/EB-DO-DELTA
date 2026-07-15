@@ -48,8 +48,8 @@ local Aimbot_ParteAlvo = "Head"
 local Aimbot_TeamCheck = true
 -- Offset na TELA para o círculo FOV (negativo = acima do centro)
 local Aimbot_OffsetTelaY = -40
--- Offset 3D: NEGATIVO = mira mais BAIXO que o alvo (compensa mira alta do jogo)
-local Aimbot_Offset3D_Y = -2.0 -- Studs ABAIXO da parte do corpo alvo
+-- Offset em PIXELS na tela (convertido dinamicamente para studs baseado na distância)
+local Aimbot_OffsetPixels = 60 -- Pixels que a mira deve ficar abaixo do alvo na tela
 
 -- Lista de jogadores ignorados manualmente
 local JogadoresIgnorados = {}
@@ -76,13 +76,11 @@ local function AtualizarESP()
                 h.Enabled = ESP_Chams 
                 h.FillColor = CorESP 
             end
-
             local box = p.Character:FindFirstChild("NoahzinBox")
             if box then 
                 box.Visible = ESP_Box 
                 box.Color3 = CorESP 
             end
-            
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
@@ -92,83 +90,53 @@ local function AtualizarESP()
                 end
             end
         end
-        if LinhasTracers[p] then 
-            LinhasTracers[p].Color = CorESP 
-        end
+        if LinhasTracers[p] then LinhasTracers[p].Color = CorESP end
     end
 end
 
 local function CriarESP(p)
     local function AdicionarUI(c)
         if p == localPlayer then return end
-        
         local head = c:WaitForChild("Head", 5)
         if not head then return end
 
         local h = c:FindFirstChild("NoahzinESP") or Instance.new("Highlight") 
-        h.Name = "NoahzinESP" 
-        h.FillColor = CorESP 
-        h.OutlineColor = Color3.new(1,1,1) 
-        h.FillTransparency = 0.5 
-        h.Enabled = ESP_Chams 
-        h.Parent = c
+        h.Name = "NoahzinESP"; h.FillColor = CorESP; h.OutlineColor = Color3.new(1,1,1)
+        h.FillTransparency = 0.5; h.Enabled = ESP_Chams; h.Parent = c
 
         local bg = head:FindFirstChild("NoahzinName") or Instance.new("BillboardGui") 
-        bg.Name = "NoahzinName" 
-        bg.Size = UDim2.new(0, 100, 0, 20) 
-        bg.AlwaysOnTop = true 
-        bg.ExtentsOffset = Vector3.new(0, 3, 0) 
-        bg.Enabled = ESP_Names 
-        bg.Parent = head
+        bg.Name = "NoahzinName"; bg.Size = UDim2.new(0, 100, 0, 20)
+        bg.AlwaysOnTop = true; bg.ExtentsOffset = Vector3.new(0, 3, 0)
+        bg.Enabled = ESP_Names; bg.Parent = head
 
         local tl = bg:FindFirstChild("TextLabel") or Instance.new("TextLabel") 
-        tl.Size = UDim2.new(1, 0, 1, 0) 
-        tl.BackgroundTransparency = 1 
-        tl.Text = p.Name 
-        tl.TextColor3 = CorESP 
-        tl.Font = Enum.Font.GothamBold 
-        tl.TextSize = 12 
-        tl.TextStrokeTransparency = 0 
-        tl.Parent = bg
+        tl.Size = UDim2.new(1, 0, 1, 0); tl.BackgroundTransparency = 1
+        tl.Text = p.Name; tl.TextColor3 = CorESP; tl.Font = Enum.Font.GothamBold
+        tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
 
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox") 
-        box.Name = "NoahzinBox" 
-        box.Adornee = c 
-        box.Color3 = CorESP 
-        box.LineThickness = 0.05 
-        box.SurfaceTransparency = 1 
-        box.Visible = ESP_Box 
-        box.Parent = c
+        box.Name = "NoahzinBox"; box.Adornee = c; box.Color3 = CorESP
+        box.LineThickness = 0.05; box.SurfaceTransparency = 1
+        box.Visible = ESP_Box; box.Parent = c
 
         if not LinhasTracers[p] then
             local tracer = Drawing.new("Line")
-            tracer.Visible = false
-            tracer.Color = CorESP
-            tracer.Thickness = 1.2
+            tracer.Visible = false; tracer.Color = CorESP; tracer.Thickness = 1.2
             LinhasTracers[p] = tracer
         end
-     
         task.spawn(AtualizarESP)
     end
     if p.Character then AdicionarUI(p.Character) end
     p.CharacterAdded:Connect(AdicionarUI)
 end
 
--- Inicializar ESP para jogadores existentes
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
 
--- Limpeza de Tracers quando jogador sai
 Players.PlayerRemoving:Connect(function(p)
-    if LinhasTracers[p] then 
-        LinhasTracers[p]:Destroy() 
-        LinhasTracers[p] = nil 
-    end
+    if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end
 end)
 
--- ==========================================
--- FUNÇÃO: APLICAR COR ESP
--- ==========================================
 local function AplicarCorESP(novaCor)
     CorESP = novaCor
     for _, plr in pairs(Players:GetPlayers()) do
@@ -185,10 +153,24 @@ local function AplicarCorESP(novaCor)
                 end
             end
         end
-        if LinhasTracers[plr] then
-            LinhasTracers[plr].Color = novaCor
-        end
+        if LinhasTracers[plr] then LinhasTracers[plr].Color = novaCor end
     end
+end
+
+-- ==========================================
+-- FUNÇÃO: CONVERTER PIXELS PARA OFFSET 3D BASEADO NA DISTÂNCIA
+-- ==========================================
+local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
+    -- Distância entre a câmera e o alvo
+    local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
+    -- Tamanho vertical da tela em studs na distância do alvo (aproximado)
+    local fovVertical = math.rad(camera.FieldOfView)
+    local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
+    -- Tamanho da tela em pixels
+    local alturaTelaPixels = camera.ViewportSize.Y
+    -- Converter pixels para studs
+    local offsetStuds = (Aimbot_OffsetPixels / alturaTelaPixels) * alturaTelaStuds
+    return offsetStuds
 end
 
 -- ==========================================
@@ -199,7 +181,6 @@ local function ObterJogadorMaisProximoDaMira()
     local menorDistancia = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
-    -- Ponto de referência na tela para o FOV (acima do centro)
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
 
     local meuTime = nil
@@ -210,15 +191,11 @@ local function ObterJogadorMaisProximoDaMira()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             
-            if JogadoresIgnorados[p.Name] then
-                continue
-            end
+            if JogadoresIgnorados[p.Name] then continue end
 
             if Aimbot_TeamCheck and meuTime then
                 local timeDoAlvo = p.Character:FindFirstChild("Team")
-                if timeDoAlvo and meuTime == timeDoAlvo then
-                    continue
-                end
+                if timeDoAlvo and meuTime == timeDoAlvo then continue end
             end
 
             local parteBuscada = Aimbot_ParteAlvo
@@ -229,8 +206,9 @@ local function ObterJogadorMaisProximoDaMira()
             end
 
             if parteBuscada then
-                -- Detecção: usar posição com offset 3D negativo (mais baixo)
-                local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, Aimbot_Offset3D_Y, 0)
+                -- Calcular offset dinâmico baseado na distância
+                local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
+                local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
                 local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
                 
                 if visivel then
@@ -256,20 +234,18 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- LOOP DE ATUALIZAÇÃO (AIMBOT + ESP TRACERS + ESP VIDA)
+-- LOOP DE ATUALIZAÇÃO (AIMBOT + ESP)
 -- ==========================================
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     
-    -- Círculo FOV na posição da mira visual do jogo (acima do centro)
     if Aimbot_UsarFOV and FOVCircle then
         FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
         FOVCircle.Radius = Aimbot_RaioFOV
         FOVCircle.Thickness = Aimbot_EspessuraFOV
     end
 
-    -- EXECUÇÃO DO AIMBOT - Mira ABAIXO do alvo para compensar mira alta do jogo
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
@@ -281,8 +257,9 @@ RunService.RenderStepped:Connect(function()
             end
 
             if parteRastrear then
-                -- CÂMERA MIRA ABAIXO DO ALVO (offset negativo = para baixo)
-                local alvoPos = parteRastrear.Position + Vector3.new(0, Aimbot_Offset3D_Y, 0)
+                -- Offset DINÂMICO baseado na distância atual
+                local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
+                local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
                 local camCFrame = camera.CFrame
                 local cframeAlvoOriginal = CFrame.new(camCFrame.Position, alvoPos)
                 camera.CFrame = camCFrame:Lerp(cframeAlvoOriginal, Aimbot_Suavidade)
@@ -290,31 +267,23 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ATUALIZAÇÃO DOS TRACERS
+    -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_Tracers and p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             local root = p.Character.HumanoidRootPart
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            
             if hum and hum.Health > 0 then
                 local posTela, visivel = camera:WorldToViewportPoint(root.Position)
                 if visivel then
-                    tracer.From = centroBaseTela
-                    tracer.To = Vector2.new(posTela.X, posTela.Y)
+                    tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y)
                     tracer.Visible = true
-                else
-                    tracer.Visible = false
-                end
-            else
-                tracer.Visible = false
-            end
-        else
-            if tracer then tracer.Visible = false end
-        end
+                else tracer.Visible = false end
+            else tracer.Visible = false end
+        else if tracer then tracer.Visible = false end end
     end
 
-    -- ATUALIZAÇÃO DE VIDA NO ESP
+    -- ESP Vida
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -340,45 +309,30 @@ end)
 -- ==========================================
 local function CriarBotaoDash()
    dashButtonScreen = Instance.new("ScreenGui")
-   dashButtonScreen.Name = "DashButtonScreen"
-   dashButtonScreen.Parent = CoreGui
+   dashButtonScreen.Name = "DashButtonScreen"; dashButtonScreen.Parent = CoreGui
    
    local mainButton = Instance.new("TextButton")
-   mainButton.Name = "DashButton"
-   mainButton.Size = UDim2.new(0, 60, 0, 60)
+   mainButton.Name = "DashButton"; mainButton.Size = UDim2.new(0, 60, 0, 60)
    mainButton.Position = UDim2.new(0.85, 0, 0.5, 0)
    mainButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-   mainButton.Text = "DASH"
-   mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-   mainButton.Font = Enum.Font.SourceSansBold
-   mainButton.TextSize = 14
-   mainButton.BorderSizePixel = 0
-   mainButton.Active = true
-   mainButton.Draggable = true
+   mainButton.Text = "DASH"; mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+   mainButton.Font = Enum.Font.SourceSansBold; mainButton.TextSize = 14
+   mainButton.BorderSizePixel = 0; mainButton.Active = true; mainButton.Draggable = true
    mainButton.Parent = dashButtonScreen
    
-   local uiCorner = Instance.new("UICorner")
-   uiCorner.CornerRadius = UDim.new(0, 12)
-   uiCorner.Parent = mainButton
-   
-   local uiStroke = Instance.new("UIStroke")
-   uiStroke.Color = Color3.fromRGB(0, 120, 255)
-   uiStroke.Thickness = 2
-   uiStroke.Parent = mainButton
+   local uiCorner = Instance.new("UICorner"); uiCorner.CornerRadius = UDim.new(0, 12); uiCorner.Parent = mainButton
+   local uiStroke = Instance.new("UIStroke"); uiStroke.Color = Color3.fromRGB(0, 120, 255); uiStroke.Thickness = 2; uiStroke.Parent = mainButton
 
    mainButton.MouseButton1Click:Connect(function()
       local character = localPlayer.Character
       if character and character:FindFirstChild("HumanoidRootPart") then
-         local root = character.HumanoidRootPart
-         root.CFrame = root.CFrame * CFrame.new(0, 0, -dashStuds)
+         character.HumanoidRootPart.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -dashStuds)
       end
    end)
 end
 
 local function RemoverBotaoDash()
-   if CoreGui:FindFirstChild("DashButtonScreen") then
-      CoreGui.DashButtonScreen:Destroy()
-   end
+   if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
    dashButtonScreen = nil
 end
 
@@ -388,13 +342,9 @@ end
 local function ObterListaJogadores()
     local jogadores = {}
     for _, player in pairs(Players:GetPlayers()) do
-        if player ~= localPlayer then
-            table.insert(jogadores, player.Name)
-        end
+        if player ~= localPlayer then table.insert(jogadores, player.Name) end
     end
-    if #jogadores == 0 then
-        table.insert(jogadores, "Nenhum jogador online")
-    end
+    if #jogadores == 0 then table.insert(jogadores, "Nenhum jogador online") end
     return jogadores
 end
 
@@ -404,262 +354,104 @@ end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Eb do Delta",
-   LoadingTitle = "Eb do Delta",
-   LoadingSubtitle = "Painel de Testes",
-   ConfigurationSaving = {
-      Enabled = false,
-      FolderName = "EbDeltaConfig",
-      FileName = "HubConfig"
-   },
-   Discord = {
-      Enabled = false,
-      Invite = "",
-      RememberJoins = true
-   },
-   KeySystem = false,
+   Name = "Eb do Delta", LoadingTitle = "Eb do Delta", LoadingSubtitle = "Painel de Testes",
+   ConfigurationSaving = {Enabled = false}, Discord = {Enabled = false}, KeySystem = false,
 })
 
 -- ==========================================
--- ABA: PRINCIPAL (Utilidades e Dash)
+-- ABA: PRINCIPAL
 -- ==========================================
 local MainTab = Window:CreateTab("🏠 Principal", 4483362458)
+MainTab:CreateSection("Configurações do Jogador")
 
-local Section = MainTab:CreateSection("Configurações do Jogador")
-
-MainTab:CreateToggle({
-   Name = "Ativar Botão de Dash",
-   CurrentValue = false,
-   Flag = "DashToggle",
-   Callback = function(Value)
-      if Value then CriarBotaoDash() else RemoverBotaoDash() end
-   end,
-})
-
-MainTab:CreateInput({
-   Name = "Distância do Dash (Studs)",
-   PlaceholderText = "Ex: 30",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local numero = tonumber(Text)
-      if numero then
-         dashStuds = numero
-         Rayfield:Notify({Title = "Configuração Salva", Content = "Distância: " .. numero .. " studs.", Duration = 3})
-      end
-   end,
-})
-
-MainTab:CreateButton({
-   Name = "Resetar Personagem",
-   Callback = function()
-      if localPlayer.Character then localPlayer.Character:BreakJoints() end
-   end,
-})
+MainTab:CreateToggle({Name = "Ativar Botão de Dash", CurrentValue = false, Flag = "DashToggle", Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
+MainTab:CreateInput({Name = "Distância do Dash (Studs)", PlaceholderText = "Ex: 30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+MainTab:CreateButton({Name = "Resetar Personagem", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 
 -- ==========================================
--- ABA: COMBATE (COM SISTEMA DE MIRA)
+-- ABA: COMBATE
 -- ==========================================
 local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
+CombatTab:CreateSection("Sistema de Mira (Aimbot)")
 
-local AimSection = CombatTab:CreateSection("Sistema de Mira (Aimbot)")
+CombatTab:CreateToggle({Name = "Ativar Aimbot (Lock-On)", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
+CombatTab:CreateToggle({Name = "Mostrar Círculo FOV", CurrentValue = true, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
+CombatTab:CreateToggle({Name = "Team Check (Ignorar Aliados)", CurrentValue = true, Callback = function(v) Aimbot_TeamCheck = v end})
 
-CombatTab:CreateToggle({
-   Name = "Ativar Aimbot (Lock-On)",
-   CurrentValue = false,
-   Flag = "AimbotToggle",
-   Callback = function(Value) Aimbot_Ativado = Value end,
-})
+CombatTab:CreateInput({Name = "Raio do FOV", PlaceholderText = "100", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
+CombatTab:CreateInput({Name = "Suavidade (0.01-1)", PlaceholderText = "0.15", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
+CombatTab:CreateInput({Name = "Espessura FOV", PlaceholderText = "1.5", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_EspessuraFOV = n; FOVCircle.Thickness = n end end})
+CombatTab:CreateInput({Name = "Offset FOV na Tela (- = acima)", PlaceholderText = "-40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
 
-CombatTab:CreateToggle({
-   Name = "Mostrar Círculo FOV",
-   CurrentValue = true,
-   Flag = "FOVToggle",
-   Callback = function(Value) Aimbot_UsarFOV = Value; FOVCircle.Visible = Value end,
-})
+-- OFFSET EM PIXELS (DINÂMICO - não quebra com distância!)
+CombatTab:CreateInput({Name = "Offset Mira (pixels, ex: 40, 60, 80)", PlaceholderText = "60 pixels abaixo do alvo", RemoveTextAfterFocusLost = false, Callback = function(t) 
+   local n = tonumber(t) 
+   if n then 
+      Aimbot_OffsetPixels = n 
+      Rayfield:Notify({Title = "Offset", Content = n .. " pixels. FUNCIONA EM QUALQUER DISTÂNCIA!", Duration = 3})
+   end 
+end})
 
-CombatTab:CreateToggle({
-   Name = "Team Check (Ignorar Aliados)",
-   CurrentValue = true,
-   Flag = "TeamCheckToggle",
-   Callback = function(Value) Aimbot_TeamCheck = Value end,
-})
-
-CombatTab:CreateInput({
-   Name = "Raio do FOV",
-   PlaceholderText = "Padrão: 100",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then Aimbot_RaioFOV = num; FOVCircle.Radius = num end
-   end,
-})
-
-CombatTab:CreateInput({
-   Name = "Suavidade da Mira (0.01 - 1)",
-   PlaceholderText = "Padrão: 0.15",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then Aimbot_Suavidade = math.clamp(num, 0.01, 1) end
-   end,
-})
-
-CombatTab:CreateInput({
-   Name = "Espessura do Círculo FOV",
-   PlaceholderText = "Padrão: 1.5",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then Aimbot_EspessuraFOV = num; FOVCircle.Thickness = num end
-   end,
-})
-
--- Offset da TELA (posição do círculo FOV)
-CombatTab:CreateInput({
-   Name = "Offset FOV na Tela (negativo=acima)",
-   PlaceholderText = "Padrão: -40 pixels",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then
-         Aimbot_OffsetTelaY = num
-         Rayfield:Notify({Title = "FOV", Content = "FOV: " .. num .. " pixels", Duration = 2})
-      end
-   end,
-})
-
--- Offset 3D NEGATIVO para mirar mais BAIXO
-CombatTab:CreateInput({
-   Name = "Offset 3D (negativo=mais baixo, ex: -1.5, -2.0, -2.5)",
-   PlaceholderText = "Padrão: -2.0 studs abaixo do alvo",
-   RemoveTextAfterFocusLost = false,
-   Callback = function(Text)
-      local num = tonumber(Text)
-      if num then
-         Aimbot_Offset3D_Y = num
-         local direcao = num < 0 and "ABAIXO" or "ACIMA"
-         Rayfield:Notify({Title = "Aimbot 3D", Content = "Câmera mira " .. math.abs(num) .. " studs " .. direcao .. " do alvo!", Duration = 2})
-      end
-   end,
-})
-
-local AimPartSection = CombatTab:CreateSection("Parte do Corpo (Alvo)")
-
-CombatTab:CreateButton({
-   Name = "Mirar na CABEÇA",
-   Callback = function()
-      Aimbot_ParteAlvo = "Head"
-      Rayfield:Notify({Title = "Aimbot", Content = "Alvo: CABEÇA", Duration = 2})
-   end,
-})
-
-CombatTab:CreateButton({
-   Name = "Mirar no TRONCO",
-   Callback = function()
-      Aimbot_ParteAlvo = "Torso"
-      Rayfield:Notify({Title = "Aimbot", Content = "Alvo: TRONCO", Duration = 2})
-   end,
-})
+CombatTab:CreateSection("Parte do Corpo")
+CombatTab:CreateButton({Name = "Mirar na CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
+CombatTab:CreateButton({Name = "Mirar no TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
 -- ==========================================
--- SEÇÃO: LISTA DE EXCLUSÃO MANUAL
+-- LISTA DE EXCLUSÃO
 -- ==========================================
-local ExclusaoSection = CombatTab:CreateSection("Lista de Exclusão (Ignorar Jogadores)")
+CombatTab:CreateSection("Lista de Exclusão")
 
-local dropdownIgnorar = CombatTab:CreateDropdown({
-   Name = "Selecionar Jogador para Ignorar",
-   Options = ObterListaJogadores(),
-   CurrentOption = "",
-   Flag = "DropdownIgnorar",
-   Callback = function(Option) JogadorSelecionadoDropdown = Option or "" end,
-})
+local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Selecionar Jogador", Options = ObterListaJogadores(), CurrentOption = "", Callback = function(o) JogadorSelecionadoDropdown = o or "" end})
 
-local function AdicionarJogadorIgnorado()
+CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
    pcall(function()
-      local nome = JogadorSelecionadoDropdown
-      if not nome or nome == "" or nome == "Nenhum jogador online" then
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3})
-         return
-      end
-      if JogadoresIgnorados[nome] then
-         Rayfield:Notify({Title = "Aviso", Content = "Já está na lista!", Duration = 3})
-         return
-      end
-      JogadoresIgnorados[nome] = true
-      Rayfield:Notify({Title = "OK", Content = nome .. " ADICIONADO!", Duration = 3})
+      local n = JogadorSelecionadoDropdown
+      if not n or n == "" or n == "Nenhum jogador online" then return end
+      JogadoresIgnorados[n] = true
       AtualizarListaIgnorados()
    end)
-end
+end})
 
-local function RemoverJogadorIgnorado()
+CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
    pcall(function()
-      local nome = JogadorSelecionadoDropdown
-      if not nome or nome == "" or nome == "Nenhum jogador online" then
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3})
-         return
-      end
-      if not JogadoresIgnorados[nome] then
-         Rayfield:Notify({Title = "Aviso", Content = "Não está na lista!", Duration = 3})
-         return
-      end
-      JogadoresIgnorados[nome] = nil
-      Rayfield:Notify({Title = "OK", Content = nome .. " REMOVIDO!", Duration = 3})
+      local n = JogadorSelecionadoDropdown
+      if not n or n == "" then return end
+      JogadoresIgnorados[n] = nil
       AtualizarListaIgnorados()
    end)
-end
+end})
 
-CombatTab:CreateButton({Name = "➕ Adicionar à Lista", Callback = AdicionarJogadorIgnorado})
-CombatTab:CreateButton({Name = "➖ Remover da Lista", Callback = RemoverJogadorIgnorado})
+CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function()
+   dropdownIgnorar:Refresh(ObterListaJogadores(), true)
+   JogadorSelecionadoDropdown = ""
+end})
 
-CombatTab:CreateButton({
-   Name = "🔄 Atualizar Lista",
-   Callback = function()
-      dropdownIgnorar:Refresh(ObterListaJogadores(), true)
-      JogadorSelecionadoDropdown = ""
-      Rayfield:Notify({Title = "OK", Content = "Lista atualizada!", Duration = 2})
-   end,
-})
-
-CombatTab:CreateButton({
-   Name = "🗑️ Limpar Tudo",
-   Callback = function()
-      JogadoresIgnorados = {}
-      AtualizarListaIgnorados()
-      Rayfield:Notify({Title = "OK", Content = "Lista limpa!", Duration = 3})
-   end,
-})
+CombatTab:CreateButton({Name = "🗑️ Limpar Tudo", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
 
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 
 function AtualizarListaIgnorados()
    local lista = {}
-   for nome, _ in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
-   if #lista == 0 then
-      ListaIgnoradosLabel:Set({Title = "Ignorados", Content = "Nenhum"})
-   else
-      ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = table.concat(lista, "\n")})
-   end
+   for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
+   ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = #lista == 0 and "Nenhum" or table.concat(lista, "\n")})
 end
 
 -- ==========================================
 -- ABA: VISUAIS
 -- ==========================================
 local VisualTab = Window:CreateTab("👁️ Visuais", 4483345998)
+VisualTab:CreateSection("ESP")
 
-VisualTab:CreateSection("Sistema ESP")
+VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = function(v) ESP_Names=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
+VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 
-VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Flag = "ESP_Completo", Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Flag = "ESP_Box", Callback = function(v) ESP_Box=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Flag = "ESP_Names", Callback = function(v) ESP_Names=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Flag = "ESP_Chams", Callback = function(v) ESP_Chams=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Flag = "ESP_Tracers", Callback = function(v) ESP_Tracers=v end})
-VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Flag = "ESP_Vida", Callback = function(v) ESP_Vida=v; AtualizarESP() end})
-
-VisualTab:CreateSection("Cores ESP")
+VisualTab:CreateSection("Cores")
 local cores = {{"🔴 Vermelho", Color3.fromRGB(255,50,50)}, {"🔵 Azul", Color3.fromRGB(50,150,255)}, {"🟢 Verde", Color3.fromRGB(50,255,100)}, {"🟡 Amarelo", Color3.fromRGB(255,220,50)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
-for _, c in ipairs(cores) do
-   VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end})
-end
+for _, c in ipairs(cores) do VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end}) end
 
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
@@ -668,30 +460,21 @@ VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brig
 -- ABA: CONFIGURAÇÕES
 -- ==========================================
 local ConfigTab = Window:CreateTab("⚙️ Configs", 4483345998)
-
-ConfigTab:CreateButton({
-   Name = "Destruir Tudo",
-   Callback = function()
-      RemoverBotaoDash()
-      if FOVCircle then FOVCircle:Destroy() end
-      Aimbot_Ativado = false
-      for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-      LinhasTracers = {}
-      for _, plr in pairs(Players:GetPlayers()) do
-         if plr.Character then
-            local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
-            local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
-            local h = plr.Character:FindFirstChild("Head")
-            if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
-         end
+ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
+   RemoverBotaoDash()
+   if FOVCircle then FOVCircle:Destroy() end
+   Aimbot_Ativado = false
+   for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
+   LinhasTracers = {}
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr.Character then
+         local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
+         local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
+         local h = plr.Character:FindFirstChild("Head")
+         if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
       end
-      Rayfield:Destroy()
-   end,
-})
+   end
+   Rayfield:Destroy()
+end})
 
-Rayfield:Notify({
-   Title = "Eb do Delta",
-   Content = "Offset 3D NEGATIVO (-2.0) = mira mais BAIXO. Ajuste conforme necessário!",
-   Duration = 5,
-   Image = 4483345998,
-})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Offset DINÂMICO! Ajuste 'Offset Mira (pixels)'. Funciona em qualquer distância!", Duration = 5, Image = 4483345998})
