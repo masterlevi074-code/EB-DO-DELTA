@@ -46,8 +46,8 @@ local Aimbot_CorFOV = Color3.fromRGB(255, 255, 255)
 local Aimbot_Suavidade = 0.15
 local Aimbot_ParteAlvo = "Head"
 local Aimbot_TeamCheck = true
--- NOVO: Offset na TELA (em pixels) - move o ponto de mira para baixo na tela
-local Aimbot_OffsetTelaY = 120 -- Pixels para baixo do centro da tela (ajustável)
+-- Offset na TELA - NEGATIVO = para CIMA (mira do jogo é acima do centro)
+local Aimbot_OffsetTelaY = -60 -- Pixels ACIMA do centro da tela (ajustável)
 
 -- Lista de jogadores ignorados manualmente
 local JogadoresIgnorados = {}
@@ -190,14 +190,14 @@ local function AplicarCorESP(novaCor)
 end
 
 -- ==========================================
--- FUNÇÃO: OBTER JOGADOR MAIS PRÓXIMO DA MIRA (COM OFFSET NA TELA)
+-- FUNÇÃO: OBTER JOGADOR MAIS PRÓXIMO DA MIRA
 -- ==========================================
 local function ObterJogadorMaisProximoDaMira()
     local alvoMaisProximo = nil
     local menorDistancia = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
-    -- Ponto de referência na tela (centro + offset para baixo)
+    -- Ponto de referência na tela (centro + offset NEGATIVO = para CIMA)
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
 
     local meuTime = nil
@@ -230,9 +230,7 @@ local function ObterJogadorMaisProximoDaMira()
                 local posicaoTela, visivel = camera:WorldToViewportPoint(parteBuscada.Position)
                 
                 if visivel then
-                    local cameraPos = camera.CFrame.Position
                     local posicaoMouseObjeto = Vector2.new(posicaoTela.X, posicaoTela.Y)
-                    -- Distância do jogador até o PONTO DE MIRA (não centro da tela)
                     local distanciaDaMira = (posicaoMouseObjeto - pontoMiraTela).Magnitude
                     
                     if Aimbot_UsarFOV then
@@ -260,7 +258,7 @@ RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     
-    -- Atualizar posição do círculo FOV (centralizado no ponto de mira)
+    -- Círculo FOV posicionado onde a mira REAL do jogo está (acima do centro)
     if Aimbot_UsarFOV and FOVCircle then
         FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
         FOVCircle.Radius = Aimbot_RaioFOV
@@ -279,7 +277,6 @@ RunService.RenderStepped:Connect(function()
             end
 
             if parteRastrear then
-                -- A câmera mira na parte do corpo (o offset já foi considerado na detecção)
                 local alvoPos = parteRastrear.Position
                 local camCFrame = camera.CFrame
                 local cframeAlvoOriginal = CFrame.new(camCFrame.Position, alvoPos)
@@ -543,10 +540,10 @@ CombatTab:CreateInput({
    end,
 })
 
--- CORRIGIDO: Offset em PIXELS na tela (muito mais preciso e não quebra)
+-- Offset NEGATIVO para jogar o FOV para CIMA
 CombatTab:CreateInput({
-   Name = "Offset Y da Mira (pixels, ex: 100, 150, 200)",
-   PlaceholderText = "Padrão: 120 pixels abaixo do centro",
+   Name = "Offset Y da Mira (negativo=acima, ex: -50, -80, -100)",
+   PlaceholderText = "Padrão: -60 pixels acima do centro",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
@@ -554,7 +551,7 @@ CombatTab:CreateInput({
          Aimbot_OffsetTelaY = num
          Rayfield:Notify({
             Title = "Aimbot",
-            Content = "Offset da mira ajustado para: " .. num .. " pixels abaixo do centro",
+            Content = "Offset: " .. num .. " pixels (negativo=acima, positivo=abaixo)",
             Duration = 2,
          })
       end
@@ -588,81 +585,100 @@ CombatTab:CreateButton({
 })
 
 -- ==========================================
--- SEÇÃO: LISTA DE EXCLUSÃO MANUAL (CORRIGIDA)
+-- SEÇÃO: LISTA DE EXCLUSÃO MANUAL (CORRIGIDA COM PCALL)
 -- ==========================================
 local ExclusaoSection = CombatTab:CreateSection("Lista de Exclusão (Ignorar Jogadores)")
 
--- Dropdown CORRIGIDO - Usando variável global JogadorSelecionadoDropdown
 local dropdownIgnorar = CombatTab:CreateDropdown({
    Name = "Selecionar Jogador para Ignorar",
    Options = ObterListaJogadores(),
    CurrentOption = "",
    Flag = "DropdownIgnorar",
    Callback = function(Option)
-      -- Salva a seleção na variável global
-      JogadorSelecionadoDropdown = Option
+      JogadorSelecionadoDropdown = Option or ""
    end,
 })
 
-CombatTab:CreateButton({
-   Name = "➕ Adicionar à Lista de Ignorados",
-   Callback = function()
-      -- Usa a variável global em vez de Rayfield.Flags
+-- Função segura para adicionar (com pcall)
+local function AdicionarJogadorIgnorado()
+   local ok, err = pcall(function()
       local nomeJogador = JogadorSelecionadoDropdown
-      if nomeJogador and nomeJogador ~= "" and nomeJogador ~= "Nenhum jogador online" then
-         if not JogadoresIgnorados[nomeJogador] then
-            JogadoresIgnorados[nomeJogador] = true
-            Rayfield:Notify({
-               Title = "Lista de Exclusão",
-               Content = "Jogador " .. nomeJogador .. " foi ADICIONADO à lista de ignorados!",
-               Duration = 3,
-            })
-            AtualizarListaIgnorados()
-         else
-            Rayfield:Notify({
-               Title = "Lista de Exclusão",
-               Content = "Este jogador já está na lista de ignorados!",
-               Duration = 3,
-            })
-         end
-      else
+      if not nomeJogador or nomeJogador == "" or nomeJogador == "Nenhum jogador online" then
          Rayfield:Notify({
             Title = "Erro",
             Content = "Selecione um jogador válido primeiro!",
             Duration = 3,
          })
+         return
       end
-   end,
+      
+      if JogadoresIgnorados[nomeJogador] then
+         Rayfield:Notify({
+            Title = "Lista de Exclusão",
+            Content = "Este jogador já está na lista de ignorados!",
+            Duration = 3,
+         })
+         return
+      end
+      
+      JogadoresIgnorados[nomeJogador] = true
+      Rayfield:Notify({
+         Title = "Lista de Exclusão",
+         Content = "Jogador " .. nomeJogador .. " foi ADICIONADO!",
+         Duration = 3,
+      })
+      AtualizarListaIgnorados()
+   end)
+   
+   if not ok then
+      warn("Erro ao adicionar jogador: " .. tostring(err))
+   end
+end
+
+-- Função segura para remover (com pcall)
+local function RemoverJogadorIgnorado()
+   local ok, err = pcall(function()
+      local nomeJogador = JogadorSelecionadoDropdown
+      if not nomeJogador or nomeJogador == "" or nomeJogador == "Nenhum jogador online" then
+         Rayfield:Notify({
+            Title = "Erro",
+            Content = "Selecione um jogador válido primeiro!",
+            Duration = 3,
+         })
+         return
+      end
+      
+      if not JogadoresIgnorados[nomeJogador] then
+         Rayfield:Notify({
+            Title = "Lista de Exclusão",
+            Content = "Este jogador não está na lista de ignorados!",
+            Duration = 3,
+         })
+         return
+      end
+      
+      JogadoresIgnorados[nomeJogador] = nil
+      Rayfield:Notify({
+         Title = "Lista de Exclusão",
+         Content = "Jogador " .. nomeJogador .. " foi REMOVIDO!",
+         Duration = 3,
+      })
+      AtualizarListaIgnorados()
+   end)
+   
+   if not ok then
+      warn("Erro ao remover jogador: " .. tostring(err))
+   end
+end
+
+CombatTab:CreateButton({
+   Name = "➕ Adicionar à Lista de Ignorados",
+   Callback = AdicionarJogadorIgnorado,
 })
 
 CombatTab:CreateButton({
    Name = "➖ Remover da Lista de Ignorados",
-   Callback = function()
-      local nomeJogador = JogadorSelecionadoDropdown
-      if nomeJogador and nomeJogador ~= "" and nomeJogador ~= "Nenhum jogador online" then
-         if JogadoresIgnorados[nomeJogador] then
-            JogadoresIgnorados[nomeJogador] = nil
-            Rayfield:Notify({
-               Title = "Lista de Exclusão",
-               Content = "Jogador " .. nomeJogador .. " foi REMOVIDO da lista de ignorados!",
-               Duration = 3,
-            })
-            AtualizarListaIgnorados()
-         else
-            Rayfield:Notify({
-               Title = "Lista de Exclusão",
-               Content = "Este jogador não está na lista de ignorados!",
-               Duration = 3,
-            })
-         end
-      else
-         Rayfield:Notify({
-            Title = "Erro",
-            Content = "Selecione um jogador válido primeiro!",
-            Duration = 3,
-         })
-      end
-   end,
+   Callback = RemoverJogadorIgnorado,
 })
 
 CombatTab:CreateButton({
@@ -902,7 +918,7 @@ ConfigTab:CreateButton({
 
 Rayfield:Notify({
    Title = "Eb do Delta Ativado!",
-   Content = "Aimbot com offset em PIXELS + Dropdown corrigido!",
+   Content = "FOV acima do centro (offset: -60) | Valores negativos = sobe, positivos = desce",
    Duration = 5,
    Image = 4483345998,
 })
