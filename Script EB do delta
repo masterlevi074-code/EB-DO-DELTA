@@ -46,10 +46,14 @@ local Aimbot_CorFOV = Color3.fromRGB(255, 255, 255)
 local Aimbot_Suavidade = 0.15
 local Aimbot_ParteAlvo = "Head"
 local Aimbot_TeamCheck = true
-local Aimbot_OffsetY = -2 -- NOVO: Offset vertical para compensar mira não centralizada
+-- NOVO: Offset na TELA (em pixels) - move o ponto de mira para baixo na tela
+local Aimbot_OffsetTelaY = 120 -- Pixels para baixo do centro da tela (ajustável)
 
 -- Lista de jogadores ignorados manualmente
 local JogadoresIgnorados = {}
+
+-- Variável global para armazenar a seleção do dropdown
+local JogadorSelecionadoDropdown = ""
 
 -- Círculo do FOV (Desenho Nativo)
 local FOVCircle = Drawing.new("Circle")
@@ -186,14 +190,15 @@ local function AplicarCorESP(novaCor)
 end
 
 -- ==========================================
--- FUNÇÃO: OBTER JOGADOR MAIS PRÓXIMO DA MIRA
+-- FUNÇÃO: OBTER JOGADOR MAIS PRÓXIMO DA MIRA (COM OFFSET NA TELA)
 -- ==========================================
 local function ObterJogadorMaisProximoDaMira()
     local alvoMaisProximo = nil
     local menorDistancia = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
-    local centroTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y / 2)
+    -- Ponto de referência na tela (centro + offset para baixo)
+    local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
 
     local meuTime = nil
     if Aimbot_TeamCheck and localPlayer.Character then
@@ -222,35 +227,23 @@ local function ObterJogadorMaisProximoDaMira()
             end
 
             if parteBuscada then
-                -- APLICAR OFFSET VERTICAL PARA COMPENSAR MIRA NÃO CENTRALIZADA
-                local posicaoAlvo = parteBuscada.Position + Vector3.new(0, Aimbot_OffsetY, 0)
-                local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo)
+                local posicaoTela, visivel = camera:WorldToViewportPoint(parteBuscada.Position)
                 
                 if visivel then
                     local cameraPos = camera.CFrame.Position
-                    local direcaoRaio = (posicaoAlvo - cameraPos)
+                    local posicaoMouseObjeto = Vector2.new(posicaoTela.X, posicaoTela.Y)
+                    -- Distância do jogador até o PONTO DE MIRA (não centro da tela)
+                    local distanciaDaMira = (posicaoMouseObjeto - pontoMiraTela).Magnitude
                     
-                    local parametrosRay = RaycastParams.new()
-                    parametrosRay.FilterType = Enum.RaycastFilterType.Exclude
-                    parametrosRay.FilterDescendantsInstances = {localPlayer.Character, p.Character}
-                    parametrosRay.IgnoreWater = true
-
-                    local resultadoRay = Workspace:Raycast(cameraPos, direcaoRaio, parametrosRay)
-                    
-                    if not resultadoRay then
-                        local posicaoMouseObjeto = Vector2.new(posicaoTela.X, posicaoTela.Y)
-                        local distanciaDaMira = (posicaoMouseObjeto - centroTela).Magnitude
-                        
-                        if Aimbot_UsarFOV then
-                            if distanciaDaMira <= Aimbot_RaioFOV and distanciaDaMira < menorDistancia then
-                                menorDistancia = distanciaDaMira
-                                alvoMaisProximo = p
-                            end
-                        else
-                            if distanciaDaMira < menorDistancia then
-                                menorDistancia = distanciaDaMira
-                                alvoMaisProximo = p
-                            end
+                    if Aimbot_UsarFOV then
+                        if distanciaDaMira <= Aimbot_RaioFOV and distanciaDaMira < menorDistancia then
+                            menorDistancia = distanciaDaMira
+                            alvoMaisProximo = p
+                        end
+                    else
+                        if distanciaDaMira < menorDistancia then
+                            menorDistancia = distanciaDaMira
+                            alvoMaisProximo = p
                         end
                     end
                 end
@@ -267,14 +260,14 @@ RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     
-    -- Atualizar posição do círculo FOV
+    -- Atualizar posição do círculo FOV (centralizado no ponto de mira)
     if Aimbot_UsarFOV and FOVCircle then
-        FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y / 2)
+        FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
         FOVCircle.Radius = Aimbot_RaioFOV
         FOVCircle.Thickness = Aimbot_EspessuraFOV
     end
 
-    -- EXECUÇÃO DO AIMBOT (COM OFFSET CORRIGIDO)
+    -- EXECUÇÃO DO AIMBOT
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
@@ -286,8 +279,8 @@ RunService.RenderStepped:Connect(function()
             end
 
             if parteRastrear then
-                -- Aplica o offset vertical para mirar um pouco abaixo
-                local alvoPos = parteRastrear.Position + Vector3.new(0, Aimbot_OffsetY, 0)
+                -- A câmera mira na parte do corpo (o offset já foi considerado na detecção)
+                local alvoPos = parteRastrear.Position
                 local camCFrame = camera.CFrame
                 local cframeAlvoOriginal = CFrame.new(camCFrame.Position, alvoPos)
                 camera.CFrame = camCFrame:Lerp(cframeAlvoOriginal, Aimbot_Suavidade)
@@ -550,18 +543,18 @@ CombatTab:CreateInput({
    end,
 })
 
--- NOVO: Input para ajustar o offset vertical da mira
+-- CORRIGIDO: Offset em PIXELS na tela (muito mais preciso e não quebra)
 CombatTab:CreateInput({
-   Name = "Offset Vertical da Mira (ex: -2, -3, 0)",
-   PlaceholderText = "Padrão: -2 (mira um pouco abaixo)",
+   Name = "Offset Y da Mira (pixels, ex: 100, 150, 200)",
+   PlaceholderText = "Padrão: 120 pixels abaixo do centro",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
       if num then
-         Aimbot_OffsetY = num
+         Aimbot_OffsetTelaY = num
          Rayfield:Notify({
             Title = "Aimbot",
-            Content = "Offset vertical ajustado para: " .. num .. " studs",
+            Content = "Offset da mira ajustado para: " .. num .. " pixels abaixo do centro",
             Duration = 2,
          })
       end
@@ -599,23 +592,24 @@ CombatTab:CreateButton({
 -- ==========================================
 local ExclusaoSection = CombatTab:CreateSection("Lista de Exclusão (Ignorar Jogadores)")
 
--- Usando CreateDropdown com a lista já populada
+-- Dropdown CORRIGIDO - Usando variável global JogadorSelecionadoDropdown
 local dropdownIgnorar = CombatTab:CreateDropdown({
    Name = "Selecionar Jogador para Ignorar",
    Options = ObterListaJogadores(),
    CurrentOption = "",
    Flag = "DropdownIgnorar",
    Callback = function(Option)
-      -- Apenas armazena a seleção
+      -- Salva a seleção na variável global
+      JogadorSelecionadoDropdown = Option
    end,
 })
 
 CombatTab:CreateButton({
    Name = "➕ Adicionar à Lista de Ignorados",
    Callback = function()
-      local flag = Rayfield.Flags["DropdownIgnorar"]
-      if flag and flag.Value and flag.Value ~= "" and flag.Value ~= "Nenhum jogador online" then
-         local nomeJogador = flag.Value
+      -- Usa a variável global em vez de Rayfield.Flags
+      local nomeJogador = JogadorSelecionadoDropdown
+      if nomeJogador and nomeJogador ~= "" and nomeJogador ~= "Nenhum jogador online" then
          if not JogadoresIgnorados[nomeJogador] then
             JogadoresIgnorados[nomeJogador] = true
             Rayfield:Notify({
@@ -644,9 +638,8 @@ CombatTab:CreateButton({
 CombatTab:CreateButton({
    Name = "➖ Remover da Lista de Ignorados",
    Callback = function()
-      local flag = Rayfield.Flags["DropdownIgnorar"]
-      if flag and flag.Value and flag.Value ~= "" and flag.Value ~= "Nenhum jogador online" then
-         local nomeJogador = flag.Value
+      local nomeJogador = JogadorSelecionadoDropdown
+      if nomeJogador and nomeJogador ~= "" and nomeJogador ~= "Nenhum jogador online" then
          if JogadoresIgnorados[nomeJogador] then
             JogadoresIgnorados[nomeJogador] = nil
             Rayfield:Notify({
@@ -677,6 +670,7 @@ CombatTab:CreateButton({
    Callback = function()
       local novaLista = ObterListaJogadores()
       dropdownIgnorar:Refresh(novaLista, true)
+      JogadorSelecionadoDropdown = ""
       Rayfield:Notify({
          Title = "Dropdown",
          Content = "Lista de jogadores atualizada!",
@@ -691,7 +685,7 @@ CombatTab:CreateButton({
       JogadoresIgnorados = {}
       Rayfield:Notify({
          Title = "Lista de Exclusão",
-         Content = "Lista de ignorados foi LIMPA! Todos os jogadores agora são alvos.",
+         Content = "Lista de ignorados foi LIMPA!",
          Duration = 3,
       })
       AtualizarListaIgnorados()
@@ -908,7 +902,7 @@ ConfigTab:CreateButton({
 
 Rayfield:Notify({
    Title = "Eb do Delta Ativado!",
-   Content = "Aimbot com offset ajustável + ESP completo! Use 'Atualizar Lista' para carregar jogadores.",
+   Content = "Aimbot com offset em PIXELS + Dropdown corrigido!",
    Duration = 5,
    Image = 4483345998,
 })
