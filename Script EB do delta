@@ -41,6 +41,9 @@ local Aimbot_PrioridadeDistancia = true
 
 local JogadoresIgnorados = {}
 
+-- VARIÁVEL LOCAL PARA O DROPDOWN (será atualizada pelo callback)
+local DropdownSelecionado = ""
+
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = false
 FOVCircle.Color = Aimbot_CorFOV
@@ -49,7 +52,7 @@ FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
 -- ==========================================
--- FUNÇÕES ESP (mantidas iguais)
+-- FUNÇÕES ESP
 -- ==========================================
 local function AtualizarESP()
     for _, p in pairs(Players:GetPlayers()) do
@@ -295,25 +298,6 @@ local function ObterListaJogadores()
 end
 
 -- ==========================================
--- FUNÇÃO AUXILIAR PARA EXTRAIR STRING DE QUALQUER TIPO
--- ==========================================
-local function ExtrairString(valor)
-    if type(valor) == "string" then
-        return valor
-    elseif type(valor) == "table" then
-        -- Tenta pegar Value, CurrentOption, ou o primeiro elemento
-        if valor.Value and type(valor.Value) == "string" then return valor.Value end
-        if valor.CurrentOption and type(valor.CurrentOption) == "string" then return valor.CurrentOption end
-        for _, v in pairs(valor) do
-            if type(v) == "string" and v ~= "" and v ~= "Nenhum jogador online" then
-                return v
-            end
-        end
-    end
-    return ""
-end
-
--- ==========================================
 -- RAYFIELD
 -- ==========================================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -346,7 +330,7 @@ CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
--- LISTA DE EXCLUSÃO (CORRIGIDA - trata tabela/string)
+-- LISTA DE EXCLUSÃO (USANDO CALLBACK PARA ATUALIZAR VARIÁVEL)
 CombatTab:CreateSection("Lista de Exclusão")
 
 local dropdownIgnorar = CombatTab:CreateDropdown({
@@ -355,27 +339,45 @@ local dropdownIgnorar = CombatTab:CreateDropdown({
    CurrentOption = "",
    Flag = "DropdownIgnorar",
    Callback = function(Option)
-      -- Não precisa fazer nada, o valor fica no Rayfield.Flags
+      -- O callback recebe o valor selecionado
+      if type(Option) == "string" then
+         DropdownSelecionado = Option
+      elseif type(Option) == "table" then
+         -- Tenta extrair como string
+         local val = Option.Value or Option.CurrentOption or Option[1] or ""
+         if type(val) == "string" then
+            DropdownSelecionado = val
+         end
+      end
+      print("[DROPDOWN] Selecionado: " .. tostring(DropdownSelecionado))
    end,
 })
 
 CombatTab:CreateButton({
    Name = "➕ Adicionar à Lista",
    Callback = function()
-      local nome = ""
+      print("[DEBUG] DropdownSelecionado = " .. tostring(DropdownSelecionado))
       
-      -- Pega o valor do flag do Rayfield
-      if Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
-         local flagValue = Rayfield.Flags["DropdownIgnorar"]
-         nome = ExtrairString(flagValue)
-      end
-      
-      if nome ~= "" and nome ~= "Nenhum jogador online" then
-         JogadoresIgnorados[nome] = true
+      if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+         JogadoresIgnorados[DropdownSelecionado] = true
          AtualizarListaIgnorados()
-         Rayfield:Notify({Title = "OK", Content = nome .. " adicionado!", Duration = 2})
+         Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " adicionado!", Duration = 2})
       else
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador primeiro!", Duration = 2})
+         -- Fallback: tenta pegar do Rayfield.Flags
+         local flag = Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"]
+         if flag then
+            local nome = flag
+            if type(flag) == "table" then
+               nome = flag.Value or flag.CurrentOption or ""
+            end
+            if type(nome) == "string" and nome ~= "" and nome ~= "Nenhum jogador online" then
+               JogadoresIgnorados[nome] = true
+               AtualizarListaIgnorados()
+               Rayfield:Notify({Title = "OK", Content = nome .. " adicionado!", Duration = 2})
+               return
+            end
+         end
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador no dropdown primeiro!", Duration = 3})
       end
    end,
 })
@@ -383,19 +385,23 @@ CombatTab:CreateButton({
 CombatTab:CreateButton({
    Name = "➖ Remover da Lista",
    Callback = function()
-      local nome = ""
-      
-      if Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"] then
-         local flagValue = Rayfield.Flags["DropdownIgnorar"]
-         nome = ExtrairString(flagValue)
-      end
-      
-      if nome ~= "" and nome ~= "Nenhum jogador online" then
-         JogadoresIgnorados[nome] = nil
+      if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+         JogadoresIgnorados[DropdownSelecionado] = nil
          AtualizarListaIgnorados()
-         Rayfield:Notify({Title = "OK", Content = nome .. " removido!", Duration = 2})
+         Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " removido!", Duration = 2})
       else
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador primeiro!", Duration = 2})
+         local flag = Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"]
+         if flag then
+            local nome = flag
+            if type(flag) == "table" then nome = flag.Value or flag.CurrentOption or "" end
+            if type(nome) == "string" and nome ~= "" and nome ~= "Nenhum jogador online" then
+               JogadoresIgnorados[nome] = nil
+               AtualizarListaIgnorados()
+               Rayfield:Notify({Title = "OK", Content = nome .. " removido!", Duration = 2})
+               return
+            end
+         end
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador no dropdown primeiro!", Duration = 3})
       end
    end,
 })
@@ -403,7 +409,9 @@ CombatTab:CreateButton({
 CombatTab:CreateButton({
    Name = "🔄 Atualizar Lista",
    Callback = function()
+      DropdownSelecionado = ""
       dropdownIgnorar:Refresh(ObterListaJogadores(), true)
+      Rayfield:Notify({Title = "OK", Content = "Lista atualizada!", Duration = 2})
    end,
 })
 
@@ -412,6 +420,7 @@ CombatTab:CreateButton({
    Callback = function()
       JogadoresIgnorados = {}
       AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = "Lista limpa!", Duration = 2})
    end,
 })
 
@@ -456,4 +465,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Lista de exclusão CORRIGIDA! Selecione um jogador e clique em Adicionar.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Selecione um jogador no dropdown e clique em Adicionar. Verifique F9 para debug.", Duration = 5, Image = 4483345998})
