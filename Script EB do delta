@@ -46,10 +46,10 @@ local Aimbot_CorFOV = Color3.fromRGB(255, 255, 255)
 local Aimbot_Suavidade = 0.15
 local Aimbot_ParteAlvo = "Head"
 local Aimbot_TeamCheck = true
--- Offset na TELA para o círculo FOV
+-- Offset na TELA para o círculo FOV (negativo = acima do centro)
 local Aimbot_OffsetTelaY = -40
--- Offset 3D em STUDS para onde a câmera vai mirar (acima do alvo)
-local Aimbot_Offset3D_Y = 2.5 -- Studs acima da parte do corpo alvo
+-- Offset 3D: NEGATIVO = mira mais BAIXO que o alvo (compensa mira alta do jogo)
+local Aimbot_Offset3D_Y = -2.0 -- Studs ABAIXO da parte do corpo alvo
 
 -- Lista de jogadores ignorados manualmente
 local JogadoresIgnorados = {}
@@ -199,7 +199,7 @@ local function ObterJogadorMaisProximoDaMira()
     local menorDistancia = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
-    -- Ponto de referência na tela para o FOV
+    -- Ponto de referência na tela para o FOV (acima do centro)
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
 
     local meuTime = nil
@@ -229,7 +229,7 @@ local function ObterJogadorMaisProximoDaMira()
             end
 
             if parteBuscada then
-                -- Para detecção, usar a posição 3D com offset (mirar acima)
+                -- Detecção: usar posição com offset 3D negativo (mais baixo)
                 local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, Aimbot_Offset3D_Y, 0)
                 local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
                 
@@ -262,14 +262,14 @@ RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     
-    -- Círculo FOV na posição da mira visual do jogo
+    -- Círculo FOV na posição da mira visual do jogo (acima do centro)
     if Aimbot_UsarFOV and FOVCircle then
         FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
         FOVCircle.Radius = Aimbot_RaioFOV
         FOVCircle.Thickness = Aimbot_EspessuraFOV
     end
 
-    -- EXECUÇÃO DO AIMBOT - Mira em um ponto ACIMA do alvo para compensar
+    -- EXECUÇÃO DO AIMBOT - Mira ABAIXO do alvo para compensar mira alta do jogo
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
@@ -281,7 +281,7 @@ RunService.RenderStepped:Connect(function()
             end
 
             if parteRastrear then
-                -- MIRA EM UM PONTO ACIMA DO ALVO (offset 3D positivo = acima)
+                -- CÂMERA MIRA ABAIXO DO ALVO (offset negativo = para baixo)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, Aimbot_Offset3D_Y, 0)
                 local camCFrame = camera.CFrame
                 local cframeAlvoOriginal = CFrame.new(camCFrame.Position, alvoPos)
@@ -432,11 +432,7 @@ MainTab:CreateToggle({
    CurrentValue = false,
    Flag = "DashToggle",
    Callback = function(Value)
-      if Value then
-         CriarBotaoDash()
-      else
-         RemoverBotaoDash()
-      end
+      if Value then CriarBotaoDash() else RemoverBotaoDash() end
    end,
 })
 
@@ -448,17 +444,7 @@ MainTab:CreateInput({
       local numero = tonumber(Text)
       if numero then
          dashStuds = numero
-         Rayfield:Notify({
-            Title = "Configuração Salva",
-            Content = "Distância do dash atualizada para: " .. numero .. " studs.",
-            Duration = 3,
-         })
-      else
-         Rayfield:Notify({
-            Title = "Erro de Entrada",
-            Content = "Por favor, digite apenas números!",
-            Duration = 3,
-         })
+         Rayfield:Notify({Title = "Configuração Salva", Content = "Distância: " .. numero .. " studs.", Duration = 3})
       end
    end,
 })
@@ -466,9 +452,7 @@ MainTab:CreateInput({
 MainTab:CreateButton({
    Name = "Resetar Personagem",
    Callback = function()
-      if localPlayer.Character then
-         localPlayer.Character:BreakJoints()
-      end
+      if localPlayer.Character then localPlayer.Character:BreakJoints() end
    end,
 })
 
@@ -483,28 +467,21 @@ CombatTab:CreateToggle({
    Name = "Ativar Aimbot (Lock-On)",
    CurrentValue = false,
    Flag = "AimbotToggle",
-   Callback = function(Value)
-      Aimbot_Ativado = Value
-   end,
+   Callback = function(Value) Aimbot_Ativado = Value end,
 })
 
 CombatTab:CreateToggle({
    Name = "Mostrar Círculo FOV",
    CurrentValue = true,
    Flag = "FOVToggle",
-   Callback = function(Value)
-      Aimbot_UsarFOV = Value
-      FOVCircle.Visible = Value
-   end,
+   Callback = function(Value) Aimbot_UsarFOV = Value; FOVCircle.Visible = Value end,
 })
 
 CombatTab:CreateToggle({
    Name = "Team Check (Ignorar Aliados)",
    CurrentValue = true,
    Flag = "TeamCheckToggle",
-   Callback = function(Value)
-      Aimbot_TeamCheck = Value
-   end,
+   Callback = function(Value) Aimbot_TeamCheck = Value end,
 })
 
 CombatTab:CreateInput({
@@ -513,10 +490,7 @@ CombatTab:CreateInput({
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
-      if num then
-         Aimbot_RaioFOV = num
-         FOVCircle.Radius = num
-      end
+      if num then Aimbot_RaioFOV = num; FOVCircle.Radius = num end
    end,
 })
 
@@ -526,9 +500,7 @@ CombatTab:CreateInput({
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
-      if num then
-         Aimbot_Suavidade = math.clamp(num, 0.01, 1)
-      end
+      if num then Aimbot_Suavidade = math.clamp(num, 0.01, 1) end
    end,
 })
 
@@ -538,10 +510,7 @@ CombatTab:CreateInput({
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
-      if num then
-         Aimbot_EspessuraFOV = num
-         FOVCircle.Thickness = num
-      end
+      if num then Aimbot_EspessuraFOV = num; FOVCircle.Thickness = num end
    end,
 })
 
@@ -554,29 +523,22 @@ CombatTab:CreateInput({
       local num = tonumber(Text)
       if num then
          Aimbot_OffsetTelaY = num
-         Rayfield:Notify({
-            Title = "FOV",
-            Content = "FOV ajustado para: " .. num .. " pixels",
-            Duration = 2,
-         })
+         Rayfield:Notify({Title = "FOV", Content = "FOV: " .. num .. " pixels", Duration = 2})
       end
    end,
 })
 
--- Offset 3D (para onde a câmera realmente mira) - ESSE É O IMPORTANTE!
+-- Offset 3D NEGATIVO para mirar mais BAIXO
 CombatTab:CreateInput({
-   Name = "Offset 3D da Mira (studs acima, ex: 1.5, 2.0, 2.5)",
-   PlaceholderText = "Padrão: 2.5 studs acima do alvo",
+   Name = "Offset 3D (negativo=mais baixo, ex: -1.5, -2.0, -2.5)",
+   PlaceholderText = "Padrão: -2.0 studs abaixo do alvo",
    RemoveTextAfterFocusLost = false,
    Callback = function(Text)
       local num = tonumber(Text)
       if num then
          Aimbot_Offset3D_Y = num
-         Rayfield:Notify({
-            Title = "Aimbot 3D",
-            Content = "Câmera agora mira " .. num .. " studs ACIMA do alvo!",
-            Duration = 2,
-         })
+         local direcao = num < 0 and "ABAIXO" or "ACIMA"
+         Rayfield:Notify({Title = "Aimbot 3D", Content = "Câmera mira " .. math.abs(num) .. " studs " .. direcao .. " do alvo!", Duration = 2})
       end
    end,
 })
@@ -587,11 +549,7 @@ CombatTab:CreateButton({
    Name = "Mirar na CABEÇA",
    Callback = function()
       Aimbot_ParteAlvo = "Head"
-      Rayfield:Notify({
-         Title = "Aimbot",
-         Content = "Alvo alterado para: CABEÇA",
-         Duration = 2,
-      })
+      Rayfield:Notify({Title = "Aimbot", Content = "Alvo: CABEÇA", Duration = 2})
    end,
 })
 
@@ -599,11 +557,7 @@ CombatTab:CreateButton({
    Name = "Mirar no TRONCO",
    Callback = function()
       Aimbot_ParteAlvo = "Torso"
-      Rayfield:Notify({
-         Title = "Aimbot",
-         Content = "Alvo alterado para: TRONCO",
-         Duration = 2,
-      })
+      Rayfield:Notify({Title = "Aimbot", Content = "Alvo: TRONCO", Duration = 2})
    end,
 })
 
@@ -617,177 +571,98 @@ local dropdownIgnorar = CombatTab:CreateDropdown({
    Options = ObterListaJogadores(),
    CurrentOption = "",
    Flag = "DropdownIgnorar",
-   Callback = function(Option)
-      JogadorSelecionadoDropdown = Option or ""
-   end,
+   Callback = function(Option) JogadorSelecionadoDropdown = Option or "" end,
 })
 
 local function AdicionarJogadorIgnorado()
-   local ok, err = pcall(function()
-      local nomeJogador = JogadorSelecionadoDropdown
-      if not nomeJogador or nomeJogador == "" or nomeJogador == "Nenhum jogador online" then
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador válido primeiro!", Duration = 3})
+   pcall(function()
+      local nome = JogadorSelecionadoDropdown
+      if not nome or nome == "" or nome == "Nenhum jogador online" then
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3})
          return
       end
-      if JogadoresIgnorados[nomeJogador] then
-         Rayfield:Notify({Title = "Lista de Exclusão", Content = "Este jogador já está na lista!", Duration = 3})
+      if JogadoresIgnorados[nome] then
+         Rayfield:Notify({Title = "Aviso", Content = "Já está na lista!", Duration = 3})
          return
       end
-      JogadoresIgnorados[nomeJogador] = true
-      Rayfield:Notify({Title = "Lista de Exclusão", Content = "Jogador " .. nomeJogador .. " foi ADICIONADO!", Duration = 3})
+      JogadoresIgnorados[nome] = true
+      Rayfield:Notify({Title = "OK", Content = nome .. " ADICIONADO!", Duration = 3})
       AtualizarListaIgnorados()
    end)
-   if not ok then warn("Erro ao adicionar: " .. tostring(err)) end
 end
 
 local function RemoverJogadorIgnorado()
-   local ok, err = pcall(function()
-      local nomeJogador = JogadorSelecionadoDropdown
-      if not nomeJogador or nomeJogador == "" or nomeJogador == "Nenhum jogador online" then
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador válido primeiro!", Duration = 3})
+   pcall(function()
+      local nome = JogadorSelecionadoDropdown
+      if not nome or nome == "" or nome == "Nenhum jogador online" then
+         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3})
          return
       end
-      if not JogadoresIgnorados[nomeJogador] then
-         Rayfield:Notify({Title = "Lista de Exclusão", Content = "Este jogador não está na lista!", Duration = 3})
+      if not JogadoresIgnorados[nome] then
+         Rayfield:Notify({Title = "Aviso", Content = "Não está na lista!", Duration = 3})
          return
       end
-      JogadoresIgnorados[nomeJogador] = nil
-      Rayfield:Notify({Title = "Lista de Exclusão", Content = "Jogador " .. nomeJogador .. " foi REMOVIDO!", Duration = 3})
+      JogadoresIgnorados[nome] = nil
+      Rayfield:Notify({Title = "OK", Content = nome .. " REMOVIDO!", Duration = 3})
       AtualizarListaIgnorados()
    end)
-   if not ok then warn("Erro ao remover: " .. tostring(err)) end
 end
 
-CombatTab:CreateButton({
-   Name = "➕ Adicionar à Lista de Ignorados",
-   Callback = AdicionarJogadorIgnorado,
-})
+CombatTab:CreateButton({Name = "➕ Adicionar à Lista", Callback = AdicionarJogadorIgnorado})
+CombatTab:CreateButton({Name = "➖ Remover da Lista", Callback = RemoverJogadorIgnorado})
 
 CombatTab:CreateButton({
-   Name = "➖ Remover da Lista de Ignorados",
-   Callback = RemoverJogadorIgnorado,
-})
-
-CombatTab:CreateButton({
-   Name = "🔄 Atualizar Lista de Jogadores",
+   Name = "🔄 Atualizar Lista",
    Callback = function()
-      local novaLista = ObterListaJogadores()
-      dropdownIgnorar:Refresh(novaLista, true)
+      dropdownIgnorar:Refresh(ObterListaJogadores(), true)
       JogadorSelecionadoDropdown = ""
-      Rayfield:Notify({Title = "Dropdown", Content = "Lista atualizada!", Duration = 2})
+      Rayfield:Notify({Title = "OK", Content = "Lista atualizada!", Duration = 2})
    end,
 })
 
 CombatTab:CreateButton({
-   Name = "🗑️ Limpar Lista de Ignorados (Todos)",
+   Name = "🗑️ Limpar Tudo",
    Callback = function()
       JogadoresIgnorados = {}
-      Rayfield:Notify({Title = "Lista de Exclusão", Content = "Lista limpa!", Duration = 3})
       AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = "Lista limpa!", Duration = 3})
    end,
 })
 
-local ListaIgnoradosLabel = CombatTab:CreateParagraph({
-   Title = "Jogadores Ignorados Atualmente",
-   Content = "Nenhum jogador na lista"
-})
+local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 
 function AtualizarListaIgnorados()
    local lista = {}
-   for nome, _ in pairs(JogadoresIgnorados) do
-      table.insert(lista, "• " .. nome)
-   end
+   for nome, _ in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
    if #lista == 0 then
-      ListaIgnoradosLabel:Set({Title = "Jogadores Ignorados Atualmente", Content = "Nenhum jogador na lista"})
+      ListaIgnoradosLabel:Set({Title = "Ignorados", Content = "Nenhum"})
    else
-      ListaIgnoradosLabel:Set({Title = "Jogadores Ignorados Atualmente (" .. #lista .. " jogadores)", Content = table.concat(lista, "\n")})
+      ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = table.concat(lista, "\n")})
    end
 end
 
 -- ==========================================
--- ABA: VISUAIS (COM ESP COMPLETO)
+-- ABA: VISUAIS
 -- ==========================================
 local VisualTab = Window:CreateTab("👁️ Visuais", 4483345998)
 
-local ESPSection = VisualTab:CreateSection("Sistema ESP (Rastreamento)")
+VisualTab:CreateSection("Sistema ESP")
 
-VisualTab:CreateToggle({
-   Name = "Ativar ESP Completo",
-   CurrentValue = false,
-   Flag = "ESP_Completo",
-   Callback = function(Value)
-      ESP_Chams = Value; ESP_Box = Value; ESP_Names = Value; ESP_Tracers = Value
-      AtualizarESP()
-   end,
-})
+VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Flag = "ESP_Completo", Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Flag = "ESP_Box", Callback = function(v) ESP_Box=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Flag = "ESP_Names", Callback = function(v) ESP_Names=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Flag = "ESP_Chams", Callback = function(v) ESP_Chams=v; AtualizarESP() end})
+VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Flag = "ESP_Tracers", Callback = function(v) ESP_Tracers=v end})
+VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Flag = "ESP_Vida", Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 
-VisualTab:CreateToggle({
-   Name = "ESP Box (Caixas)",
-   CurrentValue = false,
-   Flag = "ESP_Box",
-   Callback = function(Value) ESP_Box = Value; AtualizarESP() end,
-})
-
-VisualTab:CreateToggle({
-   Name = "ESP Names (Nomes)",
-   CurrentValue = false,
-   Flag = "ESP_Names",
-   Callback = function(Value) ESP_Names = Value; AtualizarESP() end,
-})
-
-VisualTab:CreateToggle({
-   Name = "ESP Chams (Silhuetas)",
-   CurrentValue = false,
-   Flag = "ESP_Chams",
-   Callback = function(Value) ESP_Chams = Value; AtualizarESP() end,
-})
-
-VisualTab:CreateToggle({
-   Name = "ESP Tracers (Linhas)",
-   CurrentValue = false,
-   Flag = "ESP_Tracers",
-   Callback = function(Value) ESP_Tracers = Value end,
-})
-
-VisualTab:CreateToggle({
-   Name = "ESP Vida (Mostrar HP)",
-   CurrentValue = false,
-   Flag = "ESP_Vida",
-   Callback = function(Value) ESP_Vida = Value; AtualizarESP() end,
-})
-
-local ESPColorSection = VisualTab:CreateSection("Cores do ESP")
-
-local cores = {
-   {"🔴 Vermelho Neon", Color3.fromRGB(255, 50, 50)},
-   {"🔵 Azul Elétrico", Color3.fromRGB(50, 150, 255)},
-   {"🟢 Verde Tóxico", Color3.fromRGB(50, 255, 100)},
-   {"🟡 Amarelo Ouro", Color3.fromRGB(255, 220, 50)},
-   {"🟣 Roxo Místico", Color3.fromRGB(170, 0, 255)},
-   {"🩵 Ciano Hacker", Color3.fromRGB(0, 255, 255)},
-   {"⚪ Branco Puro", Color3.fromRGB(255, 255, 255)},
-   {"💗 Rosa Choque", Color3.fromRGB(255, 0, 180)},
-}
-
-for _, cor in ipairs(cores) do
-   VisualTab:CreateButton({
-      Name = cor[1],
-      Callback = function()
-         AplicarCorESP(cor[2])
-         Rayfield:Notify({Title = "ESP", Content = "Cor: " .. cor[1], Duration = 2})
-      end,
-   })
+VisualTab:CreateSection("Cores ESP")
+local cores = {{"🔴 Vermelho", Color3.fromRGB(255,50,50)}, {"🔵 Azul", Color3.fromRGB(50,150,255)}, {"🟢 Verde", Color3.fromRGB(50,255,100)}, {"🟡 Amarelo", Color3.fromRGB(255,220,50)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
+for _, c in ipairs(cores) do
+   VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end})
 end
 
-local LuzSection = VisualTab:CreateSection("Iluminação")
-
-VisualTab:CreateButton({
-   Name = "Ativar Fullbright (Luz)",
-   Callback = function()
-      Lighting.Brightness = 2; Lighting.ClockTime = 14
-      Lighting.GlobalShadows = false; Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-   end,
-})
+VisualTab:CreateSection("Luz")
+VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
 -- ==========================================
 -- ABA: CONFIGURAÇÕES
@@ -795,21 +670,19 @@ VisualTab:CreateButton({
 local ConfigTab = Window:CreateTab("⚙️ Configs", 4483345998)
 
 ConfigTab:CreateButton({
-   Name = "Destruir Interface (Fechar Tudo)",
+   Name = "Destruir Tudo",
    Callback = function()
       RemoverBotaoDash()
       if FOVCircle then FOVCircle:Destroy() end
       Aimbot_Ativado = false
-      ESP_Chams = false; ESP_Box = false; ESP_Names = false; ESP_Tracers = false
-      JogadoresIgnorados = {}
-      for p, tracer in pairs(LinhasTracers) do if tracer then tracer:Destroy() end end
+      for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
       LinhasTracers = {}
       for _, plr in pairs(Players:GetPlayers()) do
          if plr.Character then
-            local esp = plr.Character:FindFirstChild("NoahzinESP") if esp then esp:Destroy() end
-            local box = plr.Character:FindFirstChild("NoahzinBox") if box then box:Destroy() end
-            local head = plr.Character:FindFirstChild("Head")
-            if head and head:FindFirstChild("NoahzinName") then head.NoahzinName:Destroy() end
+            local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
+            local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
+            local h = plr.Character:FindFirstChild("Head")
+            if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
          end
       end
       Rayfield:Destroy()
@@ -817,8 +690,8 @@ ConfigTab:CreateButton({
 })
 
 Rayfield:Notify({
-   Title = "Eb do Delta Ativado!",
-   Content = "Aimbot com offset 3D! Ajuste 'Offset 3D da Mira' para alinhar a camera com a mira do jogo.",
+   Title = "Eb do Delta",
+   Content = "Offset 3D NEGATIVO (-2.0) = mira mais BAIXO. Ajuste conforme necessário!",
    Duration = 5,
    Image = 4483345998,
 })
