@@ -8,7 +8,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 if CoreGui:FindFirstChild("Rayfield") then CoreGui.Rayfield:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("Rayfield") then localPlayer.PlayerGui.Rayfield:Destroy() end
@@ -47,9 +46,9 @@ local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
 
--- AUTO JJ (VIA REMOTEEVENT - MUITO MAIS RÁPIDO!)
+-- AUTO JJ
 local AutoJJ_Ativado = false
-local VelocidadeJJ = 0.001 -- Tempo entre disparos
+local VelocidadeJJ = 0.001
 local JJ_Disparos = 0
 
 local JogadoresIgnorados = {}
@@ -184,9 +183,7 @@ local function ObterJogadorMaisProximoDaMira()
             local parteBuscada = Aimbot_ParteAlvo
             if parteBuscada == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            else
-                parteBuscada = p.Character:FindFirstChild("Head")
-            end
+            else parteBuscada = p.Character:FindFirstChild("Head") end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
@@ -197,10 +194,7 @@ local function ObterJogadorMaisProximoDaMira()
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
                     if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
                         local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
-                        if pontuacao < melhorPontuacao then
-                            melhorPontuacao = pontuacao
-                            melhorAlvo = p
-                        end
+                        if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
                     end
                 end
             end
@@ -210,24 +204,48 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - VIA REMOTEEVENT (FUNCIONA 100%!)
+-- AUTO JJ - SIMULA TOQUE REAL NA TELA
 -- ==========================================
-local function DispararJJ()
-    pcall(function()
-        local remote = ReplicatedStorage:FindFirstChild("Remotes")
-        if remote then
-            local polichineloRemote = remote:FindFirstChild("Polichinelos")
-            if polichineloRemote then
-                polichineloRemote:FireServer()
-                JJ_Disparos = JJ_Disparos + 1
-            end
+local function EncontrarBolinha()
+    local playerGui = localPlayer:FindFirstChild("PlayerGui")
+    if not playerGui then return nil end
+    local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
+    if not screenPolichinelo then return nil end
+    for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
+        if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible then
+            local pos = elemento.AbsolutePosition
+            local tam = elemento.AbsoluteSize
+            return {X = pos.X + (tam.X / 2), Y = pos.Y + (tam.Y / 2), Elemento = elemento}
         end
-    end)
+    end
+    return nil
 end
 
 local function LoopAutoJJ()
     while AutoJJ_Ativado do
-        DispararJJ()
+        local bolinha = EncontrarBolinha()
+        if bolinha then
+            local touchBegan = {
+                Position = Vector2.new(bolinha.X, bolinha.Y),
+                UserInputType = Enum.UserInputType.Touch,
+                UserInputState = Enum.UserInputState.Begin,
+                Delta = Vector3.new(0, 0, 0),
+            }
+            local touchEnded = {
+                Position = Vector2.new(bolinha.X, bolinha.Y),
+                UserInputType = Enum.UserInputType.Touch,
+                UserInputState = Enum.UserInputState.End,
+                Delta = Vector3.new(0, 0, 0),
+            }
+            pcall(function() UserInputService.InputBegan:Fire(touchBegan) end)
+            task.wait(0.01)
+            pcall(function() UserInputService.InputEnded:Fire(touchEnded) end)
+            pcall(function() bolinha.Elemento.InputBegan:Fire(touchBegan) end)
+            task.wait(0.01)
+            pcall(function() bolinha.Elemento.InputEnded:Fire(touchEnded) end)
+            pcall(function() bolinha.Elemento.MouseButton1Click:Fire() end)
+            JJ_Disparos = JJ_Disparos + 1
+        end
         task.wait(VelocidadeJJ)
     end
 end
@@ -248,9 +266,7 @@ RunService.RenderStepped:Connect(function()
             local parteRastrear = Aimbot_ParteAlvo
             if parteRastrear == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            else
-                parteRastrear = alvo.Character:FindFirstChild("Head")
-            end
+            else parteRastrear = alvo.Character:FindFirstChild("Head") end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -354,13 +370,7 @@ MainTab:CreateButton({Name = "Resetar Personagem", Callback = function() if loca
 MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
-    if v then 
-        JJ_Disparos = 0
-        task.spawn(LoopAutoJJ)
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Disparando RemoteEvent!", Duration = 3})
-    else
-        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Disparos: " .. JJ_Disparos, Duration = 3})
-    end
+    if v then JJ_Disparos = 0; task.spawn(LoopAutoJJ) end
 end})
 MainTab:CreateInput({Name = "Velocidade (0.001 = ultra)", PlaceholderText = "0.001", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeJJ = n end end})
 MainTab:CreateButton({Name = "Ver Disparos", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Disparos: " .. JJ_Disparos, Duration = 4}) end})
@@ -385,15 +395,7 @@ CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo 
 CombatTab:CreateSection("Hitbox Expander")
 CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
     Hitbox_Ativado = v
-    if not v then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-                p.Character.HumanoidRootPart.Transparency = 1
-                p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
-                p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
-            end
-        end
+    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
     end
 end})
 CombatTab:CreateInput({Name = "Tamanho", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
@@ -446,25 +448,10 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
-   for _, p in pairs(Players:GetPlayers()) do
-      if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-         p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-         p.Character.HumanoidRootPart.Transparency = 1
-         p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
-         p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
-      end
-   end
+   for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-   LinhasTracers = {}
-   for _, plr in pairs(Players:GetPlayers()) do
-      if plr.Character then
-         local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
-         local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
-         local h = plr.Character:FindFirstChild("Head")
-         if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
-      end
-   end
+   for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ via RemoteEvent! 100% funcional!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ com Touch real! Ative na aba Principal!", Duration = 5, Image = 4483345998})
