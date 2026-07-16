@@ -51,7 +51,7 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
--- BLOCOS PARKOUR (VAKHA VKH)
+-- BLOCOS PARKOUR
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -523,9 +523,6 @@ local Window = Rayfield:CreateWindow({
 
 -- Principal
 local MainTab = Window:CreateTab("Principal", 4483362458)
-MainTab:CreateSection("Movimentacao")
-MainTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-MainTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 
 MainTab:CreateSection("Auto JJ Polichinelos")
@@ -537,13 +534,7 @@ end})
 MainTab:CreateSection("Blocos Parkour")
 MainTab:CreateToggle({Name = "Ativar Blocos", CurrentValue = false, Callback = function(v)
     BlocosAtivado = v
-    if v then
-        CreateHitboxes()
-        Rayfield:Notify({Title = "Blocos", Content = "Blocos criados!", Duration = 3})
-    else
-        RemoveHitboxes()
-        Rayfield:Notify({Title = "Blocos", Content = "Blocos removidos!", Duration = 3})
-    end
+    if v then CreateHitboxes() else RemoveHitboxes() end
 end})
 
 -- Combate
@@ -619,6 +610,45 @@ VisualTab:CreateButton({Name = "Rosa", Callback = function() AplicarCorESP(Color
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
+-- Outros
+local OutrosTab = Window:CreateTab("Outros", 4483345998)
+OutrosTab:CreateSection("Dash")
+OutrosTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
+OutrosTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+
+OutrosTab:CreateSection("Invisibilidade")
+OutrosTab:CreateToggle({Name = "Ficar Invisivel", CurrentValue = false, Callback = function(v)
+    if localPlayer.Character then
+        if v then
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    part.Transparency = 1
+                elseif part:IsA("BasePart") and part.Name == "HumanoidRootPart" then
+                    part.Transparency = 0.5
+                end
+            end
+            for _, obj in pairs(localPlayer.Character:GetChildren()) do
+                if obj:IsA("Accessory") or obj:IsA("Hat") then
+                    for _, part in pairs(obj:GetDescendants()) do
+                        if part:IsA("BasePart") then part.Transparency = 1 end
+                    end
+                end
+            end
+        else
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.Transparency = 0 end
+            end
+            for _, obj in pairs(localPlayer.Character:GetChildren()) do
+                if obj:IsA("Accessory") or obj:IsA("Hat") then
+                    for _, part in pairs(obj:GetDescendants()) do
+                        if part:IsA("BasePart") then part.Transparency = 0 end
+                    end
+                end
+            end
+        end
+    end
+end})
+
 -- Configs
 local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
@@ -634,4 +664,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Blocos Parkour adicionados! Ative na aba Principal.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Nova aba Outros com Dash e Invisibilidade!", Duration = 5})
