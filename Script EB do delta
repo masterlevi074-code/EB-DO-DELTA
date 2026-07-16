@@ -182,7 +182,6 @@ local function ObterJogadorMaisProximoDaMira()
     local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
-
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
@@ -216,23 +215,20 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - SISTEMA DE CLIQUES DIRETOS
+-- AUTO JJ - SISTEMA SEGURO DE CLIQUES
 -- ==========================================
 local function EncontrarBolinhasPolichinelo()
     local bolinhas = {}
     local playerGui = localPlayer:FindFirstChild("PlayerGui")
     if not playerGui then return bolinhas end
-    
     local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
     if not screenPolichinelo then return bolinhas end
-    
     for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
         if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible and elemento.Active then
             local pos = elemento.AbsolutePosition
             local tam = elemento.AbsoluteSize
             local centroX = pos.X + (tam.X / 2)
             local centroY = pos.Y + (tam.Y / 2)
-            
             if centroX > 0 and centroY > 0 and centroX < 2000 and centroY < 2000 then
                 local id = math.floor(centroX) .. "_" .. math.floor(centroY)
                 if not BolinhasClicadas[id] or (tick() - BolinhasClicadas[id] > 0.2) then
@@ -244,40 +240,41 @@ local function EncontrarBolinhasPolichinelo()
     return bolinhas
 end
 
-local function ClicarBolinhaDireto(x, y, id, elemento)
+local function ClicarBolinhaSeguro(x, y, id, elemento)
     pcall(function()
         if elemento and elemento:IsA("GuiButton") then
-            -- Pega TODAS as conexões do InputBegan e dispara uma a uma
-            local conexoes = getconnections(elemento.InputBegan)
-            for _, conexao in pairs(conexoes) do
-                local TouchInicio = {
-                    Position = Vector2.new(x, y),
-                    UserInputType = Enum.UserInputType.Touch,
-                    UserInputState = Enum.UserInputState.Begin,
-                }
-                conexao:Fire(TouchInicio)
+            -- Tenta getconnections com segurança
+            local ok, conexoes = pcall(function() return getconnections(elemento.InputBegan) end)
+            if ok and type(conexoes) == "table" then
+                for _, conexao in pairs(conexoes) do
+                    pcall(function()
+                        conexao:Fire({
+                            Position = Vector2.new(x, y),
+                            UserInputType = Enum.UserInputType.Touch,
+                            UserInputState = Enum.UserInputState.Begin,
+                        })
+                    end)
+                end
+                task.wait(0.003)
+                local ok2, conexoesEnd = pcall(function() return getconnections(elemento.InputEnded) end)
+                if ok2 and type(conexoesEnd) == "table" then
+                    for _, conexao in pairs(conexoesEnd) do
+                        pcall(function()
+                            conexao:Fire({
+                                Position = Vector2.new(x, y),
+                                UserInputType = Enum.UserInputType.Touch,
+                                UserInputState = Enum.UserInputState.End,
+                            })
+                        end)
+                    end
+                end
             end
-            
-            task.wait(0.005)
-            
-            -- Dispara o InputEnded
-            local conexoesEnd = getconnections(elemento.InputEnded)
-            for _, conexao in pairs(conexoesEnd) do
-                local TouchFim = {
-                    Position = Vector2.new(x, y),
-                    UserInputType = Enum.UserInputType.Touch,
-                    UserInputState = Enum.UserInputState.End,
-                }
-                conexao:Fire(TouchFim)
-            end
-            
-            -- Dispara o MouseButton1Click como garantia extra
-            pcall(function()
-                elemento.MouseButton1Click:Fire()
-            end)
+            -- Fire direto no MouseButton1Click
+            pcall(function() elemento.MouseButton1Click:Fire() end)
+            -- Fire no Activated
+            pcall(function() elemento.Activated:Fire() end)
         end
     end)
-    
     BolinhasClicadas[id] = tick()
     ClicksRealizados = ClicksRealizados + 1
 end
@@ -288,7 +285,7 @@ local function LoopAutoJJ()
         if #bolinhas > 0 then
             for _, bolinha in ipairs(bolinhas) do
                 if not AutoJJ_Ativado then break end
-                ClicarBolinhaDireto(bolinha.CentroX, bolinha.CentroY, bolinha.ID, bolinha.Elemento)
+                ClicarBolinhaSeguro(bolinha.CentroX, bolinha.CentroY, bolinha.ID, bolinha.Elemento)
                 task.wait(VelocidadeClique)
             end
         end
@@ -311,12 +308,10 @@ end)
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
-    
     if Aimbot_UsarFOV and FOVCircle then
         FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
         FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV
     end
-
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
@@ -333,7 +328,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-
     -- Hitbox
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
@@ -348,7 +342,6 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-
     -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
@@ -362,7 +355,6 @@ RunService.RenderStepped:Connect(function()
             else tracer.Visible = false end
         else if tracer then tracer.Visible = false end end
     end
-
     -- ESP Vida
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
@@ -428,14 +420,14 @@ local Window = Rayfield:CreateWindow({
 -- ==========================================
 -- ABA PRINCIPAL
 -- ==========================================
-local MainTab = Window:CreateTab("🏠 Principal", 4483362458)
+local MainTab = Window:CreateTab("Principal", 4483362458)
 
-MainTab:CreateSection("Movimentação")
-MainTab:CreateToggle({Name = "Botão de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-MainTab:CreateInput({Name = "Distância Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+MainTab:CreateSection("Movimentacao")
+MainTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
+MainTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 MainTab:CreateButton({Name = "Resetar Personagem", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 
-MainTab:CreateSection("Auto JJ (Polichinelos)")
+MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
     if v then 
@@ -447,17 +439,17 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
         Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Cliques: " .. ClicksRealizados, Duration = 3})
     end
 end})
-MainTab:CreateInput({Name = "Velocidade (segundos)", PlaceholderText = "0.01 = ultra rápido", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
-MainTab:CreateButton({Name = "📊 Ver Estatísticas", Callback = function() 
+MainTab:CreateInput({Name = "Velocidade (segundos)", PlaceholderText = "0.01 = ultra rapido", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
+MainTab:CreateButton({Name = "Ver Estatisticas", Callback = function() 
     local bolinhas = EncontrarBolinhasPolichinelo()
     Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados .. " | Bolinhas: " .. #bolinhas, Duration = 4}) 
 end})
-MainTab:CreateButton({Name = "🔄 Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasClicadas = {} end})
+MainTab:CreateButton({Name = "Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasClicadas = {} end})
 
 -- ==========================================
 -- ABA COMBATE
 -- ==========================================
-local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
+local CombatTab = Window:CreateTab("Combate", 4483345998)
 
 CombatTab:CreateSection("Aimbot")
 CombatTab:CreateToggle({Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
@@ -470,7 +462,7 @@ CombatTab:CreateInput({Name = "Suavidade", PlaceholderText = "0.15", RemoveTextA
 CombatTab:CreateInput({Name = "Offset FOV Tela", PlaceholderText = "-40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
 CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
 CombatTab:CreateSection("Alvo")
-CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
+CombatTab:CreateButton({Name = "CABECA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
 CombatTab:CreateSection("Hitbox Expander")
@@ -488,28 +480,28 @@ CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback =
     end
 end})
 CombatTab:CreateInput({Name = "Tamanho", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
-CombatTab:CreateInput({Name = "Transparência (0-1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
+CombatTab:CreateInput({Name = "Transparencia (0-1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
 CombatTab:CreateSection("Cores Hitbox")
-local coresHitbox = {{"🔴 Vermelho", Color3.fromRGB(255,30,30)}, {"🔵 Azul", Color3.fromRGB(30,100,255)}, {"🟢 Verde", Color3.fromRGB(50,255,50)}, {"🟡 Amarelo", Color3.fromRGB(255,220,0)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
+local coresHitbox = {{"Vermelho", Color3.fromRGB(255,30,30)}, {"Azul", Color3.fromRGB(30,100,255)}, {"Verde", Color3.fromRGB(50,255,50)}, {"Amarelo", Color3.fromRGB(255,220,0)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
 for _, c in ipairs(coresHitbox) do CombatTab:CreateButton({Name = c[1], Callback = function() Hitbox_Cor = c[2] end}) end
 CombatTab:CreateInput({Name = "Cor RGB (ex: 255,128,0)", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
     local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
     if r and g and b then Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255)) end
 end})
 
-CombatTab:CreateSection("Lista de Exclusão")
+CombatTab:CreateSection("Lista de Exclusao")
 local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Flag = "DropdownIgnorar", Callback = function(Option)
     if type(Option) == "string" then DropdownSelecionado = Option
     elseif type(Option) == "table" then local val = Option.Value or Option.CurrentOption or Option[1] or ""; if type(val) == "string" then DropdownSelecionado = val end end
 end})
-CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
+CombatTab:CreateButton({Name = "Adicionar", Callback = function()
    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = true; AtualizarListaIgnorados() end
 end})
-CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
+CombatTab:CreateButton({Name = "Remover", Callback = function()
    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = nil; AtualizarListaIgnorados() end
 end})
-CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function() DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true) end})
-CombatTab:CreateButton({Name = "🗑️ Limpar", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
+CombatTab:CreateButton({Name = "Atualizar", Callback = function() DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true) end})
+CombatTab:CreateButton({Name = "Limpar", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 function AtualizarListaIgnorados()
    local lista = {}; for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
@@ -517,7 +509,7 @@ function AtualizarListaIgnorados()
 end
 
 -- Visuais
-local VisualTab = Window:CreateTab("👁️ Visuais", 4483345998)
+local VisualTab = Window:CreateTab("Visuais", 4483345998)
 VisualTab:CreateSection("ESP")
 VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
@@ -526,13 +518,13 @@ VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 VisualTab:CreateSection("Cores ESP")
-local cores = {{"🔴 Vermelho", Color3.fromRGB(255,50,50)}, {"🔵 Azul", Color3.fromRGB(50,150,255)}, {"🟢 Verde", Color3.fromRGB(50,255,100)}, {"🟡 Amarelo", Color3.fromRGB(255,220,50)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
+local cores = {{"Vermelho", Color3.fromRGB(255,50,50)}, {"Azul", Color3.fromRGB(50,150,255)}, {"Verde", Color3.fromRGB(50,255,100)}, {"Amarelo", Color3.fromRGB(255,220,50)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
 for _, c in ipairs(cores) do VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end}) end
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
 -- Configs
-local ConfigTab = Window:CreateTab("⚙️ Configs", 4483345998)
+local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
    RemoverBotaoDash()
@@ -558,4 +550,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Ative e veja a mágica!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Tudo pronto!", Duration = 5, Image = 4483345998})
