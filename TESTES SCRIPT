@@ -203,7 +203,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - ABRE PAINEL EXTERNO (EXECUTA UMA VEZ)
+-- AUTO JJ - CORRIGIDO (DESTROI PELO TÍTULO "Auto jjs")
 -- ==========================================
 local function CarregarScriptJJ()
     if not AutoJJ_Script then
@@ -215,23 +215,23 @@ end
 
 local function DestruirPainelJJ()
     pcall(function()
-        -- Destroi apenas painéis que parecem ser de script (tem palavras-chave)
+        local todosGuis = {}
         for _, gui in pairs(CoreGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then
-                local nome = gui.Name:lower()
-                if nome ~= "rayfield" and nome ~= "dashbuttonscreen" and not nome:find("polichinelo") then
-                    local parecePainelScript = false
-                    for _, child in pairs(gui:GetDescendants()) do
-                        if child:IsA("TextButton") or child:IsA("TextLabel") then
-                            local texto = child.Text:lower()
-                            if texto:find("delay") or texto:find("auto") or texto:find("jj") or texto:find("click") or texto:find("start") or texto:find("stop") then
-                                parecePainelScript = true
-                                break
-                            end
-                        end
-                    end
-                    if parecePainelScript then
+            if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end
+        end
+        for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end
+        end
+        
+        for _, gui in pairs(todosGuis) do
+            local nome = gui.Name:lower()
+            if nome:find("auto") or nome:find("jj") then
+                gui:Destroy()
+            else
+                for _, child in pairs(gui:GetDescendants()) do
+                    if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then
                         gui:Destroy()
+                        break
                     end
                 end
             end
