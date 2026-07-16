@@ -50,8 +50,6 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_DelayMin = 0.1
 local AutoJJ_DelayMax = 0.3
-local AutoJJ_UltimoClique = 0
-local AutoJJ_Script = nil
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -206,30 +204,33 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - INTEGRADO AO RAYFIELD (SEM PAINEL)
+-- AUTO JJ - SCRIPT EXTERNO + ESCONDE PAINEL
 -- ==========================================
-local function CarregarScriptJJ()
-    pcall(function()
-        AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua"))
+local function EsconderPainelExterno()
+    task.spawn(function()
+        while AutoJJ_Ativado do
+            pcall(function()
+                for _, gui in pairs(CoreGui:GetChildren()) do
+                    if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
+                        gui.Enabled = false
+                    end
+                end
+                for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
+                    if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
+                        gui.Enabled = false
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end
     end)
 end
-CarregarScriptJJ()
 
-local function ExecutarAutoJJ()
-    local agora = tick()
-    if agora - AutoJJ_UltimoClique < AutoJJ_DelayMin then return end
-    if AutoJJ_Script then
-        pcall(function() AutoJJ_Script() end)
-    end
-    AutoJJ_UltimoClique = agora
-end
-
-local function LoopAutoJJ()
-    while AutoJJ_Ativado do
-        ExecutarAutoJJ()
-        local delay = AutoJJ_DelayMin + (math.random() * (AutoJJ_DelayMax - AutoJJ_DelayMin))
-        task.wait(delay)
-    end
+local function IniciarAutoJJ()
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua"))()
+    end)
+    EsconderPainelExterno()
 end
 
 -- ==========================================
@@ -353,9 +354,8 @@ MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
     if v then 
-        AutoJJ_UltimoClique = 0
-        task.spawn(LoopAutoJJ)
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO!", Duration = 3})
+        IniciarAutoJJ()
+        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Painel oculto.", Duration = 3})
     else
         Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO!", Duration = 3})
     end
@@ -447,4 +447,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ com Delay Min/Max na aba Principal!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ funcional! Painel externo oculto automaticamente.", Duration = 5})
