@@ -204,7 +204,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - SIMULA TOQUE REAL NA TELA
+-- AUTO JJ - TOUCH REAL
 -- ==========================================
 local function EncontrarBolinha()
     local playerGui = localPlayer:FindFirstChild("PlayerGui")
@@ -238,10 +238,10 @@ local function LoopAutoJJ()
                 Delta = Vector3.new(0, 0, 0),
             }
             pcall(function() UserInputService.InputBegan:Fire(touchBegan) end)
-            task.wait(0.01)
+            task.wait(0.005)
             pcall(function() UserInputService.InputEnded:Fire(touchEnded) end)
             pcall(function() bolinha.Elemento.InputBegan:Fire(touchBegan) end)
-            task.wait(0.01)
+            task.wait(0.005)
             pcall(function() bolinha.Elemento.InputEnded:Fire(touchEnded) end)
             pcall(function() bolinha.Elemento.MouseButton1Click:Fire() end)
             JJ_Disparos = JJ_Disparos + 1
@@ -351,13 +351,17 @@ local function ObterListaJogadores()
 end
 
 -- ==========================================
--- RAYFIELD
+-- RAYFIELD (COMPATIVEL COM DELTA EXECUTOR)
 -- ==========================================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Eb do Delta", LoadingTitle = "Eb do Delta", LoadingSubtitle = "Painel de Testes",
-   ConfigurationSaving = {Enabled = false}, Discord = {Enabled = false}, KeySystem = false,
+   Name = "Eb do Delta",
+   LoadingTitle = "Eb do Delta",
+   LoadingSubtitle = "Painel de Testes",
+   ConfigurationSaving = {Enabled = false},
+   Discord = {Enabled = false},
+   KeySystem = false,
 })
 
 -- Principal
@@ -372,7 +376,7 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
     AutoJJ_Ativado = v
     if v then JJ_Disparos = 0; task.spawn(LoopAutoJJ) end
 end})
-MainTab:CreateInput({Name = "Velocidade (0.001 = ultra)", PlaceholderText = "0.001", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeJJ = n end end})
+MainTab:CreateInput({Name = "Velocidade", PlaceholderText = "0.001", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeJJ = n end end})
 MainTab:CreateButton({Name = "Ver Disparos", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Disparos: " .. JJ_Disparos, Duration = 4}) end})
 MainTab:CreateButton({Name = "Resetar Contador", Callback = function() JJ_Disparos = 0 end})
 
@@ -399,17 +403,24 @@ CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback =
     end
 end})
 CombatTab:CreateInput({Name = "Tamanho", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
-CombatTab:CreateInput({Name = "Transparencia (0-1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
+CombatTab:CreateInput({Name = "Transparencia", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
+
 CombatTab:CreateSection("Cores Hitbox")
-local coresHitbox = {{"Vermelho", Color3.fromRGB(255,30,30)}, {"Azul", Color3.fromRGB(30,100,255)}, {"Verde", Color3.fromRGB(50,255,50)}, {"Amarelo", Color3.fromRGB(255,220,0)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
-for _, c in ipairs(coresHitbox) do CombatTab:CreateButton({Name = c[1], Callback = function() Hitbox_Cor = c[2] end}) end
-CombatTab:CreateInput({Name = "Cor RGB (ex: 255,128,0)", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
+CombatTab:CreateButton({Name = "Vermelho", Callback = function() Hitbox_Cor = Color3.fromRGB(255,30,30) end})
+CombatTab:CreateButton({Name = "Azul", Callback = function() Hitbox_Cor = Color3.fromRGB(30,100,255) end})
+CombatTab:CreateButton({Name = "Verde", Callback = function() Hitbox_Cor = Color3.fromRGB(50,255,50) end})
+CombatTab:CreateButton({Name = "Amarelo", Callback = function() Hitbox_Cor = Color3.fromRGB(255,220,0) end})
+CombatTab:CreateButton({Name = "Roxo", Callback = function() Hitbox_Cor = Color3.fromRGB(170,0,255) end})
+CombatTab:CreateButton({Name = "Ciano", Callback = function() Hitbox_Cor = Color3.fromRGB(0,255,255) end})
+CombatTab:CreateButton({Name = "Branco", Callback = function() Hitbox_Cor = Color3.fromRGB(255,255,255) end})
+CombatTab:CreateButton({Name = "Rosa", Callback = function() Hitbox_Cor = Color3.fromRGB(255,0,180) end})
+CombatTab:CreateInput({Name = "Cor RGB", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
     local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
     if r and g and b then Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255)) end
 end})
 
 CombatTab:CreateSection("Lista de Exclusao")
-local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Flag = "DropdownIgnorar", Callback = function(Option)
+local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Callback = function(Option)
     if type(Option) == "string" then DropdownSelecionado = Option
     elseif type(Option) == "table" then local val = Option.Value or Option.CurrentOption or Option[1] or ""; if type(val) == "string" then DropdownSelecionado = val end end
 end})
@@ -423,7 +434,7 @@ CombatTab:CreateButton({Name = "Atualizar", Callback = function() DropdownSeleci
 CombatTab:CreateButton({Name = "Limpar", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 function AtualizarListaIgnorados()
-   local lista = {}; for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
+   local lista = {}; for nome in pairs(JogadoresIgnorados) do table.insert(lista, " - " .. nome) end
    ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = #lista == 0 and "Nenhum" or table.concat(lista, "\n")})
 end
 
@@ -437,8 +448,14 @@ VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 VisualTab:CreateSection("Cores ESP")
-local cores = {{"Vermelho", Color3.fromRGB(255,50,50)}, {"Azul", Color3.fromRGB(50,150,255)}, {"Verde", Color3.fromRGB(50,255,100)}, {"Amarelo", Color3.fromRGB(255,220,50)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
-for _, c in ipairs(cores) do VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end}) end
+VisualTab:CreateButton({Name = "Vermelho", Callback = function() AplicarCorESP(Color3.fromRGB(255,50,50)) end})
+VisualTab:CreateButton({Name = "Azul", Callback = function() AplicarCorESP(Color3.fromRGB(50,150,255)) end})
+VisualTab:CreateButton({Name = "Verde", Callback = function() AplicarCorESP(Color3.fromRGB(50,255,100)) end})
+VisualTab:CreateButton({Name = "Amarelo", Callback = function() AplicarCorESP(Color3.fromRGB(255,220,50)) end})
+VisualTab:CreateButton({Name = "Roxo", Callback = function() AplicarCorESP(Color3.fromRGB(170,0,255)) end})
+VisualTab:CreateButton({Name = "Ciano", Callback = function() AplicarCorESP(Color3.fromRGB(0,255,255)) end})
+VisualTab:CreateButton({Name = "Branco", Callback = function() AplicarCorESP(Color3.fromRGB(255,255,255)) end})
+VisualTab:CreateButton({Name = "Rosa", Callback = function() AplicarCorESP(Color3.fromRGB(255,0,180)) end})
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
@@ -454,4 +471,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ com Touch real! Ative na aba Principal!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Script completo! Auto JJ na aba Principal.", Duration = 5})
