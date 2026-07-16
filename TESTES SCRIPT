@@ -632,7 +632,13 @@ OutrosTab:CreateToggle({Name = "Ficar Invisivel", CurrentValue = false, Callback
             end
         else
             for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then part.Transparency = 0 end
+                if part:IsA("BasePart") then
+                    if part.Name == "HumanoidRootPart" then
+                        part.Transparency = 1
+                    else
+                        part.Transparency = 0
+                    end
+                end
             end
             for _, obj in pairs(localPlayer.Character:GetChildren()) do
                 if obj:IsA("Accessory") or obj:IsA("Hat") then
@@ -653,25 +659,28 @@ OutrosTab:CreateToggle({Name = "Ativar God Mode", CurrentValue = false, Callback
             if v then
                 hum.MaxHealth = 9e9
                 hum.Health = 9e9
-                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
-                hum.HealthChanged:Connect(function()
+                hum.BreakJointsOnDeath = false
+                hum.RequiresNeck = false
+                local protecao
+                protecao = hum.HealthChanged:Connect(function()
                     if hum.Health < 9e9 then hum.Health = 9e9 end
                 end)
-                task.spawn(function()
-                    while v and hum and hum.Parent do
-                        pcall(function()
-                            hum.Health = 9e9
-                            hum.MaxHealth = 9e9
-                        end)
-                        task.wait(0.05)
+                local conexao
+                conexao = RunService.RenderStepped:Connect(function()
+                    if not v or not hum or not hum.Parent then
+                        if conexao then conexao:Disconnect() end
+                        return
                     end
+                    pcall(function()
+                        hum.Health = 9e9
+                        hum.MaxHealth = 9e9
+                    end)
                 end)
             else
                 hum.MaxHealth = 100
                 hum.Health = 100
-                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-                hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
+                hum.BreakJointsOnDeath = true
+                hum.RequiresNeck = true
             end
         end
     end
@@ -728,4 +737,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "God Mode REAL ativado! Dano completamente bloqueado!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "God Mode no RenderStepped + Invisivel sem bloco no tronco!", Duration = 5})
