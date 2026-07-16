@@ -204,24 +204,24 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - SCRIPT EXTERNO + ESCONDE PAINEL
+-- AUTO JJ - CORRIGIDO (ESCONDE SÓ PAINEL GRANDE)
 -- ==========================================
 local function EsconderPainelExterno()
     task.spawn(function()
         while AutoJJ_Ativado do
             pcall(function()
                 for _, gui in pairs(CoreGui:GetChildren()) do
-                    if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
-                        gui.Enabled = false
-                    end
-                end
-                for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
-                    if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
-                        gui.Enabled = false
+                    if gui:IsA("ScreenGui") then
+                        if gui.Name ~= "Rayfield" and gui.Name ~= "DashButtonScreen" then
+                            local tamanho = gui.AbsoluteSize
+                            if tamanho.X > 200 and tamanho.Y > 200 then
+                                gui.Enabled = false
+                            end
+                        end
                     end
                 end
             end)
-            task.wait(0.1)
+            task.wait(0.5)
         end
     end)
 end
@@ -355,7 +355,7 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
     AutoJJ_Ativado = v
     if v then 
         IniciarAutoJJ()
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Painel oculto.", Duration = 3})
+        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO!", Duration = 3})
     else
         Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO!", Duration = 3})
     end
@@ -447,4 +447,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ funcional! Painel externo oculto automaticamente.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ funcional! Delay Min/Max configuravel.", Duration = 5})
