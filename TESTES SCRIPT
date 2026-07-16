@@ -38,6 +38,7 @@ local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
+local Aimbot_SoComItem = false  -- NOVO: Só mirar com item equipado
 
 -- HITBOX
 local Hitbox_Ativado = false
@@ -168,7 +169,24 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
+-- NOVO: Verifica se o jogador tem item equipado
+local function TemItemEquipado()
+    if localPlayer.Character then
+        for _, child in pairs(localPlayer.Character:GetChildren()) do
+            if child:IsA("Tool") then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 local function ObterJogadorMaisProximoDaMira()
+    -- NOVO: Se a opção estiver ativada e não tiver item, não mira
+    if Aimbot_SoComItem and not TemItemEquipado() then
+        return nil
+    end
+    
     local melhorAlvo = nil
     local melhorPontuacao = math.huge
     local camera = Workspace.CurrentCamera
@@ -384,6 +402,7 @@ CombatTab:CreateToggle({Name = "Mostrar FOV", CurrentValue = false, Callback = f
 CombatTab:CreateToggle({Name = "Team Check", CurrentValue = false, Callback = function(v) Aimbot_TeamCheck = v end})
 CombatTab:CreateToggle({Name = "Wall Check", CurrentValue = false, Callback = function(v) Aimbot_WallCheck = v end})
 CombatTab:CreateToggle({Name = "Priorizar Perto", CurrentValue = false, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
+CombatTab:CreateToggle({Name = "So mirar com item", CurrentValue = false, Callback = function(v) Aimbot_SoComItem = v end})
 CombatTab:CreateInput({Name = "Raio FOV", PlaceholderText = "100", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
 CombatTab:CreateInput({Name = "Suavidade", PlaceholderText = "0.15", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
 CombatTab:CreateInput({Name = "Offset FOV Tela", PlaceholderText = "-40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
@@ -461,4 +480,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ: Ative/Desative na aba Principal.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot com opcao 'So mirar com item' adicionada!", Duration = 5})
