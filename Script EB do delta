@@ -27,21 +27,26 @@ local LinhasTracers = {}
 
 -- AIMBOT
 local Aimbot_Ativado = false
-local Aimbot_UsarFOV = true
+local Aimbot_UsarFOV = false
 local Aimbot_RaioFOV = 100
 local Aimbot_EspessuraFOV = 1.5
 local Aimbot_CorFOV = Color3.fromRGB(255, 255, 255)
 local Aimbot_Suavidade = 0.15
 local Aimbot_ParteAlvo = "Head"
-local Aimbot_TeamCheck = true
+local Aimbot_TeamCheck = false
 local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
-local Aimbot_WallCheck = true
-local Aimbot_PrioridadeDistancia = true
+local Aimbot_WallCheck = false
+local Aimbot_PrioridadeDistancia = false
+
+-- HITBOX
+local Hitbox_Ativado = false
+local Hitbox_Tamanho = 20
+local Hitbox_Transparencia = 0.7
+local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
+local Hitbox_Material = Enum.Material.Neon
 
 local JogadoresIgnorados = {}
-
--- VARIÁVEL LOCAL PARA O DROPDOWN (será atualizada pelo callback)
 local DropdownSelecionado = ""
 
 local FOVCircle = Drawing.new("Circle")
@@ -233,6 +238,24 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
+    -- HITBOX - Atualiza o tamanho/transparência/cor dos HumanoidRootParts
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= localPlayer and p.Character then
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if hum and root and hum.Health > 0 then
+                if Hitbox_Ativado then
+                    root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
+                    root.Transparency = Hitbox_Transparencia
+                    root.Material = Hitbox_Material
+                    root.Color = Hitbox_Cor
+                    root.CanCollide = false
+                end
+            end
+        end
+    end
+
+    -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_Tracers and p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -246,6 +269,7 @@ RunService.RenderStepped:Connect(function()
         else if tracer then tracer.Visible = false end end
     end
 
+    -- ESP Vida
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -316,6 +340,8 @@ MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Cha
 
 -- Combate
 local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
+
+-- AIMBOT
 CombatTab:CreateSection("Aimbot")
 CombatTab:CreateToggle({Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:CreateToggle({Name = "Mostrar FOV", CurrentValue = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
@@ -330,99 +356,99 @@ CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
--- LISTA DE EXCLUSÃO (USANDO CALLBACK PARA ATUALIZAR VARIÁVEL)
+-- HITBOX (NOVO)
+CombatTab:CreateSection("Hitbox Expander")
+CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
+    Hitbox_Ativado = v
+    if not v then
+        -- Reseta as hitboxes quando desativa
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                p.Character.HumanoidRootPart.Transparency = 1
+                p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
+                p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
+            end
+        end
+    end
+end})
+
+CombatTab:CreateInput({Name = "Tamanho da Hitbox", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) 
+    local n = tonumber(t) 
+    if n then Hitbox_Tamanho = n end
+end})
+
+CombatTab:CreateInput({Name = "Transparência (0 a 1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) 
+    local n = tonumber(t) 
+    if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end
+end})
+
+-- Cores da Hitbox
+CombatTab:CreateSection("Cores da Hitbox")
+local coresHitbox = {
+    {"🔴 Vermelho", Color3.fromRGB(255, 30, 30)},
+    {"🔵 Azul", Color3.fromRGB(30, 100, 255)},
+    {"🟢 Verde", Color3.fromRGB(50, 255, 50)},
+    {"🟡 Amarelo", Color3.fromRGB(255, 220, 0)},
+    {"🟣 Roxo", Color3.fromRGB(170, 0, 255)},
+    {"🩵 Ciano", Color3.fromRGB(0, 255, 255)},
+    {"⚪ Branco", Color3.fromRGB(255, 255, 255)},
+    {"💗 Rosa", Color3.fromRGB(255, 0, 180)},
+}
+
+for _, c in ipairs(coresHitbox) do
+    CombatTab:CreateButton({Name = c[1], Callback = function() 
+        Hitbox_Cor = c[2] 
+        Rayfield:Notify({Title = "Hitbox", Content = "Cor: " .. c[1], Duration = 2})
+    end})
+end
+
+-- RGB personalizado para Hitbox
+CombatTab:CreateInput({Name = "Cor RGB (ex: 255,128,0)", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
+    local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+    if r and g and b then
+        local rNum = math.clamp(tonumber(r), 0, 255)
+        local gNum = math.clamp(tonumber(g), 0, 255)
+        local bNum = math.clamp(tonumber(b), 0, 255)
+        Hitbox_Cor = Color3.fromRGB(rNum, gNum, bNum)
+        Rayfield:Notify({Title = "Hitbox", Content = "Cor RGB: " .. rNum .. "," .. gNum .. "," .. bNum, Duration = 2})
+    end
+end})
+
+-- LISTA DE EXCLUSÃO
 CombatTab:CreateSection("Lista de Exclusão")
-
 local dropdownIgnorar = CombatTab:CreateDropdown({
-   Name = "Jogador",
-   Options = ObterListaJogadores(),
-   CurrentOption = "",
-   Flag = "DropdownIgnorar",
+   Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Flag = "DropdownIgnorar",
    Callback = function(Option)
-      -- O callback recebe o valor selecionado
-      if type(Option) == "string" then
-         DropdownSelecionado = Option
+      if type(Option) == "string" then DropdownSelecionado = Option
       elseif type(Option) == "table" then
-         -- Tenta extrair como string
          local val = Option.Value or Option.CurrentOption or Option[1] or ""
-         if type(val) == "string" then
-            DropdownSelecionado = val
-         end
-      end
-      print("[DROPDOWN] Selecionado: " .. tostring(DropdownSelecionado))
-   end,
-})
-
-CombatTab:CreateButton({
-   Name = "➕ Adicionar à Lista",
-   Callback = function()
-      print("[DEBUG] DropdownSelecionado = " .. tostring(DropdownSelecionado))
-      
-      if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
-         JogadoresIgnorados[DropdownSelecionado] = true
-         AtualizarListaIgnorados()
-         Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " adicionado!", Duration = 2})
-      else
-         -- Fallback: tenta pegar do Rayfield.Flags
-         local flag = Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"]
-         if flag then
-            local nome = flag
-            if type(flag) == "table" then
-               nome = flag.Value or flag.CurrentOption or ""
-            end
-            if type(nome) == "string" and nome ~= "" and nome ~= "Nenhum jogador online" then
-               JogadoresIgnorados[nome] = true
-               AtualizarListaIgnorados()
-               Rayfield:Notify({Title = "OK", Content = nome .. " adicionado!", Duration = 2})
-               return
-            end
-         end
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador no dropdown primeiro!", Duration = 3})
+         if type(val) == "string" then DropdownSelecionado = val end
       end
    end,
 })
 
-CombatTab:CreateButton({
-   Name = "➖ Remover da Lista",
-   Callback = function()
-      if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
-         JogadoresIgnorados[DropdownSelecionado] = nil
-         AtualizarListaIgnorados()
-         Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " removido!", Duration = 2})
-      else
-         local flag = Rayfield.Flags and Rayfield.Flags["DropdownIgnorar"]
-         if flag then
-            local nome = flag
-            if type(flag) == "table" then nome = flag.Value or flag.CurrentOption or "" end
-            if type(nome) == "string" and nome ~= "" and nome ~= "Nenhum jogador online" then
-               JogadoresIgnorados[nome] = nil
-               AtualizarListaIgnorados()
-               Rayfield:Notify({Title = "OK", Content = nome .. " removido!", Duration = 2})
-               return
-            end
-         end
-         Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador no dropdown primeiro!", Duration = 3})
-      end
-   end,
-})
+CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
+   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+      JogadoresIgnorados[DropdownSelecionado] = true; AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " adicionado!", Duration = 2})
+   else Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3}) end
+end})
 
-CombatTab:CreateButton({
-   Name = "🔄 Atualizar Lista",
-   Callback = function()
-      DropdownSelecionado = ""
-      dropdownIgnorar:Refresh(ObterListaJogadores(), true)
-      Rayfield:Notify({Title = "OK", Content = "Lista atualizada!", Duration = 2})
-   end,
-})
+CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
+   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+      JogadoresIgnorados[DropdownSelecionado] = nil; AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " removido!", Duration = 2})
+   else Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3}) end
+end})
 
-CombatTab:CreateButton({
-   Name = "🗑️ Limpar Tudo",
-   Callback = function()
-      JogadoresIgnorados = {}
-      AtualizarListaIgnorados()
-      Rayfield:Notify({Title = "OK", Content = "Lista limpa!", Duration = 2})
-   end,
-})
+CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function()
+   DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true)
+end})
+
+CombatTab:CreateButton({Name = "🗑️ Limpar Tudo", Callback = function()
+   JogadoresIgnorados = {}; AtualizarListaIgnorados()
+end})
 
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 
@@ -441,7 +467,7 @@ VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
-VisualTab:CreateSection("Cores")
+VisualTab:CreateSection("Cores ESP")
 local cores = {{"🔴 Vermelho", Color3.fromRGB(255,50,50)}, {"🔵 Azul", Color3.fromRGB(50,150,255)}, {"🟢 Verde", Color3.fromRGB(50,255,100)}, {"🟡 Amarelo", Color3.fromRGB(255,220,50)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
 for _, c in ipairs(cores) do VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end}) end
 VisualTab:CreateSection("Luz")
@@ -452,6 +478,15 @@ local ConfigTab = Window:CreateTab("⚙️ Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
+   -- Reseta hitboxes
+   for _, p in pairs(Players:GetPlayers()) do
+      if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+         p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+         p.Character.HumanoidRootPart.Transparency = 1
+         p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
+         p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
+      end
+   end
    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
    LinhasTracers = {}
    for _, plr in pairs(Players:GetPlayers()) do
@@ -465,4 +500,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Selecione um jogador no dropdown e clique em Adicionar. Verifique F9 para debug.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot + Hitbox + ESP + Lista de Exclusão! Tudo desativado por padrão.", Duration = 5, Image = 4483345998})
