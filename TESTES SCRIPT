@@ -52,11 +52,12 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
--- MACRO PARKOUR (AUTO-SAVE SIMPLES)
-local MacroParkour_Gravando = false
-local MacroParkour_Reproduzindo = false
-local MacroParkour_Movimentos = {}
-local MacroParkour_ParkourSelecionado = 1
+-- BLOCOS ANTI-QUEDA
+local BlocosAtivado = false
+local BlocosCapturando = false
+local BlocosPosicoes = {}
+local BlocosCriados = {}
+local BlocosParkourAtual = 1
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -257,55 +258,61 @@ local function IniciarAutoJJ()
 end
 
 -- ==========================================
--- MACRO PARKOUR (AUTO-SAVE SIMPLES)
+-- BLOCOS ANTI-QUEDA
 -- ==========================================
-local function IniciarGravacao()
-    MacroParkour_Gravando = true
-    MacroParkour_Movimentos = {}
-    Rayfield:Notify({Title = "Gravacao", Content = "GRAVANDO Parkour " .. MacroParkour_ParkourSelecionado .. "!", Duration = 3})
+local function IniciarCaptura()
+    BlocosCapturando = true
+    BlocosPosicoes = {}
+    Rayfield:Notify({Title = "Blocos", Content = "Capturando! Caminhe pelo parkour...", Duration = 3})
 end
 
-local function PararGravacao()
-    MacroParkour_Gravando = false
-    if #MacroParkour_Movimentos > 0 then
-        local json = HttpService:JSONEncode(MacroParkour_Movimentos)
-        local nomeArquivo = "Parkour_" .. MacroParkour_ParkourSelecionado .. ".txt"
+local function PararCaptura()
+    BlocosCapturando = false
+    if #BlocosPosicoes > 0 then
+        local json = HttpService:JSONEncode(BlocosPosicoes)
+        local nomeArquivo = "BlocosParkour_" .. BlocosParkourAtual .. ".txt"
         pcall(function()
             if writefile then
                 writefile(nomeArquivo, json)
-                Rayfield:Notify({Title = "SUCESSO!", Content = "Parkour " .. MacroParkour_ParkourSelecionado .. " SALVO!", Duration = 5})
+                Rayfield:Notify({Title = "SUCESSO!", Content = #BlocosPosicoes .. " posicoes salvas!", Duration = 5})
             end
         end)
     end
 end
 
-local function ReproduzirParkour()
-    local nomeArquivo = "Parkour_" .. MacroParkour_ParkourSelecionado .. ".txt"
+local function CriarBlocos()
+    for _, bloco in pairs(BlocosCriados) do if bloco then bloco:Destroy() end end
+    BlocosCriados = {}
+    
+    local nomeArquivo = "BlocosParkour_" .. BlocosParkourAtual .. ".txt"
     if not isfile or not isfile(nomeArquivo) then
-        Rayfield:Notify({Title = "Erro", Content = "Parkour nao gravado!", Duration = 3})
+        Rayfield:Notify({Title = "Erro", Content = "Parkour nao tem blocos salvos!", Duration = 3})
         return
     end
+    
     local conteudo = readfile(nomeArquivo)
-    local movimentos = HttpService:JSONDecode(conteudo)
-    if not movimentos or #movimentos == 0 then return end
-    MacroParkour_Reproduzindo = true
-    local char = localPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then MacroParkour_Reproduzindo = false; return end
-    local root = char.HumanoidRootPart
-    Rayfield:Notify({Title = "Parkour", Content = "REPRODUZINDO " .. MacroParkour_ParkourSelecionado, Duration = 3})
-    task.spawn(function()
-        for i, pos in ipairs(movimentos) do
-            if not MacroParkour_Reproduzindo then break end
-            root.CFrame = CFrame.new(pos.x, pos.y, pos.z)
-            task.wait(0.01)
-        end
-        MacroParkour_Reproduzindo = false
-        Rayfield:Notify({Title = "Parkour", Content = "CONCLUIDO!", Duration = 3})
-    end)
+    local posicoes = HttpService:JSONDecode(conteudo)
+    
+    for _, pos in ipairs(posicoes) do
+        local bloco = Instance.new("Part")
+        bloco.Name = "BlocoAntiQueda"
+        bloco.Size = Vector3.new(8, 1, 8)
+        bloco.Position = Vector3.new(pos.x, pos.y, pos.z)
+        bloco.Anchored = true
+        bloco.CanCollide = true
+        bloco.Color = Color3.fromRGB(0, 150, 255)
+        bloco.Transparency = 0.5
+        bloco.Material = Enum.Material.Neon
+        bloco.Parent = Workspace
+        table.insert(BlocosCriados, bloco)
+    end
+    
+    Rayfield:Notify({Title = "Blocos", Content = #posicoes .. " blocos criados!", Duration = 3})
 end
 
-local function PararReproducao()
-    MacroParkour_Reproduzindo = false
+local function RemoverBlocos()
+    for _, bloco in pairs(BlocosCriados) do if bloco then bloco:Destroy() end end
+    BlocosCriados = {}
 end
 
 -- ==========================================
@@ -370,10 +377,15 @@ RunService.RenderStepped:Connect(function()
         end
     end
     
-    -- GRAVAÇÃO DO PARKOUR
-    if MacroParkour_Gravando and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+    -- CAPTURA DE POSIÇÕES DOS BLOCOS
+    if BlocosCapturando and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local pos = localPlayer.Character.HumanoidRootPart.Position
-        table.insert(MacroParkour_Movimentos, {x = pos.X, y = pos.Y, z = pos.Z})
+        local posArredondada = {x = math.floor(pos.X), y = math.floor(pos.Y - 4), z = math.floor(pos.Z)}
+        local existe = false
+        for _, p in ipairs(BlocosPosicoes) do
+            if p.x == posArredondada.x and p.z == posArredondada.z then existe = true; break end
+        end
+        if not existe then table.insert(BlocosPosicoes, posArredondada) end
     end
 end)
 
@@ -437,21 +449,21 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
     if v then IniciarAutoJJ() else DestruirPainelJJ() end
 end})
 
-MainTab:CreateSection("Macro Parkour")
-local dropdownParkour = MainTab:CreateDropdown({
+MainTab:CreateSection("Blocos Anti-Queda")
+local dropdownBlocos = MainTab:CreateDropdown({
     Name = "Selecionar Parkour",
     Options = {"Parkour 1", "Parkour 2", "Parkour 3", "Parkour 4", "Parkour 5", "Parkour 6", "Parkour 7"},
     CurrentOption = "Parkour 1",
     Callback = function(Option)
         local numero = Option:match("%d+")
-        if numero then MacroParkour_ParkourSelecionado = tonumber(numero) end
+        if numero then BlocosParkourAtual = tonumber(numero) end
     end,
 })
-MainTab:CreateButton({Name = "INICIAR GRAVACAO", Callback = function() IniciarGravacao() end})
-MainTab:CreateButton({Name = "PARAR E SALVAR", Callback = function() PararGravacao() end})
-MainTab:CreateButton({Name = "REPRODUZIR PARKOUR", Callback = function() task.spawn(ReproduzirParkour) end})
-MainTab:CreateButton({Name = "PARAR REPRODUCAO", Callback = function() PararReproducao() end})
-MainTab:CreateParagraph({Title = "Como usar", Content = "1. Selecione o Parkour\n2. INICIAR GRAVACAO\n3. Faça o parkour\n4. PARAR E SALVAR\n5. REPRODUZIR PARKOUR"})
+MainTab:CreateButton({Name = "INICIAR CAPTURA", Callback = function() IniciarCaptura() end})
+MainTab:CreateButton({Name = "PARAR E SALVAR", Callback = function() PararCaptura() end})
+MainTab:CreateButton({Name = "MOSTRAR BLOCOS", Callback = function() CriarBlocos() end})
+MainTab:CreateButton({Name = "REMOVER BLOCOS", Callback = function() RemoverBlocos() end})
+MainTab:CreateParagraph({Title = "Como usar", Content = "1. Selecione o Parkour\n2. INICIAR CAPTURA\n3. Caminhe pelo parkour\n4. PARAR E SALVAR\n5. MOSTRAR BLOCOS"})
 
 -- Combate
 local CombatTab = Window:CreateTab("Combate", 4483345998)
@@ -530,8 +542,8 @@ VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brig
 local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
-   MacroParkour_Gravando = false
-   MacroParkour_Reproduzindo = false
+   BlocosCapturando = false
+   RemoverBlocos()
    DestruirPainelJJ()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
@@ -541,4 +553,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Macro Parkour SIMPLES! Grave e reproduza facilmente.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Blocos Anti-Queda! Capture e mostre blocos nos parkours.", Duration = 5})
