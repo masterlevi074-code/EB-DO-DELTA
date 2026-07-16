@@ -215,19 +215,29 @@ end
 
 local function DestruirPainelJJ()
     pcall(function()
-        -- Destroi paineis que NÃO são Rayfield ou DashButton
+        -- Destroi apenas painéis que parecem ser de script (tem palavras-chave)
         for _, gui in pairs(CoreGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" and gui.Name ~= "DashButtonScreen" then
-                gui:Destroy()
-            end
-        end
-        for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
-                gui:Destroy()
+            if gui:IsA("ScreenGui") then
+                local nome = gui.Name:lower()
+                if nome ~= "rayfield" and nome ~= "dashbuttonscreen" and not nome:find("polichinelo") then
+                    local parecePainelScript = false
+                    for _, child in pairs(gui:GetDescendants()) do
+                        if child:IsA("TextButton") or child:IsA("TextLabel") then
+                            local texto = child.Text:lower()
+                            if texto:find("delay") or texto:find("auto") or texto:find("jj") or texto:find("click") or texto:find("start") or texto:find("stop") then
+                                parecePainelScript = true
+                                break
+                            end
+                        end
+                    end
+                    if parecePainelScript then
+                        gui:Destroy()
+                    end
+                end
             end
         end
     end)
-    AutoJJ_Script = nil -- Reseta para recarregar na próxima vez
+    AutoJJ_Script = nil
 end
 
 local function IniciarAutoJJ()
