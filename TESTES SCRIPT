@@ -48,8 +48,7 @@ local Hitbox_Material = Enum.Material.Neon
 
 -- AUTO JJ
 local AutoJJ_Ativado = false
-local AutoJJ_DelayMin = 0.1
-local AutoJJ_DelayMax = 0.3
+local AutoJJ_Script = nil
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -204,33 +203,40 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - CORRIGIDO (ESCONDE SÓ PAINEL GRANDE)
+-- AUTO JJ - ABRE PAINEL EXTERNO (EXECUTA UMA VEZ)
 -- ==========================================
-local function EsconderPainelExterno()
-    task.spawn(function()
-        while AutoJJ_Ativado do
-            pcall(function()
-                for _, gui in pairs(CoreGui:GetChildren()) do
-                    if gui:IsA("ScreenGui") then
-                        if gui.Name ~= "Rayfield" and gui.Name ~= "DashButtonScreen" then
-                            local tamanho = gui.AbsoluteSize
-                            if tamanho.X > 200 and tamanho.Y > 200 then
-                                gui.Enabled = false
-                            end
-                        end
-                    end
-                end
-            end)
-            task.wait(0.5)
+local function CarregarScriptJJ()
+    if not AutoJJ_Script then
+        pcall(function()
+            AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua"))
+        end)
+    end
+end
+
+local function DestruirPainelJJ()
+    pcall(function()
+        -- Destroi paineis que NÃO são Rayfield ou DashButton
+        for _, gui in pairs(CoreGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" and gui.Name ~= "DashButtonScreen" then
+                gui:Destroy()
+            end
+        end
+        for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Name ~= "Rayfield" then
+                gui:Destroy()
+            end
         end
     end)
+    AutoJJ_Script = nil -- Reseta para recarregar na próxima vez
 end
 
 local function IniciarAutoJJ()
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua"))()
-    end)
-    EsconderPainelExterno()
+    CarregarScriptJJ()
+    if AutoJJ_Script then
+        pcall(function()
+            AutoJJ_Script()
+        end)
+    end
 end
 
 -- ==========================================
@@ -355,13 +361,10 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
     AutoJJ_Ativado = v
     if v then 
         IniciarAutoJJ()
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO!", Duration = 3})
     else
-        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO!", Duration = 3})
+        DestruirPainelJJ()
     end
 end})
-MainTab:CreateInput({Name = "Delay Minimo (seg)", PlaceholderText = "0.1", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then AutoJJ_DelayMin = n end end})
-MainTab:CreateInput({Name = "Delay Maximo (seg)", PlaceholderText = "0.3", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then AutoJJ_DelayMax = n end end})
 
 -- Combate
 local CombatTab = Window:CreateTab("Combate", 4483345998)
@@ -439,6 +442,7 @@ VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brig
 local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
+   DestruirPainelJJ()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
@@ -447,4 +451,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ funcional! Delay Min/Max configuravel.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ: Ative/Desative na aba Principal.", Duration = 5})
