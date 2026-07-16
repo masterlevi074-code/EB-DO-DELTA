@@ -621,11 +621,7 @@ OutrosTab:CreateToggle({Name = "Ficar Invisivel", CurrentValue = false, Callback
     if localPlayer.Character then
         if v then
             for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 1
-                elseif part:IsA("BasePart") and part.Name == "HumanoidRootPart" then
-                    part.Transparency = 0.5
-                end
+                if part:IsA("BasePart") then part.Transparency = 1 end
             end
             for _, obj in pairs(localPlayer.Character:GetChildren()) do
                 if obj:IsA("Accessory") or obj:IsA("Hat") then
@@ -655,14 +651,27 @@ OutrosTab:CreateToggle({Name = "Ativar God Mode", CurrentValue = false, Callback
         local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
         if hum then
             if v then
-                hum.MaxHealth = 999999
-                hum.Health = 999999
-                hum:GetPropertyChangedSignal("Health"):Connect(function()
-                    if hum.Health < 999999 then hum.Health = 999999 end
+                hum.MaxHealth = 9e9
+                hum.Health = 9e9
+                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+                hum.HealthChanged:Connect(function()
+                    if hum.Health < 9e9 then hum.Health = 9e9 end
+                end)
+                task.spawn(function()
+                    while v and hum and hum.Parent do
+                        pcall(function()
+                            hum.Health = 9e9
+                            hum.MaxHealth = 9e9
+                        end)
+                        task.wait(0.05)
+                    end
                 end)
             else
                 hum.MaxHealth = 100
                 hum.Health = 100
+                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Physics, true)
             end
         end
     end
@@ -719,4 +728,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "God Mode, FOV e Teleporte adicionados!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "God Mode REAL ativado! Dano completamente bloqueado!", Duration = 5})
