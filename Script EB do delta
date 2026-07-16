@@ -48,7 +48,7 @@ local Hitbox_Material = Enum.Material.Neon
 
 -- AUTO JJ
 local AutoJJ_Ativado = false
-local VelocidadeClique = 0.01
+local VelocidadeClique = 0.001
 local ClicksRealizados = 0
 local BolinhasClicadas = {}
 
@@ -167,11 +167,6 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
         if teamA.TeamColor == teamB.TeamColor then return true end
     end
-    if jogadorA.Character and jogadorB.Character then
-        local charTeamA = jogadorA.Character:FindFirstChild("Team")
-        local charTeamB = jogadorB.Character:FindFirstChild("Team")
-        if charTeamA and charTeamB and charTeamA == charTeamB then return true end
-    end
     return false
 end
 
@@ -215,49 +210,26 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - MouseButton1Click (CORRIGIDO!)
+-- AUTO JJ - ULTRA RÁPIDO
 -- ==========================================
-local function EncontrarBolinhasPolichinelo()
-    local bolinhas = {}
-    local playerGui = localPlayer:FindFirstChild("PlayerGui")
-    if not playerGui then return bolinhas end
-    local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
-    if not screenPolichinelo then return bolinhas end
-    for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
-        if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible and elemento.Active then
-            local pos = elemento.AbsolutePosition
-            local tam = elemento.AbsoluteSize
-            local centroX = pos.X + (tam.X / 2)
-            local centroY = pos.Y + (tam.Y / 2)
-            if centroX > 0 and centroY > 0 and centroX < 2000 and centroY < 2000 then
-                local id = math.floor(centroX) .. "_" .. math.floor(centroY)
-                if not BolinhasClicadas[id] or (tick() - BolinhasClicadas[id] > 0.2) then
-                    table.insert(bolinhas, {ID = id, Elemento = elemento})
-                end
-            end
-        end
-    end
-    return bolinhas
-end
-
-local function ClicarBolinha(id, elemento)
-    pcall(function()
-        if elemento and elemento:IsA("GuiButton") then
-            elemento.MouseButton1Click:Fire()
-        end
-    end)
-    BolinhasClicadas[id] = tick()
-    ClicksRealizados = ClicksRealizados + 1
-end
-
 local function LoopAutoJJ()
     while AutoJJ_Ativado do
-        local bolinhas = EncontrarBolinhasPolichinelo()
-        if #bolinhas > 0 then
-            for _, bolinha in ipairs(bolinhas) do
-                if not AutoJJ_Ativado then break end
-                ClicarBolinha(bolinha.ID, bolinha.Elemento)
-                task.wait(VelocidadeClique)
+        local playerGui = localPlayer:FindFirstChild("PlayerGui")
+        if playerGui then
+            local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
+            if screenPolichinelo then
+                for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
+                    if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible and elemento.Active then
+                        local pos = elemento.AbsolutePosition
+                        local id = math.floor(pos.X) .. "_" .. math.floor(pos.Y)
+                        local agora = tick()
+                        if not BolinhasClicadas[id] or (agora - BolinhasClicadas[id] > 0.3) then
+                            pcall(function() elemento.MouseButton1Click:Fire() end)
+                            BolinhasClicadas[id] = agora
+                            ClicksRealizados = ClicksRealizados + 1
+                        end
+                    end
+                end
             end
         end
         task.wait(VelocidadeClique)
@@ -265,10 +237,10 @@ local function LoopAutoJJ()
 end
 
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(0.5) do
         local agora = tick()
         for id, tempo in pairs(BolinhasClicadas) do
-            if agora - tempo > 0.3 then BolinhasClicadas[id] = nil end
+            if agora - tempo > 0.5 then BolinhasClicadas[id] = nil end
         end
     end
 end)
@@ -396,19 +368,15 @@ MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
     if v then 
-        ClicksRealizados = 0
-        BolinhasClicadas = {}
+        ClicksRealizados = 0; BolinhasClicadas = {}
         task.spawn(LoopAutoJJ)
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Clicando nas bolinhas!", Duration = 3})
+        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Ultra rapido!", Duration = 3})
     else
         Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Cliques: " .. ClicksRealizados, Duration = 3})
     end
 end})
-MainTab:CreateInput({Name = "Velocidade (segundos)", PlaceholderText = "0.01 = ultra rapido", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
-MainTab:CreateButton({Name = "Ver Estatisticas", Callback = function() 
-    local bolinhas = EncontrarBolinhasPolichinelo()
-    Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados .. " | Bolinhas: " .. #bolinhas, Duration = 4}) 
-end})
+MainTab:CreateInput({Name = "Velocidade (0.001 = ultra)", PlaceholderText = "0.001", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
+MainTab:CreateButton({Name = "Ver Estatisticas", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados, Duration = 4}) end})
 MainTab:CreateButton({Name = "Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasClicadas = {} end})
 
 -- Combate
@@ -512,4 +480,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ com MouseButton1Click! Ative na aba Principal.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ Ultra Rapido na aba Principal! Velocidade padrao: 0.001s", Duration = 5, Image = 4483345998})
