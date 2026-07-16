@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
+local HttpService = game:GetService("HttpService")
 
 if CoreGui:FindFirstChild("Rayfield") then CoreGui.Rayfield:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("Rayfield") then localPlayer.PlayerGui.Rayfield:Destroy() end
@@ -38,7 +39,7 @@ local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
-local Aimbot_SoComItem = false  -- NOVO: Só mirar com item equipado
+local Aimbot_SoComItem = false
 
 -- HITBOX
 local Hitbox_Ativado = false
@@ -50,6 +51,12 @@ local Hitbox_Material = Enum.Material.Neon
 -- AUTO JJ
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
+
+-- MACRO PARKOUR (AUTO-SAVE SIMPLES)
+local MacroParkour_Gravando = false
+local MacroParkour_Reproduzindo = false
+local MacroParkour_Movimentos = {}
+local MacroParkour_ParkourSelecionado = 1
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -169,24 +176,17 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
--- NOVO: Verifica se o jogador tem item equipado
 local function TemItemEquipado()
     if localPlayer.Character then
         for _, child in pairs(localPlayer.Character:GetChildren()) do
-            if child:IsA("Tool") then
-                return true
-            end
+            if child:IsA("Tool") then return true end
         end
     end
     return false
 end
 
 local function ObterJogadorMaisProximoDaMira()
-    -- NOVO: Se a opção estiver ativada e não tiver item, não mira
-    if Aimbot_SoComItem and not TemItemEquipado() then
-        return nil
-    end
-    
+    if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil
     local melhorPontuacao = math.huge
     local camera = Workspace.CurrentCamera
@@ -221,7 +221,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - CORRIGIDO (DESTROI PELO TÍTULO "Auto jjs")
+-- AUTO JJ
 -- ==========================================
 local function CarregarScriptJJ()
     if not AutoJJ_Script then
@@ -240,19 +240,12 @@ local function DestruirPainelJJ()
         for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
             if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end
         end
-        
         for _, gui in pairs(todosGuis) do
             local nome = gui.Name:lower()
-            if nome:find("auto") or nome:find("jj") then
-                gui:Destroy()
-            else
-                for _, child in pairs(gui:GetDescendants()) do
-                    if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then
-                        gui:Destroy()
-                        break
-                    end
-                end
-            end
+            if nome:find("auto") or nome:find("jj") then gui:Destroy()
+            else for _, child in pairs(gui:GetDescendants()) do
+                if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then gui:Destroy(); break end
+            end end
         end
     end)
     AutoJJ_Script = nil
@@ -260,11 +253,59 @@ end
 
 local function IniciarAutoJJ()
     CarregarScriptJJ()
-    if AutoJJ_Script then
+    if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end
+end
+
+-- ==========================================
+-- MACRO PARKOUR (AUTO-SAVE SIMPLES)
+-- ==========================================
+local function IniciarGravacao()
+    MacroParkour_Gravando = true
+    MacroParkour_Movimentos = {}
+    Rayfield:Notify({Title = "Gravacao", Content = "GRAVANDO Parkour " .. MacroParkour_ParkourSelecionado .. "!", Duration = 3})
+end
+
+local function PararGravacao()
+    MacroParkour_Gravando = false
+    if #MacroParkour_Movimentos > 0 then
+        local json = HttpService:JSONEncode(MacroParkour_Movimentos)
+        local nomeArquivo = "Parkour_" .. MacroParkour_ParkourSelecionado .. ".txt"
         pcall(function()
-            AutoJJ_Script()
+            if writefile then
+                writefile(nomeArquivo, json)
+                Rayfield:Notify({Title = "SUCESSO!", Content = "Parkour " .. MacroParkour_ParkourSelecionado .. " SALVO!", Duration = 5})
+            end
         end)
     end
+end
+
+local function ReproduzirParkour()
+    local nomeArquivo = "Parkour_" .. MacroParkour_ParkourSelecionado .. ".txt"
+    if not isfile or not isfile(nomeArquivo) then
+        Rayfield:Notify({Title = "Erro", Content = "Parkour nao gravado!", Duration = 3})
+        return
+    end
+    local conteudo = readfile(nomeArquivo)
+    local movimentos = HttpService:JSONDecode(conteudo)
+    if not movimentos or #movimentos == 0 then return end
+    MacroParkour_Reproduzindo = true
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then MacroParkour_Reproduzindo = false; return end
+    local root = char.HumanoidRootPart
+    Rayfield:Notify({Title = "Parkour", Content = "REPRODUZINDO " .. MacroParkour_ParkourSelecionado, Duration = 3})
+    task.spawn(function()
+        for i, pos in ipairs(movimentos) do
+            if not MacroParkour_Reproduzindo then break end
+            root.CFrame = CFrame.new(pos.x, pos.y, pos.z)
+            task.wait(0.01)
+        end
+        MacroParkour_Reproduzindo = false
+        Rayfield:Notify({Title = "Parkour", Content = "CONCLUIDO!", Duration = 3})
+    end)
+end
+
+local function PararReproducao()
+    MacroParkour_Reproduzindo = false
 end
 
 -- ==========================================
@@ -328,6 +369,12 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+    
+    -- GRAVAÇÃO DO PARKOUR
+    if MacroParkour_Gravando and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local pos = localPlayer.Character.HumanoidRootPart.Position
+        table.insert(MacroParkour_Movimentos, {x = pos.X, y = pos.Y, z = pos.Z})
+    end
 end)
 
 -- ==========================================
@@ -387,12 +434,24 @@ MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Cha
 MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
-    if v then 
-        IniciarAutoJJ()
-    else
-        DestruirPainelJJ()
-    end
+    if v then IniciarAutoJJ() else DestruirPainelJJ() end
 end})
+
+MainTab:CreateSection("Macro Parkour")
+local dropdownParkour = MainTab:CreateDropdown({
+    Name = "Selecionar Parkour",
+    Options = {"Parkour 1", "Parkour 2", "Parkour 3", "Parkour 4", "Parkour 5", "Parkour 6", "Parkour 7"},
+    CurrentOption = "Parkour 1",
+    Callback = function(Option)
+        local numero = Option:match("%d+")
+        if numero then MacroParkour_ParkourSelecionado = tonumber(numero) end
+    end,
+})
+MainTab:CreateButton({Name = "INICIAR GRAVACAO", Callback = function() IniciarGravacao() end})
+MainTab:CreateButton({Name = "PARAR E SALVAR", Callback = function() PararGravacao() end})
+MainTab:CreateButton({Name = "REPRODUZIR PARKOUR", Callback = function() task.spawn(ReproduzirParkour) end})
+MainTab:CreateButton({Name = "PARAR REPRODUCAO", Callback = function() PararReproducao() end})
+MainTab:CreateParagraph({Title = "Como usar", Content = "1. Selecione o Parkour\n2. INICIAR GRAVACAO\n3. Faça o parkour\n4. PARAR E SALVAR\n5. REPRODUZIR PARKOUR"})
 
 -- Combate
 local CombatTab = Window:CreateTab("Combate", 4483345998)
@@ -471,6 +530,8 @@ VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brig
 local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
+   MacroParkour_Gravando = false
+   MacroParkour_Reproduzindo = false
    DestruirPainelJJ()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
@@ -480,4 +541,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot com opcao 'So mirar com item' adicionada!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Macro Parkour SIMPLES! Grave e reproduza facilmente.", Duration = 5})
