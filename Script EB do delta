@@ -217,7 +217,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - POLICHINELOS (InputTemplate)
+-- AUTO JJ CORRIGIDO (SendMouseButtonEvent)
 -- ==========================================
 local function EncontrarBolinhasPolichinelo()
     local bolinhas = {}
@@ -237,7 +237,7 @@ local function EncontrarBolinhasPolichinelo()
             if centroX > 0 and centroY > 0 and centroX < 2000 and centroY < 2000 then
                 local id = math.floor(centroX) .. "_" .. math.floor(centroY)
                 if not BolinhasClicadas[id] or (tick() - BolinhasClicadas[id] > 0.2) then
-                    table.insert(bolinhas, {CentroX = centroX, CentroY = centroY, ID = id})
+                    table.insert(bolinhas, {CentroX = centroX, CentroY = centroY, ID = id, Elemento = elemento})
                 end
             end
         end
@@ -245,11 +245,30 @@ local function EncontrarBolinhasPolichinelo()
     return bolinhas
 end
 
-local function ClicarBolinha(x, y, id)
+local function ClicarBolinha(x, y, id, elemento)
+    -- Move o mouse
     VirtualInputManager:SendMouseMoveEvent(x, y)
-    VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, nil, 1)
-    task.wait(0.01)
-    VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, nil, 1)
+    task.wait(0.005)
+    
+    -- Clique do mouse (CORRIGIDO: todos os parâmetros preenchidos)
+    VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+    task.wait(0.005)
+    VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+    
+    -- Também tenta simular um toque na tela (para mobile)
+    pcall(function()
+        if elemento and elemento.Parent then
+            -- Dispara o evento de clique do botão diretamente
+            local args = {
+                [1] = {Position = Vector2.new(x, y), UserInputType = Enum.UserInputType.MouseButton1, UserInputState = Enum.UserInputState.Begin},
+            }
+            -- Tenta ativar o evento MouseButton1Click
+            if elemento.MouseButton1Click then
+                elemento.MouseButton1Click:Fire()
+            end
+        end
+    end)
+    
     BolinhasClicadas[id] = tick()
     ClicksRealizados = ClicksRealizados + 1
 end
@@ -259,7 +278,7 @@ local function LoopAutoJJ()
         local bolinhas = EncontrarBolinhasPolichinelo()
         for _, bolinha in ipairs(bolinhas) do
             if not AutoJJ_Ativado then break end
-            ClicarBolinha(bolinha.CentroX, bolinha.CentroY, bolinha.ID)
+            ClicarBolinha(bolinha.CentroX, bolinha.CentroY, bolinha.ID, bolinha.Elemento)
             task.wait(VelocidadeClique)
         end
         task.wait(VelocidadeClique)
@@ -528,4 +547,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Dash + JJs + Aimbot + Hitbox + ESP!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ CORRIGIDO! Ative na aba Principal quando começar o Polichinelo.", Duration = 5, Image = 4483345998})
