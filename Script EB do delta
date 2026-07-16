@@ -47,7 +47,7 @@ local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
 
--- AUTO JJ (POLICHINELOS)
+-- AUTO JJ
 local AutoJJ_Ativado = false
 local VelocidadeClique = 0.01
 local ClicksRealizados = 0
@@ -217,7 +217,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ CORRIGIDO (SendMouseButtonEvent)
+-- AUTO JJ - POLICHINELOS (InputTemplate)
 -- ==========================================
 local function EncontrarBolinhasPolichinelo()
     local bolinhas = {}
@@ -246,27 +246,34 @@ local function EncontrarBolinhasPolichinelo()
 end
 
 local function ClicarBolinha(x, y, id, elemento)
-    -- Move o mouse
-    VirtualInputManager:SendMouseMoveEvent(x, y)
-    task.wait(0.005)
-    
-    -- Clique do mouse (CORRIGIDO: todos os parâmetros preenchidos)
-    VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
-    task.wait(0.005)
-    VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
-    
-    -- Também tenta simular um toque na tela (para mobile)
+    -- Método 1: Mover mouse e clicar
     pcall(function()
-        if elemento and elemento.Parent then
-            -- Dispara o evento de clique do botão diretamente
-            local args = {
-                [1] = {Position = Vector2.new(x, y), UserInputType = Enum.UserInputType.MouseButton1, UserInputState = Enum.UserInputState.Begin},
-            }
-            -- Tenta ativar o evento MouseButton1Click
-            if elemento.MouseButton1Click then
-                elemento.MouseButton1Click:Fire()
-            end
+        game:GetService("UserInputService"):SetMouseLocation(math.floor(x), math.floor(y))
+        task.wait(0.001)
+    end)
+    
+    -- Método 2: Disparar evento de clique diretamente
+    pcall(function()
+        if elemento and elemento.MouseButton1Click then
+            elemento.MouseButton1Click:Fire()
         end
+    end)
+    
+    -- Método 3: Simular InputBegan
+    pcall(function()
+        if elemento and elemento.InputBegan then
+            elemento.InputBegan:Fire({
+                Position = Vector2.new(x, y),
+                UserInputType = Enum.UserInputType.MouseButton1,
+                UserInputState = Enum.UserInputState.Begin,
+            })
+        end
+    end)
+    
+    -- Método 4: VirtualInputManager
+    pcall(function()
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
+        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
     end)
     
     BolinhasClicadas[id] = tick()
@@ -415,7 +422,7 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- ==========================================
--- ABA PRINCIPAL (Com Auto JJ)
+-- ABA PRINCIPAL
 -- ==========================================
 local MainTab = Window:CreateTab("🏠 Principal", 4483362458)
 
@@ -547,4 +554,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ CORRIGIDO! Ative na aba Principal quando começar o Polichinelo.", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Dash + JJs + Aimbot + Hitbox + ESP!", Duration = 5, Image = 4483345998})
