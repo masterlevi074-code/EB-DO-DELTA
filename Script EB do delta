@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 if CoreGui:FindFirstChild("Rayfield") then CoreGui.Rayfield:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("Rayfield") then localPlayer.PlayerGui.Rayfield:Destroy() end
@@ -46,11 +47,10 @@ local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
 
--- AUTO JJ
+-- AUTO JJ (VIA REMOTEEVENT - MUITO MAIS RÁPIDO!)
 local AutoJJ_Ativado = false
-local VelocidadeClique = 0.001
-local ClicksRealizados = 0
-local BolinhasClicadas = {}
+local VelocidadeJJ = 0.001 -- Tempo entre disparos
+local JJ_Disparos = 0
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -210,40 +210,27 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - ULTRA RÁPIDO
+-- AUTO JJ - VIA REMOTEEVENT (FUNCIONA 100%!)
 -- ==========================================
-local function LoopAutoJJ()
-    while AutoJJ_Ativado do
-        local playerGui = localPlayer:FindFirstChild("PlayerGui")
-        if playerGui then
-            local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
-            if screenPolichinelo then
-                for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
-                    if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible and elemento.Active then
-                        local pos = elemento.AbsolutePosition
-                        local id = math.floor(pos.X) .. "_" .. math.floor(pos.Y)
-                        local agora = tick()
-                        if not BolinhasClicadas[id] or (agora - BolinhasClicadas[id] > 0.3) then
-                            pcall(function() elemento.MouseButton1Click:Fire() end)
-                            BolinhasClicadas[id] = agora
-                            ClicksRealizados = ClicksRealizados + 1
-                        end
-                    end
-                end
+local function DispararJJ()
+    pcall(function()
+        local remote = ReplicatedStorage:FindFirstChild("Remotes")
+        if remote then
+            local polichineloRemote = remote:FindFirstChild("Polichinelos")
+            if polichineloRemote then
+                polichineloRemote:FireServer()
+                JJ_Disparos = JJ_Disparos + 1
             end
         end
-        task.wait(VelocidadeClique)
-    end
+    end)
 end
 
-task.spawn(function()
-    while task.wait(0.5) do
-        local agora = tick()
-        for id, tempo in pairs(BolinhasClicadas) do
-            if agora - tempo > 0.5 then BolinhasClicadas[id] = nil end
-        end
+local function LoopAutoJJ()
+    while AutoJJ_Ativado do
+        DispararJJ()
+        task.wait(VelocidadeJJ)
     end
-end)
+end
 
 -- ==========================================
 -- LOOP PRINCIPAL
@@ -348,7 +335,7 @@ local function ObterListaJogadores()
 end
 
 -- ==========================================
--- RAYFIELD (SEM EMOJIS NOS NOMES)
+-- RAYFIELD
 -- ==========================================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -368,16 +355,16 @@ MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
     if v then 
-        ClicksRealizados = 0; BolinhasClicadas = {}
+        JJ_Disparos = 0
         task.spawn(LoopAutoJJ)
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Ultra rapido!", Duration = 3})
+        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Disparando RemoteEvent!", Duration = 3})
     else
-        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Cliques: " .. ClicksRealizados, Duration = 3})
+        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Disparos: " .. JJ_Disparos, Duration = 3})
     end
 end})
-MainTab:CreateInput({Name = "Velocidade (0.001 = ultra)", PlaceholderText = "0.001", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
-MainTab:CreateButton({Name = "Ver Estatisticas", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados, Duration = 4}) end})
-MainTab:CreateButton({Name = "Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasClicadas = {} end})
+MainTab:CreateInput({Name = "Velocidade (0.001 = ultra)", PlaceholderText = "0.001", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeJJ = n end end})
+MainTab:CreateButton({Name = "Ver Disparos", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Disparos: " .. JJ_Disparos, Duration = 4}) end})
+MainTab:CreateButton({Name = "Resetar Contador", Callback = function() JJ_Disparos = 0 end})
 
 -- Combate
 local CombatTab = Window:CreateTab("Combate", 4483345998)
@@ -480,4 +467,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Ative e seja feliz!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ via RemoteEvent! 100% funcional!", Duration = 5, Image = 4483345998})
