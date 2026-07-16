@@ -348,7 +348,7 @@ local function ObterListaJogadores()
 end
 
 -- ==========================================
--- RAYFIELD
+-- RAYFIELD (SEM EMOJIS NOS NOMES)
 -- ==========================================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -480,4 +480,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ Ultra Rapido na aba Principal! Velocidade padrao: 0.001s", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Ative e seja feliz!", Duration = 5, Image = 4483345998})
