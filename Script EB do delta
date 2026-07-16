@@ -8,7 +8,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 if CoreGui:FindFirstChild("Rayfield") then CoreGui.Rayfield:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("Rayfield") then localPlayer.PlayerGui.Rayfield:Destroy() end
@@ -40,10 +39,12 @@ local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
 
--- AUTO JJ
-local AutoJJ_Ativado = false
-local VelocidadeJJ = 0.01
-local JJ_Disparos = 0
+-- HITBOX
+local Hitbox_Ativado = false
+local Hitbox_Tamanho = 20
+local Hitbox_Transparencia = 0.7
+local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
+local Hitbox_Material = Enum.Material.Neon
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -160,6 +161,11 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
         if teamA.TeamColor == teamB.TeamColor then return true end
     end
+    if jogadorA.Character and jogadorB.Character then
+        local charTeamA = jogadorA.Character:FindFirstChild("Team")
+        local charTeamB = jogadorB.Character:FindFirstChild("Team")
+        if charTeamA and charTeamB and charTeamA == charTeamB then return true end
+    end
     return false
 end
 
@@ -170,25 +176,34 @@ local function ObterJogadorMaisProximoDaMira()
     local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
+
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
+
             local parteBuscada = Aimbot_ParteAlvo
             if parteBuscada == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            else parteBuscada = p.Character:FindFirstChild("Head") end
+            else
+                parteBuscada = p.Character:FindFirstChild("Head")
+            end
+
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
                 local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
                 local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
+                
                 if visivel then
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
                     if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
                         local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
-                        if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
+                        if pontuacao < melhorPontuacao then
+                            melhorPontuacao = pontuacao
+                            melhorAlvo = p
+                        end
                     end
                 end
             end
@@ -197,60 +212,24 @@ local function ObterJogadorMaisProximoDaMira()
     return melhorAlvo
 end
 
--- ==========================================
--- AUTO JJ - TOQUE REAL NO CELULAR
--- ==========================================
-local function EncontrarBolinha()
-    local playerGui = localPlayer:FindFirstChild("PlayerGui")
-    if not playerGui then return nil end
-    local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
-    if not screenPolichinelo then return nil end
-    for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
-        if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible then
-            local pos = elemento.AbsolutePosition
-            local tam = elemento.AbsoluteSize
-            return {X = pos.X + (tam.X / 2), Y = pos.Y + (tam.Y / 2)}
-        end
-    end
-    return nil
-end
-
-local function LoopAutoJJ()
-    while AutoJJ_Ativado do
-        local bolinha = EncontrarBolinha()
-        if bolinha then
-            -- Pressiona
-            pcall(function()
-                VirtualInputManager:SendTouchEvent(Vector2.new(bolinha.X, bolinha.Y), 0, true, game, 1)
-            end)
-            task.wait(0.02)
-            -- Solta
-            pcall(function()
-                VirtualInputManager:SendTouchEvent(Vector2.new(bolinha.X, bolinha.Y), 0, false, game, 1)
-            end)
-            JJ_Disparos = JJ_Disparos + 1
-        end
-        task.wait(VelocidadeJJ)
-    end
-end
-
--- ==========================================
--- LOOP PRINCIPAL
--- ==========================================
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
+    
     if Aimbot_UsarFOV and FOVCircle then
         FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
         FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV
     end
+
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
             local parteRastrear = Aimbot_ParteAlvo
             if parteRastrear == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            else parteRastrear = alvo.Character:FindFirstChild("Head") end
+            else
+                parteRastrear = alvo.Character:FindFirstChild("Head")
+            end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -258,6 +237,25 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+
+    -- HITBOX - Atualiza o tamanho/transparência/cor dos HumanoidRootParts
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= localPlayer and p.Character then
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if hum and root and hum.Health > 0 then
+                if Hitbox_Ativado then
+                    root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
+                    root.Transparency = Hitbox_Transparencia
+                    root.Material = Hitbox_Material
+                    root.Color = Hitbox_Cor
+                    root.CanCollide = false
+                end
+            end
+        end
+    end
+
+    -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_Tracers and p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -270,6 +268,8 @@ RunService.RenderStepped:Connect(function()
             else tracer.Visible = false end
         else if tracer then tracer.Visible = false end end
     end
+
+    -- ESP Vida
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -332,23 +332,16 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- Principal
-local MainTab = Window:CreateTab("Principal", 4483362458)
-MainTab:CreateSection("Movimentacao")
-MainTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-MainTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+local MainTab = Window:CreateTab("🏠 Principal", 4483362458)
+MainTab:CreateSection("Configurações")
+MainTab:CreateToggle({Name = "Botão de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
+MainTab:CreateInput({Name = "Distância Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 
-MainTab:CreateSection("Auto JJ Polichinelos")
-MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
-    AutoJJ_Ativado = v
-    if v then JJ_Disparos = 0; task.spawn(LoopAutoJJ) end
-end})
-MainTab:CreateInput({Name = "Velocidade", PlaceholderText = "0.01", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeJJ = n end end})
-MainTab:CreateButton({Name = "Ver Disparos", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Disparos: " .. JJ_Disparos, Duration = 4}) end})
-MainTab:CreateButton({Name = "Resetar Contador", Callback = function() JJ_Disparos = 0 end})
-
 -- Combate
-local CombatTab = Window:CreateTab("Combate", 4483345998)
+local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
+
+-- AIMBOT
 CombatTab:CreateSection("Aimbot")
 CombatTab:CreateToggle({Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:CreateToggle({Name = "Mostrar FOV", CurrentValue = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
@@ -360,30 +353,113 @@ CombatTab:CreateInput({Name = "Suavidade", PlaceholderText = "0.15", RemoveTextA
 CombatTab:CreateInput({Name = "Offset FOV Tela", PlaceholderText = "-40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
 CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
 CombatTab:CreateSection("Alvo")
-CombatTab:CreateButton({Name = "CABECA", Callback = function() Aimbot_ParteAlvo = "Head" end})
+CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
-CombatTab:CreateSection("Lista de Exclusao")
-local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Callback = function(Option)
-    if type(Option) == "string" then DropdownSelecionado = Option
-    elseif type(Option) == "table" then local val = Option.Value or Option.CurrentOption or Option[1] or ""; if type(val) == "string" then DropdownSelecionado = val end end
+-- HITBOX (NOVO)
+CombatTab:CreateSection("Hitbox Expander")
+CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
+    Hitbox_Ativado = v
+    if not v then
+        -- Reseta as hitboxes quando desativa
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                p.Character.HumanoidRootPart.Transparency = 1
+                p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
+                p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
+            end
+        end
+    end
 end})
-CombatTab:CreateButton({Name = "Adicionar", Callback = function()
-   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = true; AtualizarListaIgnorados() end
+
+CombatTab:CreateInput({Name = "Tamanho da Hitbox", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) 
+    local n = tonumber(t) 
+    if n then Hitbox_Tamanho = n end
 end})
-CombatTab:CreateButton({Name = "Remover", Callback = function()
-   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = nil; AtualizarListaIgnorados() end
+
+CombatTab:CreateInput({Name = "Transparência (0 a 1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) 
+    local n = tonumber(t) 
+    if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end
 end})
-CombatTab:CreateButton({Name = "Atualizar", Callback = function() DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true) end})
-CombatTab:CreateButton({Name = "Limpar", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
+
+-- Cores da Hitbox
+CombatTab:CreateSection("Cores da Hitbox")
+local coresHitbox = {
+    {"🔴 Vermelho", Color3.fromRGB(255, 30, 30)},
+    {"🔵 Azul", Color3.fromRGB(30, 100, 255)},
+    {"🟢 Verde", Color3.fromRGB(50, 255, 50)},
+    {"🟡 Amarelo", Color3.fromRGB(255, 220, 0)},
+    {"🟣 Roxo", Color3.fromRGB(170, 0, 255)},
+    {"🩵 Ciano", Color3.fromRGB(0, 255, 255)},
+    {"⚪ Branco", Color3.fromRGB(255, 255, 255)},
+    {"💗 Rosa", Color3.fromRGB(255, 0, 180)},
+}
+
+for _, c in ipairs(coresHitbox) do
+    CombatTab:CreateButton({Name = c[1], Callback = function() 
+        Hitbox_Cor = c[2] 
+        Rayfield:Notify({Title = "Hitbox", Content = "Cor: " .. c[1], Duration = 2})
+    end})
+end
+
+-- RGB personalizado para Hitbox
+CombatTab:CreateInput({Name = "Cor RGB (ex: 255,128,0)", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
+    local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+    if r and g and b then
+        local rNum = math.clamp(tonumber(r), 0, 255)
+        local gNum = math.clamp(tonumber(g), 0, 255)
+        local bNum = math.clamp(tonumber(b), 0, 255)
+        Hitbox_Cor = Color3.fromRGB(rNum, gNum, bNum)
+        Rayfield:Notify({Title = "Hitbox", Content = "Cor RGB: " .. rNum .. "," .. gNum .. "," .. bNum, Duration = 2})
+    end
+end})
+
+-- LISTA DE EXCLUSÃO
+CombatTab:CreateSection("Lista de Exclusão")
+local dropdownIgnorar = CombatTab:CreateDropdown({
+   Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Flag = "DropdownIgnorar",
+   Callback = function(Option)
+      if type(Option) == "string" then DropdownSelecionado = Option
+      elseif type(Option) == "table" then
+         local val = Option.Value or Option.CurrentOption or Option[1] or ""
+         if type(val) == "string" then DropdownSelecionado = val end
+      end
+   end,
+})
+
+CombatTab:CreateButton({Name = "➕ Adicionar", Callback = function()
+   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+      JogadoresIgnorados[DropdownSelecionado] = true; AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " adicionado!", Duration = 2})
+   else Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3}) end
+end})
+
+CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
+   if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+      JogadoresIgnorados[DropdownSelecionado] = nil; AtualizarListaIgnorados()
+      Rayfield:Notify({Title = "OK", Content = DropdownSelecionado .. " removido!", Duration = 2})
+   else Rayfield:Notify({Title = "Erro", Content = "Selecione um jogador!", Duration = 3}) end
+end})
+
+CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function()
+   DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true)
+end})
+
+CombatTab:CreateButton({Name = "🗑️ Limpar Tudo", Callback = function()
+   JogadoresIgnorados = {}; AtualizarListaIgnorados()
+end})
+
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
+
 function AtualizarListaIgnorados()
-   local lista = {}; for nome in pairs(JogadoresIgnorados) do table.insert(lista, " - " .. nome) end
+   local lista = {}
+   for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
    ListaIgnoradosLabel:Set({Title = "Ignorados (" .. #lista .. ")", Content = #lista == 0 and "Nenhum" or table.concat(lista, "\n")})
 end
 
 -- Visuais
-local VisualTab = Window:CreateTab("Visuais", 4483345998)
+local VisualTab = Window:CreateTab("👁️ Visuais", 4483345998)
 VisualTab:CreateSection("ESP")
 VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
@@ -392,26 +468,36 @@ VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 VisualTab:CreateSection("Cores ESP")
-VisualTab:CreateButton({Name = "Vermelho", Callback = function() AplicarCorESP(Color3.fromRGB(255,50,50)) end})
-VisualTab:CreateButton({Name = "Azul", Callback = function() AplicarCorESP(Color3.fromRGB(50,150,255)) end})
-VisualTab:CreateButton({Name = "Verde", Callback = function() AplicarCorESP(Color3.fromRGB(50,255,100)) end})
-VisualTab:CreateButton({Name = "Amarelo", Callback = function() AplicarCorESP(Color3.fromRGB(255,220,50)) end})
-VisualTab:CreateButton({Name = "Roxo", Callback = function() AplicarCorESP(Color3.fromRGB(170,0,255)) end})
-VisualTab:CreateButton({Name = "Ciano", Callback = function() AplicarCorESP(Color3.fromRGB(0,255,255)) end})
-VisualTab:CreateButton({Name = "Branco", Callback = function() AplicarCorESP(Color3.fromRGB(255,255,255)) end})
-VisualTab:CreateButton({Name = "Rosa", Callback = function() AplicarCorESP(Color3.fromRGB(255,0,180)) end})
+local cores = {{"🔴 Vermelho", Color3.fromRGB(255,50,50)}, {"🔵 Azul", Color3.fromRGB(50,150,255)}, {"🟢 Verde", Color3.fromRGB(50,255,100)}, {"🟡 Amarelo", Color3.fromRGB(255,220,50)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
+for _, c in ipairs(cores) do VisualTab:CreateButton({Name = c[1], Callback = function() AplicarCorESP(c[2]) end}) end
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
 -- Configs
-local ConfigTab = Window:CreateTab("Configs", 4483345998)
+local ConfigTab = Window:CreateTab("⚙️ Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
-   AutoJJ_Ativado = false
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
+   -- Reseta hitboxes
+   for _, p in pairs(Players:GetPlayers()) do
+      if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+         p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+         p.Character.HumanoidRootPart.Transparency = 1
+         p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
+         p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
+      end
+   end
    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-   for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
+   LinhasTracers = {}
+   for _, plr in pairs(Players:GetPlayers()) do
+      if plr.Character then
+         local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
+         local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
+         local h = plr.Character:FindFirstChild("Head")
+         if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
+      end
+   end
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ com Touch real! Ative na aba Principal.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot + Hitbox + ESP + Lista de Exclusão! Tudo desativado por padrão.", Duration = 5, Image = 4483345998})
