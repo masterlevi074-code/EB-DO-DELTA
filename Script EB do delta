@@ -8,7 +8,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 if CoreGui:FindFirstChild("Rayfield") then CoreGui.Rayfield:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("Rayfield") then localPlayer.PlayerGui.Rayfield:Destroy() end
@@ -217,7 +216,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - POLICHINELOS (InputTemplate)
+-- AUTO JJ - SIMULA TOUCH (TELA)
 -- ==========================================
 local function EncontrarBolinhasPolichinelo()
     local bolinhas = {}
@@ -245,35 +244,57 @@ local function EncontrarBolinhasPolichinelo()
     return bolinhas
 end
 
-local function ClicarBolinha(x, y, id, elemento)
-    -- Método 1: Mover mouse e clicar
+local function ClicarBolinhaTouch(x, y, id, elemento)
+    -- Simula TOQUE na tela (Touch) - muito mais estável que mouse
     pcall(function()
-        game:GetService("UserInputService"):SetMouseLocation(math.floor(x), math.floor(y))
-        task.wait(0.001)
+        local touchEvent = {
+            Position = Vector2.new(x, y),
+            UserInputType = Enum.UserInputType.Touch,
+            UserInputState = Enum.UserInputState.Begin,
+        }
+        
+        -- Dispara o InputBegan no próprio elemento
+        if elemento then
+            elemento.InputBegan:Fire(touchEvent)
+            task.wait(0.005)
+            
+            local touchEnd = {
+                Position = Vector2.new(x, y),
+                UserInputType = Enum.UserInputType.Touch,
+                UserInputState = Enum.UserInputState.End,
+            }
+            elemento.InputEnded:Fire(touchEnd)
+        end
     end)
     
-    -- Método 2: Disparar evento de clique diretamente
+    -- Método alternativo: usar o sistema de Touch do Roblox
+    pcall(function()
+        local touchInputs = UserInputService:GetTouchInputs()
+        -- Cria um toque simulado
+        local fakeTouch = {
+            Position = Vector2.new(x, y),
+            Delta = Vector2.new(0, 0),
+            UserInputState = Enum.UserInputState.Begin,
+            UserInputType = Enum.UserInputType.Touch,
+        }
+        
+        -- Dispara TouchStarted no UserInputService
+        if UserInputService.TouchStarted then
+            UserInputService.TouchStarted:Fire(fakeTouch)
+            task.wait(0.005)
+            
+            fakeTouch.UserInputState = Enum.UserInputState.End
+            if UserInputService.TouchEnded then
+                UserInputService.TouchEnded:Fire(fakeTouch)
+            end
+        end
+    end)
+    
+    -- Método 3: Fire direto no botão (se os outros falharem)
     pcall(function()
         if elemento and elemento.MouseButton1Click then
             elemento.MouseButton1Click:Fire()
         end
-    end)
-    
-    -- Método 3: Simular InputBegan
-    pcall(function()
-        if elemento and elemento.InputBegan then
-            elemento.InputBegan:Fire({
-                Position = Vector2.new(x, y),
-                UserInputType = Enum.UserInputType.MouseButton1,
-                UserInputState = Enum.UserInputState.Begin,
-            })
-        end
-    end)
-    
-    -- Método 4: VirtualInputManager
-    pcall(function()
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, nil, 0)
-        VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, nil, 0)
     end)
     
     BolinhasClicadas[id] = tick()
@@ -285,7 +306,7 @@ local function LoopAutoJJ()
         local bolinhas = EncontrarBolinhasPolichinelo()
         for _, bolinha in ipairs(bolinhas) do
             if not AutoJJ_Ativado then break end
-            ClicarBolinha(bolinha.CentroX, bolinha.CentroY, bolinha.ID, bolinha.Elemento)
+            ClicarBolinhaTouch(bolinha.CentroX, bolinha.CentroY, bolinha.ID, bolinha.Elemento)
             task.wait(VelocidadeClique)
         end
         task.wait(VelocidadeClique)
@@ -438,15 +459,15 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
         ClicksRealizados = 0
         BolinhasClicadas = {}
         task.spawn(LoopAutoJJ)
-        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Clicando nas bolinhas!", Duration = 3})
+        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Tocando nas bolinhas!", Duration = 3})
     else
-        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Cliques: " .. ClicksRealizados, Duration = 3})
+        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Toques: " .. ClicksRealizados, Duration = 3})
     end
 end})
 MainTab:CreateInput({Name = "Velocidade (segundos)", PlaceholderText = "0.01 = ultra rápido", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
 MainTab:CreateButton({Name = "📊 Ver Estatísticas", Callback = function() 
     local bolinhas = EncontrarBolinhasPolichinelo()
-    Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados .. " | Bolinhas: " .. #bolinhas, Duration = 4}) 
+    Rayfield:Notify({Title = "Auto JJ", Content = "Toques: " .. ClicksRealizados .. " | Bolinhas: " .. #bolinhas, Duration = 4}) 
 end})
 MainTab:CreateButton({Name = "🔄 Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasClicadas = {} end})
 
@@ -554,4 +575,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Dash + JJs + Aimbot + Hitbox + ESP!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ com TOUCH! Ative na aba Principal para o Polichinelo.", Duration = 5, Image = 4483345998})
