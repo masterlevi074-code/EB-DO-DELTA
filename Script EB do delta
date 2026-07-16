@@ -480,4 +480,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot com opcao 'So mirar com item' adicionada!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot com opcao 'So mirar com item' adicionada!", Duration = 3})
