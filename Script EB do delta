@@ -47,12 +47,11 @@ local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
 
--- AUTO JJ (AUTO CLICK BOLINHAS)
+-- AUTO JJ (POLICHINELOS)
 local AutoJJ_Ativado = false
-local VelocidadeClique = 0.05
+local VelocidadeClique = 0.01
 local ClicksRealizados = 0
-local BolinhasIgnoradas = {}
-local TempoLimpeza = 0.5
+local BolinhasClicadas = {}
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -189,20 +188,17 @@ local function ObterJogadorMaisProximoDaMira()
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
-
             local parteBuscada = Aimbot_ParteAlvo
             if parteBuscada == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
             else
                 parteBuscada = p.Character:FindFirstChild("Head")
             end
-
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
                 local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
                 local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
-                
                 if visivel then
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
@@ -221,30 +217,27 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- FUNÇÕES AUTO JJ
+-- AUTO JJ - POLICHINELOS (InputTemplate)
 -- ==========================================
-local function EncontrarBolinhas()
+local function EncontrarBolinhasPolichinelo()
     local bolinhas = {}
     local playerGui = localPlayer:FindFirstChild("PlayerGui")
     if not playerGui then return bolinhas end
     
-    for _, screenGui in pairs(playerGui:GetChildren()) do
-        if screenGui:IsA("ScreenGui") or screenGui:IsA("SurfaceGui") then
-            for _, elemento in pairs(screenGui:GetDescendants()) do
-                if elemento:IsA("ImageButton") and elemento.Visible and elemento.Active then
-                    local pos = elemento.AbsolutePosition
-                    local tam = elemento.AbsoluteSize
-                    if tam.X > 10 and tam.Y > 10 and tam.X < 200 and tam.Y < 200 then
-                        local id = elemento:GetFullName()
-                        if not BolinhasIgnoradas[id] or (tick() - BolinhasIgnoradas[id] > TempoLimpeza) then
-                            table.insert(bolinhas, {
-                                Elemento = elemento,
-                                ID = id,
-                                CentroX = pos.X + (tam.X / 2),
-                                CentroY = pos.Y + (tam.Y / 2),
-                            })
-                        end
-                    end
+    local screenPolichinelo = playerGui:FindFirstChild("Polichinelos")
+    if not screenPolichinelo then return bolinhas end
+    
+    for _, elemento in pairs(screenPolichinelo:GetDescendants()) do
+        if elemento:IsA("ImageButton") and elemento.Name == "InputTemplate" and elemento.Visible and elemento.Active then
+            local pos = elemento.AbsolutePosition
+            local tam = elemento.AbsoluteSize
+            local centroX = pos.X + (tam.X / 2)
+            local centroY = pos.Y + (tam.Y / 2)
+            
+            if centroX > 0 and centroY > 0 and centroX < 2000 and centroY < 2000 then
+                local id = math.floor(centroX) .. "_" .. math.floor(centroY)
+                if not BolinhasClicadas[id] or (tick() - BolinhasClicadas[id] > 0.2) then
+                    table.insert(bolinhas, {CentroX = centroX, CentroY = centroY, ID = id})
                 end
             end
         end
@@ -254,32 +247,30 @@ end
 
 local function ClicarBolinha(x, y, id)
     VirtualInputManager:SendMouseMoveEvent(x, y)
-    task.wait(0.01)
     VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, nil, 1)
     task.wait(0.01)
     VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, nil, 1)
-    BolinhasIgnoradas[id] = tick()
+    BolinhasClicadas[id] = tick()
     ClicksRealizados = ClicksRealizados + 1
 end
 
 local function LoopAutoJJ()
     while AutoJJ_Ativado do
-        local bolinhas = EncontrarBolinhas()
-        if #bolinhas > 0 then
-            local bolinha = bolinhas[1]
-            if bolinha.Elemento and bolinha.Elemento.Parent and bolinha.Elemento.Visible then
-                ClicarBolinha(bolinha.CentroX, bolinha.CentroY, bolinha.ID)
-            end
+        local bolinhas = EncontrarBolinhasPolichinelo()
+        for _, bolinha in ipairs(bolinhas) do
+            if not AutoJJ_Ativado then break end
+            ClicarBolinha(bolinha.CentroX, bolinha.CentroY, bolinha.ID)
+            task.wait(VelocidadeClique)
         end
         task.wait(VelocidadeClique)
     end
 end
 
 task.spawn(function()
-    while task.wait(2) do
+    while task.wait(1) do
         local agora = tick()
-        for id, tempo in pairs(BolinhasIgnoradas) do
-            if agora - tempo > TempoLimpeza then BolinhasIgnoradas[id] = nil end
+        for id, tempo in pairs(BolinhasClicadas) do
+            if agora - tempo > 0.3 then BolinhasClicadas[id] = nil end
         end
     end
 end)
@@ -404,19 +395,40 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = {Enabled = false}, Discord = {Enabled = false}, KeySystem = false,
 })
 
--- Principal
+-- ==========================================
+-- ABA PRINCIPAL (Com Auto JJ)
+-- ==========================================
 local MainTab = Window:CreateTab("🏠 Principal", 4483362458)
-MainTab:CreateSection("Configurações")
+
+MainTab:CreateSection("Movimentação")
 MainTab:CreateToggle({Name = "Botão de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
 MainTab:CreateInput({Name = "Distância Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
-MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
+MainTab:CreateButton({Name = "Resetar Personagem", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
+
+MainTab:CreateSection("Auto JJ (Polichinelos)")
+MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
+    AutoJJ_Ativado = v
+    if v then 
+        ClicksRealizados = 0
+        BolinhasClicadas = {}
+        task.spawn(LoopAutoJJ)
+        Rayfield:Notify({Title = "Auto JJ", Content = "ATIVADO! Clicando nas bolinhas!", Duration = 3})
+    else
+        Rayfield:Notify({Title = "Auto JJ", Content = "DESATIVADO! Cliques: " .. ClicksRealizados, Duration = 3})
+    end
+end})
+MainTab:CreateInput({Name = "Velocidade (segundos)", PlaceholderText = "0.01 = ultra rápido", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
+MainTab:CreateButton({Name = "📊 Ver Estatísticas", Callback = function() 
+    local bolinhas = EncontrarBolinhasPolichinelo()
+    Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados .. " | Bolinhas: " .. #bolinhas, Duration = 4}) 
+end})
+MainTab:CreateButton({Name = "🔄 Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasClicadas = {} end})
 
 -- ==========================================
--- COMBATE
+-- ABA COMBATE
 -- ==========================================
 local CombatTab = Window:CreateTab("⚔️ Combate", 4483345998)
 
--- AIMBOT
 CombatTab:CreateSection("Aimbot")
 CombatTab:CreateToggle({Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:CreateToggle({Name = "Mostrar FOV", CurrentValue = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
@@ -431,7 +443,6 @@ CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABEÇA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
 
--- HITBOX
 CombatTab:CreateSection("Hitbox Expander")
 CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
     Hitbox_Ativado = v
@@ -448,30 +459,14 @@ CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback =
 end})
 CombatTab:CreateInput({Name = "Tamanho", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
 CombatTab:CreateInput({Name = "Transparência (0-1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
-
 CombatTab:CreateSection("Cores Hitbox")
-local coresHitbox = {{"🔴 Vermelho", Color3.fromRGB(255, 30, 30)}, {"🔵 Azul", Color3.fromRGB(30, 100, 255)}, {"🟢 Verde", Color3.fromRGB(50, 255, 50)}, {"🟡 Amarelo", Color3.fromRGB(255, 220, 0)}, {"🟣 Roxo", Color3.fromRGB(170, 0, 255)}, {"🩵 Ciano", Color3.fromRGB(0, 255, 255)}, {"⚪ Branco", Color3.fromRGB(255, 255, 255)}, {"💗 Rosa", Color3.fromRGB(255, 0, 180)}}
+local coresHitbox = {{"🔴 Vermelho", Color3.fromRGB(255,30,30)}, {"🔵 Azul", Color3.fromRGB(30,100,255)}, {"🟢 Verde", Color3.fromRGB(50,255,50)}, {"🟡 Amarelo", Color3.fromRGB(255,220,0)}, {"🟣 Roxo", Color3.fromRGB(170,0,255)}, {"🩵 Ciano", Color3.fromRGB(0,255,255)}, {"⚪ Branco", Color3.fromRGB(255,255,255)}, {"💗 Rosa", Color3.fromRGB(255,0,180)}}
 for _, c in ipairs(coresHitbox) do CombatTab:CreateButton({Name = c[1], Callback = function() Hitbox_Cor = c[2] end}) end
 CombatTab:CreateInput({Name = "Cor RGB (ex: 255,128,0)", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
     local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
     if r and g and b then Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255)) end
 end})
 
--- AUTO JJ
-CombatTab:CreateSection("Auto JJ (Auto Click Bolinhas)")
-CombatTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
-    AutoJJ_Ativado = v
-    if v then ClicksRealizados = 0; BolinhasIgnoradas = {}; task.spawn(LoopAutoJJ) end
-end})
-CombatTab:CreateInput({Name = "Velocidade (segundos)", PlaceholderText = "0.05 = rápido | 0.2 = lento", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n and n > 0 then VelocidadeClique = n end end})
-CombatTab:CreateButton({Name = "📊 Ver Cliques", Callback = function() Rayfield:Notify({Title = "Auto JJ", Content = "Cliques: " .. ClicksRealizados .. " | Vel: " .. VelocidadeClique .. "s", Duration = 4}) end})
-CombatTab:CreateButton({Name = "🔄 Resetar Contador", Callback = function() ClicksRealizados = 0; BolinhasIgnoradas = {} end})
-CombatTab:CreateButton({Name = "🔍 Scanear Bolinhas", Callback = function()
-    local bolinhas = EncontrarBolinhas()
-    Rayfield:Notify({Title = "Bolinhas: " .. #bolinhas, Content = #bolinhas > 0 and "Bolinhas detectadas!" or "Nenhuma bolinha!", Duration = 3})
-end})
-
--- LISTA DE EXCLUSÃO
 CombatTab:CreateSection("Lista de Exclusão")
 local dropdownIgnorar = CombatTab:CreateDropdown({Name = "Jogador", Options = ObterListaJogadores(), CurrentOption = "", Flag = "DropdownIgnorar", Callback = function(Option)
     if type(Option) == "string" then DropdownSelecionado = Option
@@ -484,7 +479,7 @@ CombatTab:CreateButton({Name = "➖ Remover", Callback = function()
    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = nil; AtualizarListaIgnorados() end
 end})
 CombatTab:CreateButton({Name = "🔄 Atualizar", Callback = function() DropdownSelecionado = ""; dropdownIgnorar:Refresh(ObterListaJogadores(), true) end})
-CombatTab:CreateButton({Name = "🗑️ Limpar Tudo", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
+CombatTab:CreateButton({Name = "🗑️ Limpar", Callback = function() JogadoresIgnorados = {}; AtualizarListaIgnorados() end})
 local ListaIgnoradosLabel = CombatTab:CreateParagraph({Title = "Ignorados", Content = "Nenhum"})
 function AtualizarListaIgnorados()
    local lista = {}; for nome in pairs(JogadoresIgnorados) do table.insert(lista, "• " .. nome) end
@@ -533,4 +528,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot + Hitbox + Auto JJ + ESP! Tudo pronto!", Duration = 5, Image = 4483345998})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Auto JJ na aba Principal! Dash + JJs + Aimbot + Hitbox + ESP!", Duration = 5, Image = 4483345998})
