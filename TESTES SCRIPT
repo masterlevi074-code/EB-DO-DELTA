@@ -8,7 +8,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
-local HttpService = game:GetService("HttpService")
 
 if CoreGui:FindFirstChild("Rayfield") then CoreGui.Rayfield:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("Rayfield") then localPlayer.PlayerGui.Rayfield:Destroy() end
@@ -52,12 +51,131 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
--- BLOCOS ANTI-QUEDA
+-- BLOCOS PARKOUR (VAKHA VKH)
 local BlocosAtivado = false
-local BlocosCapturando = false
-local BlocosPosicoes = {}
-local BlocosCriados = {}
-local BlocosParkourAtual = 1
+local Hitboxes = {}
+
+local data = {
+    {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.11, 21.28, -661.68), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.30, 29.29, -661.72), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.08, 37.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.08, 45.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.25, 53.36, -661.86), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.82, 61.36, -662.00), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.60, 69.40, -661.98), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.71, 77.42, -661.90), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.28, 85.44, -662.14), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.42, 93.48, -662.05), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.94, 101.46, -661.80), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.94, 109.48, -661.78), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(185.08, 5.26, -618.66), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.36, 13.28, -618.65), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.32, 21.29, -618.70), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.65, 29.34, -618.67), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.12, 37.36, -618.43), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(186.30, 45.34, -617.87), size = Vector3.new(5.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.41, 53.36, -618.05), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.62, 61.40, -617.79), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.58, 69.40, -617.79), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(185.87, 77.42, -618.33), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.73, 85.44, -618.62), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.68, 93.48, -618.49), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.83, 101.46, -617.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.57, 109.48, -618.45), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(270.22, 4.24, -661.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(277.86, 4.24, -655.56), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(269.80, 4.24, -649.96), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(284.45, 4.24, -660.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(284.59, 4.24, -650.23), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(267.14, 5.04, -627.94), size = Vector3.new(4.00, 0.50, 32.00)},
+    {pos = Vector3.new(288.33, 5.04, -627.86), size = Vector3.new(4.00, 0.50, 31.00)},
+    {pos = Vector3.new(277.48, 7.63, -591.97), size = Vector3.new(4.00, 0.50, 27.00)},
+    {pos = Vector3.new(271.76, 7.64, -569.98), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(279.08, 7.64, -567.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(265.48, 7.64, -564.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(271.34, 7.64, -559.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(259.46, 7.64, -561.92), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(260.50, 7.64, -554.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(250.93, 7.64, -561.91), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(248.66, 7.64, -554.60), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(243.06, 7.64, -565.74), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(235.96, 7.64, -560.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(240.08, 7.64, -592.47), size = Vector3.new(4.00, 0.50, 27.00)},
+    {pos = Vector3.new(394.19, 5.06, -850.78), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.19, 7.45, -855.82), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(392.91, 5.06, -861.09), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(384.07, 10.15, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(377.51, 12.94, -855.73), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(370.87, 14.68, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(365.12, 16.20, -856.03), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(358.50, 17.61, -855.96), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(351.76, 19.27, -856.05), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(345.37, 20.53, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(339.00, 21.54, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(334.51, 21.54, -850.11), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(328.83, 21.54, -855.97), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(335.00, 21.54, -861.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(324.43, 21.54, -861.35), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(324.69, 21.54, -850.36), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(318.73, 21.54, -855.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(313.47, 21.54, -861.90), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(308.27, 21.54, -855.88), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(314.49, 21.54, -850.04), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(303.58, 21.54, -861.59), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(303.61, 21.54, -850.61), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(298.50, 21.54, -856.16), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(393.87, 2.87, -892.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(394.65, 2.87, -902.16), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.37, 5.04, -892.40), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.57, 5.04, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(383.37, 7.79, -892.63), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(383.64, 7.79, -903.27), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(378.64, 9.35, -892.48), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(378.64, 9.35, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(373.27, 11.53, -892.90), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(372.82, 11.53, -903.33), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(368.47, 11.53, -892.69), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(367.91, 11.53, -903.02), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(362.88, 11.53, -894.04), size = Vector3.new(4.00, 0.50, 7.00)},
+    {pos = Vector3.new(358.03, 11.53, -901.74), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(352.36, 11.53, -894.75), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(347.47, 11.53, -899.21), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(333.21, 11.53, -897.81), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(325.73, 11.53, -898.53), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(318.25, 11.53, -897.79), size = Vector3.new(5.00, 0.50, 11.00)},
+    {pos = Vector3.new(310.71, 11.53, -898.95), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(303.10, 11.53, -898.29), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(295.54, 11.53, -898.01), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(288.21, 11.53, -898.79), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(149.54, 1.04, -856.00), size = Vector3.new(3.00, 0.50, 13.00)},
+    {pos = Vector3.new(148.21, 7.50, -855.93), size = Vector3.new(4.00, 0.50, 13.00)},
+    {pos = Vector3.new(148.27, 13.38, -856.27), size = Vector3.new(4.00, 0.50, 13.00)},
+    {pos = Vector3.new(162.71, 13.70, -859.82), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(170.73, 13.70, -852.89), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(181.41, 13.70, -859.17), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(190.97, 13.70, -853.25), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(217.92, 11.53, -848.28), size = Vector3.new(32.00, 0.50, 4.00)},
+    {pos = Vector3.new(217.99, 12.04, -863.62), size = Vector3.new(29.00, 0.50, 4.00)},
+    {pos = Vector3.new(243.52, 12.04, -855.57), size = Vector3.new(14.00, 0.50, 3.00)},
+    {pos = Vector3.new(150.43, 5.27, -897.87), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(150.71, 13.28, -898.27), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(150.28, 21.29, -898.42), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.45, 29.30, -898.11), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(150.52, 37.31, -898.44), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.56, 45.32, -897.73), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.95, 53.33, -898.02), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(167.23, 53.26, -903.84), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(172.90, 53.26, -900.06), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(167.09, 53.26, -890.73), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(181.65, 53.26, -902.00), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(180.48, 53.26, -893.06), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(199.10, 53.33, -897.28), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(210.50, 53.33, -897.85), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(223.52, 53.33, -898.25), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(235.61, 53.33, -897.82), size = Vector3.new(5.00, 0.50, 5.00)},
+}
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -258,61 +376,26 @@ local function IniciarAutoJJ()
 end
 
 -- ==========================================
--- BLOCOS ANTI-QUEDA
+-- BLOCOS PARKOUR
 -- ==========================================
-local function IniciarCaptura()
-    BlocosCapturando = true
-    BlocosPosicoes = {}
-    Rayfield:Notify({Title = "Blocos", Content = "Capturando! Caminhe pelo parkour...", Duration = 3})
-end
-
-local function PararCaptura()
-    BlocosCapturando = false
-    if #BlocosPosicoes > 0 then
-        local json = HttpService:JSONEncode(BlocosPosicoes)
-        local nomeArquivo = "BlocosParkour_" .. BlocosParkourAtual .. ".txt"
-        pcall(function()
-            if writefile then
-                writefile(nomeArquivo, json)
-                Rayfield:Notify({Title = "SUCESSO!", Content = #BlocosPosicoes .. " posicoes salvas!", Duration = 5})
-            end
-        end)
+local function CreateHitboxes()
+    for _, v in ipairs(data) do
+        local p = Instance.new("Part", workspace)
+        p.Name = "BlocoParkour"
+        p.Size = v.size
+        p.Position = v.pos
+        p.Anchored = true
+        p.CanCollide = true
+        p.Transparency = 0.7
+        p.Color = Color3.fromRGB(0, 255, 100)
+        p.Material = Enum.Material.Neon
+        table.insert(Hitboxes, p)
     end
 end
 
-local function CriarBlocos()
-    for _, bloco in pairs(BlocosCriados) do if bloco then bloco:Destroy() end end
-    BlocosCriados = {}
-    
-    local nomeArquivo = "BlocosParkour_" .. BlocosParkourAtual .. ".txt"
-    if not isfile or not isfile(nomeArquivo) then
-        Rayfield:Notify({Title = "Erro", Content = "Parkour nao tem blocos salvos!", Duration = 3})
-        return
-    end
-    
-    local conteudo = readfile(nomeArquivo)
-    local posicoes = HttpService:JSONDecode(conteudo)
-    
-    for _, pos in ipairs(posicoes) do
-        local bloco = Instance.new("Part")
-        bloco.Name = "BlocoAntiQueda"
-        bloco.Size = Vector3.new(8, 1, 8)
-        bloco.Position = Vector3.new(pos.x, pos.y, pos.z)
-        bloco.Anchored = true
-        bloco.CanCollide = true
-        bloco.Color = Color3.fromRGB(0, 150, 255)
-        bloco.Transparency = 0.5
-        bloco.Material = Enum.Material.Neon
-        bloco.Parent = Workspace
-        table.insert(BlocosCriados, bloco)
-    end
-    
-    Rayfield:Notify({Title = "Blocos", Content = #posicoes .. " blocos criados!", Duration = 3})
-end
-
-local function RemoverBlocos()
-    for _, bloco in pairs(BlocosCriados) do if bloco then bloco:Destroy() end end
-    BlocosCriados = {}
+local function RemoveHitboxes()
+    for _, v in pairs(Hitboxes) do if v then v:Destroy() end end
+    Hitboxes = {}
 end
 
 -- ==========================================
@@ -377,15 +460,17 @@ RunService.RenderStepped:Connect(function()
         end
     end
     
-    -- CAPTURA DE POSIÇÕES DOS BLOCOS
-    if BlocosCapturando and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local pos = localPlayer.Character.HumanoidRootPart.Position
-        local posArredondada = {x = math.floor(pos.X), y = math.floor(pos.Y - 4), z = math.floor(pos.Z)}
-        local existe = false
-        for _, p in ipairs(BlocosPosicoes) do
-            if p.x == posArredondada.x and p.z == posArredondada.z then existe = true; break end
+    -- BLOCOS PARKOUR
+    if BlocosAtivado and localPlayer.Character then
+        local hrp = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local velY = hrp.AssemblyLinearVelocity.Y
+            for _, part in pairs(Hitboxes) do
+                if part then
+                    part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1))
+                end
+            end
         end
-        if not existe then table.insert(BlocosPosicoes, posArredondada) end
     end
 end)
 
@@ -449,21 +534,17 @@ MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = 
     if v then IniciarAutoJJ() else DestruirPainelJJ() end
 end})
 
-MainTab:CreateSection("Blocos Anti-Queda")
-local dropdownBlocos = MainTab:CreateDropdown({
-    Name = "Selecionar Parkour",
-    Options = {"Parkour 1", "Parkour 2", "Parkour 3", "Parkour 4", "Parkour 5", "Parkour 6", "Parkour 7"},
-    CurrentOption = "Parkour 1",
-    Callback = function(Option)
-        local numero = Option:match("%d+")
-        if numero then BlocosParkourAtual = tonumber(numero) end
-    end,
-})
-MainTab:CreateButton({Name = "INICIAR CAPTURA", Callback = function() IniciarCaptura() end})
-MainTab:CreateButton({Name = "PARAR E SALVAR", Callback = function() PararCaptura() end})
-MainTab:CreateButton({Name = "MOSTRAR BLOCOS", Callback = function() CriarBlocos() end})
-MainTab:CreateButton({Name = "REMOVER BLOCOS", Callback = function() RemoverBlocos() end})
-MainTab:CreateParagraph({Title = "Como usar", Content = "1. Selecione o Parkour\n2. INICIAR CAPTURA\n3. Caminhe pelo parkour\n4. PARAR E SALVAR\n5. MOSTRAR BLOCOS"})
+MainTab:CreateSection("Blocos Parkour")
+MainTab:CreateToggle({Name = "Ativar Blocos", CurrentValue = false, Callback = function(v)
+    BlocosAtivado = v
+    if v then
+        CreateHitboxes()
+        Rayfield:Notify({Title = "Blocos", Content = "Blocos criados!", Duration = 3})
+    else
+        RemoveHitboxes()
+        Rayfield:Notify({Title = "Blocos", Content = "Blocos removidos!", Duration = 3})
+    end
+end})
 
 -- Combate
 local CombatTab = Window:CreateTab("Combate", 4483345998)
@@ -542,8 +623,8 @@ VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brig
 local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
-   BlocosCapturando = false
-   RemoverBlocos()
+   BlocosAtivado = false
+   RemoveHitboxes()
    DestruirPainelJJ()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
@@ -553,4 +634,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Blocos Anti-Queda! Capture e mostre blocos nos parkours.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Blocos Parkour adicionados! Ative na aba Principal.", Duration = 5})
