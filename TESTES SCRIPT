@@ -25,6 +25,23 @@ local ESP_Vida = false
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 
+-- ESP POR TIMES
+local ESP_TimesAtivado = false
+local TimesMarcados = {
+    ["[CI]"] = false,
+    ["[EB]"] = false,
+    ["[OF]"] = false,
+    ["[BAC]"] = false,
+    ["[BPE]"] = false,
+    ["[BFE]"] = false,
+    ["[CIE]"] = false,
+    ["[BIP]"] = false,
+    ["[CAAT]"] = false,
+    ["[CIGS]"] = false,
+    ["[MD]"] = false,
+    ["[REC MEC]"] = false,
+}
+
 -- AIMBOT
 local Aimbot_Ativado = false
 local Aimbot_UsarFOV = false
@@ -190,20 +207,58 @@ FOVCircle.Filled = false
 -- ==========================================
 -- FUNÇÕES ESP
 -- ==========================================
+local function GetPlayerTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then
+                return time
+            end
+        end
+    end
+    return nil
+end
+
 local function AtualizarESP()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
+            local mostrarESP = true
+            
+            if ESP_TimesAtivado then
+                local timePlayer = GetPlayerTime(p)
+                if timePlayer then
+                    mostrarESP = TimesMarcados[timePlayer] or false
+                else
+                    mostrarESP = false
+                end
+            end
+            
             local h = p.Character:FindFirstChild("NoahzinESP")
-            if h then h.Enabled = ESP_Chams; h.FillColor = CorESP end
+            if h then 
+                h.Enabled = ESP_Chams and mostrarESP
+                h.FillColor = CorESP 
+            end
+            
             local box = p.Character:FindFirstChild("NoahzinBox")
-            if box then box.Visible = ESP_Box; box.Color3 = CorESP end
+            if box then 
+                box.Visible = ESP_Box and mostrarESP
+                box.Color3 = CorESP 
+            end
+            
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui then nameGui.Enabled = ESP_Names; nameGui.TextLabel.TextColor3 = CorESP end
+                if nameGui then 
+                    nameGui.Enabled = ESP_Names and mostrarESP
+                    if nameGui:FindFirstChild("TextLabel") then
+                        nameGui.TextLabel.TextColor3 = CorESP
+                    end
+                end
             end
         end
-        if LinhasTracers[p] then LinhasTracers[p].Color = CorESP end
+        if LinhasTracers[p] then 
+            LinhasTracers[p].Color = CorESP 
+        end
     end
 end
 
@@ -591,6 +646,32 @@ end
 
 -- Visuais
 local VisualTab = Window:CreateTab("Visuais", 4483345998)
+
+-- TIMES ESP
+VisualTab:CreateSection("ESP por Times")
+VisualTab:CreateToggle({Name = "Ativar ESP por Times", CurrentValue = false, Callback = function(v)
+    ESP_TimesAtivado = v
+    AtualizarESP()
+end})
+
+local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
+for _, nomeTime in ipairs(timesOrdenados) do
+    VisualTab:CreateButton({Name = nomeTime .. (TimesMarcados[nomeTime] and " [X]" or " [ ]"), Callback = function()
+        TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]
+        AtualizarESP()
+    end})
+end
+
+VisualTab:CreateButton({Name = "SELECIONAR TODOS", Callback = function()
+    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end
+    AtualizarESP()
+end})
+
+VisualTab:CreateButton({Name = "DESMARCAR TODOS", Callback = function()
+    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end
+    AtualizarESP()
+end})
+
 VisualTab:CreateSection("ESP")
 VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
@@ -651,41 +732,6 @@ OutrosTab:CreateToggle({Name = "Ficar Invisivel", CurrentValue = false, Callback
     end
 end})
 
-OutrosTab:CreateSection("God Mode (Sem Dano)")
-OutrosTab:CreateToggle({Name = "Ativar God Mode", CurrentValue = false, Callback = function(v)
-    if localPlayer.Character then
-        local hum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            if v then
-                hum.MaxHealth = 9e9
-                hum.Health = 9e9
-                hum.BreakJointsOnDeath = false
-                hum.RequiresNeck = false
-                local protecao
-                protecao = hum.HealthChanged:Connect(function()
-                    if hum.Health < 9e9 then hum.Health = 9e9 end
-                end)
-                local conexao
-                conexao = RunService.RenderStepped:Connect(function()
-                    if not v or not hum or not hum.Parent then
-                        if conexao then conexao:Disconnect() end
-                        return
-                    end
-                    pcall(function()
-                        hum.Health = 9e9
-                        hum.MaxHealth = 9e9
-                    end)
-                end)
-            else
-                hum.MaxHealth = 100
-                hum.Health = 100
-                hum.BreakJointsOnDeath = true
-                hum.RequiresNeck = true
-            end
-        end
-    end
-end})
-
 OutrosTab:CreateSection("FOV da Camera")
 OutrosTab:CreateInput({Name = "FOV (70 padrao)", PlaceholderText = "70", RemoveTextAfterFocusLost = false, Callback = function(t) 
     local n = tonumber(t) 
@@ -737,4 +783,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "God Mode no RenderStepped + Invisivel sem bloco no tronco!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "ESP por Times adicionado! Selecione os times na aba Visuais.", Duration = 5})
