@@ -371,10 +371,14 @@ local function ObterJogadorMaisProximoDaMira()
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
-            local parteBuscada = Aimbot_ParteAlvo
-            if parteBuscada == "Torso" then
+            local parteBuscada = nil
+            if Aimbot_ParteAlvo == "Head" then
+                parteBuscada = p.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            else parteBuscada = p.Character:FindFirstChild("Head") end
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteBuscada = p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("RightFoot")
+            end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
@@ -466,10 +470,14 @@ RunService.RenderStepped:Connect(function()
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
-            local parteRastrear = Aimbot_ParteAlvo
-            if parteRastrear == "Torso" then
+            local parteRastrear = nil
+            if Aimbot_ParteAlvo == "Head" then
+                parteRastrear = alvo.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            else parteRastrear = alvo.Character:FindFirstChild("Head") end
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteRastrear = alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("RightFoot")
+            end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -608,6 +616,7 @@ CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", Remove
 CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABECA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
+CombatTab:CreateButton({Name = "PERNA", Callback = function() Aimbot_ParteAlvo = "Perna" end})
 
 CombatTab:CreateSection("Hitbox Expander")
 CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
@@ -783,4 +792,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "ESP por Times adicionado! Selecione os times na aba Visuais.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Alvo PERNA adicionado! Cabeca, Tronco e Perna.", Duration = 5})
