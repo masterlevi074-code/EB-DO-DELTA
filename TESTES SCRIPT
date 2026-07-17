@@ -244,9 +244,12 @@ local function AtualizarESP()
                     end
                 end
             end
-        end
-        if LinhasTracers[p] then 
-            LinhasTracers[p].Color = CorESP 
+            
+            -- CORRIGIDO: Esconde tracers também
+            if LinhasTracers[p] then 
+                LinhasTracers[p].Color = CorESP
+                LinhasTracers[p].Visible = ESP_Tracers and mostrarESP
+            end
         end
     end
 end
@@ -389,7 +392,12 @@ local function ObterJogadorMaisProximoDaMira()
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
                     if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
-                        local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
+                        local pontuacao
+                        if Aimbot_PrioridadeDistancia then
+                            pontuacao = (distanciaReal * 0.7) + (distanciaDaMira * 0.3)
+                        else
+                            pontuacao = distanciaDaMira
+                        end
                         if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
                     end
                 end
@@ -623,15 +631,9 @@ CombatTab:CreateDropdown({
     CurrentOption = "Cabeca",
     Flag = "AlvoAimbot",
     Callback = function(Option)
-        if Option == "Cabeca" then 
-            Aimbot_ParteAlvo = "Head"
-            Rayfield:Notify({Title = "Aimbot", Content = "Alvo: CABECA", Duration = 2})
-        elseif Option == "Tronco" then 
-            Aimbot_ParteAlvo = "Torso"
-            Rayfield:Notify({Title = "Aimbot", Content = "Alvo: TRONCO", Duration = 2})
-        elseif Option == "Perna" then 
-            Aimbot_ParteAlvo = "Perna"
-            Rayfield:Notify({Title = "Aimbot", Content = "Alvo: PERNA", Duration = 2})
+        if Option == "Cabeca" then Aimbot_ParteAlvo = "Head"
+        elseif Option == "Tronco" then Aimbot_ParteAlvo = "Torso"
+        elseif Option == "Perna" then Aimbot_ParteAlvo = "Perna"
         end
     end,
 })
@@ -665,7 +667,6 @@ CombatTab:CreateDropdown({
         }
         if cores[Option] then
             AplicarCorHitbox(cores[Option])
-            Rayfield:Notify({Title = "Hitbox", Content = "Cor: " .. Option, Duration = 2})
         end
     end,
 })
@@ -731,7 +732,7 @@ VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = 
 VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = function(v) ESP_Names=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
+VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 
 -- DROPDOWN DE CORES ESP
@@ -754,7 +755,6 @@ VisualTab:CreateDropdown({
         }
         if cores[Option] then
             AplicarCorESP(cores[Option])
-            Rayfield:Notify({Title = "ESP", Content = "Cor: " .. Option, Duration = 2})
         end
     end,
 })
@@ -818,4 +818,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Tudo corrigido! Alvo, Cores ESP e Hitbox com Flag!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Tracers corrigidos! Sintaxe do Aimbot corrigida!", Duration = 5})
