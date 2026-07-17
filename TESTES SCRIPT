@@ -647,26 +647,12 @@ end
 -- Visuais
 local VisualTab = Window:CreateTab("Visuais", 4483345998)
 
--- TIMES ESP (LISTA COMPACTA)
+-- TIMES ESP (DROPDOWN FUNCIONAL)
 VisualTab:CreateSection("ESP por Times")
 VisualTab:CreateToggle({Name = "Ativar ESP por Times", CurrentValue = false, Callback = function(v)
     ESP_TimesAtivado = v
     AtualizarESP()
 end})
-
-local TimesSelecionadosLabel = VisualTab:CreateParagraph({Title = "Times Selecionados", Content = "Nenhum"})
-
-local function AtualizarTextoSelecionados()
-    local selecionados = {}
-    for time, marcado in pairs(TimesMarcados) do
-        if marcado then table.insert(selecionados, time) end
-    end
-    if #selecionados == 0 then
-        TimesSelecionadosLabel:Set({Title = "Times Selecionados", Content = "Nenhum"})
-    else
-        TimesSelecionadosLabel:Set({Title = "Times Selecionados (" .. #selecionados .. ")", Content = table.concat(selecionados, ", ")})
-    end
-end
 
 local dropdownTimes = VisualTab:CreateDropdown({
     Name = "Selecionar Time",
@@ -676,22 +662,18 @@ local dropdownTimes = VisualTab:CreateDropdown({
     Callback = function(Option)
         if Option and Option ~= "" then
             TimesMarcados[Option] = not TimesMarcados[Option]
-            AtualizarTextoSelecionados()
             AtualizarESP()
-            dropdownTimes:Refresh({"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}, true)
         end
     end,
 })
 
 VisualTab:CreateButton({Name = "SELECIONAR TODOS", Callback = function()
     for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end
-    AtualizarTextoSelecionados()
     AtualizarESP()
 end})
 
 VisualTab:CreateButton({Name = "DESMARCAR TODOS", Callback = function()
     for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end
-    AtualizarTextoSelecionados()
     AtualizarESP()
 end})
 
@@ -702,15 +684,31 @@ VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
+
+-- LISTA DE CORES ESP (DROPDOWN)
 VisualTab:CreateSection("Cores ESP")
-VisualTab:CreateButton({Name = "Vermelho", Callback = function() AplicarCorESP(Color3.fromRGB(255,50,50)) end})
-VisualTab:CreateButton({Name = "Azul", Callback = function() AplicarCorESP(Color3.fromRGB(50,150,255)) end})
-VisualTab:CreateButton({Name = "Verde", Callback = function() AplicarCorESP(Color3.fromRGB(50,255,100)) end})
-VisualTab:CreateButton({Name = "Amarelo", Callback = function() AplicarCorESP(Color3.fromRGB(255,220,50)) end})
-VisualTab:CreateButton({Name = "Roxo", Callback = function() AplicarCorESP(Color3.fromRGB(170,0,255)) end})
-VisualTab:CreateButton({Name = "Ciano", Callback = function() AplicarCorESP(Color3.fromRGB(0,255,255)) end})
-VisualTab:CreateButton({Name = "Branco", Callback = function() AplicarCorESP(Color3.fromRGB(255,255,255)) end})
-VisualTab:CreateButton({Name = "Rosa", Callback = function() AplicarCorESP(Color3.fromRGB(255,0,180)) end})
+local dropdownCoresESP = VisualTab:CreateDropdown({
+    Name = "Selecionar Cor",
+    Options = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
+    CurrentOption = "Vermelho",
+    Flag = "DropdownCoresESP",
+    Callback = function(Option)
+        local cores = {
+            ["Vermelho"] = Color3.fromRGB(255,50,50),
+            ["Azul"] = Color3.fromRGB(50,150,255),
+            ["Verde"] = Color3.fromRGB(50,255,100),
+            ["Amarelo"] = Color3.fromRGB(255,220,50),
+            ["Roxo"] = Color3.fromRGB(170,0,255),
+            ["Ciano"] = Color3.fromRGB(0,255,255),
+            ["Branco"] = Color3.fromRGB(255,255,255),
+            ["Rosa"] = Color3.fromRGB(255,0,180),
+        }
+        if cores[Option] then
+            AplicarCorESP(cores[Option])
+        end
+    end,
+})
+
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
@@ -719,41 +717,6 @@ local OutrosTab = Window:CreateTab("Outros", 4483345998)
 OutrosTab:CreateSection("Dash")
 OutrosTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
 OutrosTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
-
-OutrosTab:CreateSection("Invisibilidade")
-OutrosTab:CreateToggle({Name = "Ficar Invisivel", CurrentValue = false, Callback = function(v)
-    if localPlayer.Character then
-        if v then
-            for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then part.Transparency = 1 end
-            end
-            for _, obj in pairs(localPlayer.Character:GetChildren()) do
-                if obj:IsA("Accessory") or obj:IsA("Hat") then
-                    for _, part in pairs(obj:GetDescendants()) do
-                        if part:IsA("BasePart") then part.Transparency = 1 end
-                    end
-                end
-            end
-        else
-            for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    if part.Name == "HumanoidRootPart" then
-                        part.Transparency = 1
-                    else
-                        part.Transparency = 0
-                    end
-                end
-            end
-            for _, obj in pairs(localPlayer.Character:GetChildren()) do
-                if obj:IsA("Accessory") or obj:IsA("Hat") then
-                    for _, part in pairs(obj:GetDescendants()) do
-                        if part:IsA("BasePart") then part.Transparency = 0 end
-                    end
-                end
-            end
-        end
-    end
-end})
 
 OutrosTab:CreateSection("FOV da Camera")
 OutrosTab:CreateInput({Name = "FOV (70 padrao)", PlaceholderText = "70", RemoveTextAfterFocusLost = false, Callback = function(t) 
@@ -778,7 +741,6 @@ OutrosTab:CreateInput({Name = "Nome do Jogador (iniciais tbm)", PlaceholderText 
                 if nome:find(texto, 1, true) or display:find(texto, 1, true) then
                     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
                         localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-                        Rayfield:Notify({Title = "TP", Content = "Teleportado para " .. p.Name, Duration = 3})
                         encontrado = true
                         break
                     end
@@ -806,4 +768,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "ESP por Times com lista compacta! Selecione no dropdown.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "ESP com dropdown de times e cores! Invisibilidade removida.", Duration = 5})
