@@ -25,22 +25,9 @@ local ESP_Vida = false
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 
--- ESP POR TIMES
+-- ESP POR TIMES (CORRIGIDO)
 local ESP_TimesAtivado = false
-local TimesMarcados = {
-    ["[CI]"] = false,
-    ["[EB]"] = false,
-    ["[OF]"] = false,
-    ["[BAC]"] = false,
-    ["[BPE]"] = false,
-    ["[BFE]"] = false,
-    ["[CIE]"] = false,
-    ["[BIP]"] = false,
-    ["[CAAT]"] = false,
-    ["[CIGS]"] = false,
-    ["[MD]"] = false,
-    ["[REC MEC]"] = false,
-}
+local TimesSelecionados = {}
 
 -- AIMBOT
 local Aimbot_Ativado = false
@@ -209,12 +196,7 @@ FOVCircle.Filled = false
 -- ==========================================
 local function GetPlayerTime(player)
     if player.Team then
-        local teamName = player.Team.Name
-        for time, _ in pairs(TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then
-                return time
-            end
-        end
+        return player.Team.Name
     end
     return nil
 end
@@ -227,7 +209,15 @@ local function AtualizarESP()
             if ESP_TimesAtivado then
                 local timePlayer = GetPlayerTime(p)
                 if timePlayer then
-                    mostrarESP = TimesMarcados[timePlayer] or false
+                    -- Verifica se o time do jogador contém alguma das siglas selecionadas
+                    local encontrado = false
+                    for sigla, _ in pairs(TimesSelecionados) do
+                        if timePlayer:find(sigla, 1, true) then
+                            encontrado = true
+                            break
+                        end
+                    end
+                    mostrarESP = encontrado
                 else
                     mostrarESP = false
                 end
@@ -301,22 +291,11 @@ end)
 
 local function AplicarCorESP(novaCor)
     CorESP = novaCor
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= localPlayer and plr.Character then
-            local h = plr.Character:FindFirstChild("NoahzinESP")
-            if h then h.FillColor = novaCor end
-            local box = plr.Character:FindFirstChild("NoahzinBox")
-            if box then box.Color3 = novaCor end
-            local head = plr.Character:FindFirstChild("Head")
-            if head then
-                local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui and nameGui:FindFirstChild("TextLabel") then
-                    nameGui.TextLabel.TextColor3 = novaCor
-                end
-            end
-        end
-        if LinhasTracers[plr] then LinhasTracers[plr].Color = novaCor end
-    end
+    AtualizarESP()
+end
+
+local function AplicarCorHitbox(novaCor)
+    Hitbox_Cor = novaCor
 end
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
@@ -371,10 +350,14 @@ local function ObterJogadorMaisProximoDaMira()
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
-            local parteBuscada = Aimbot_ParteAlvo
-            if parteBuscada == "Torso" then
+            local parteBuscada = nil
+            if Aimbot_ParteAlvo == "Head" then
+                parteBuscada = p.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            else parteBuscada = p.Character:FindFirstChild("Head") end
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteBuscada = p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("RightFoot")
+            end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
@@ -466,10 +449,14 @@ RunService.RenderStepped:Connect(function()
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
-            local parteRastrear = Aimbot_ParteAlvo
-            if parteRastrear == "Torso" then
+            local parteRastrear = nil
+            if Aimbot_ParteAlvo == "Head" then
+                parteRastrear = alvo.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            else parteRastrear = alvo.Character:FindFirstChild("Head") end
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteRastrear = alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("RightFoot")
+            end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -605,9 +592,21 @@ CombatTab:CreateInput({Name = "Raio FOV", PlaceholderText = "100", RemoveTextAft
 CombatTab:CreateInput({Name = "Suavidade", PlaceholderText = "0.15", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
 CombatTab:CreateInput({Name = "Offset FOV Tela", PlaceholderText = "-40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
 CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
+
+-- DROPDOWN DE ALVO
 CombatTab:CreateSection("Alvo")
-CombatTab:CreateButton({Name = "CABECA", Callback = function() Aimbot_ParteAlvo = "Head" end})
-CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
+local dropdownAlvo = CombatTab:CreateDropdown({
+    Name = "Parte do Corpo",
+    Options = {"Cabeca", "Tronco", "Perna"},
+    CurrentOption = "Cabeca",
+    Flag = "DropdownAlvo",
+    Callback = function(Option)
+        if Option == "Cabeca" then Aimbot_ParteAlvo = "Head"
+        elseif Option == "Tronco" then Aimbot_ParteAlvo = "Torso"
+        elseif Option == "Perna" then Aimbot_ParteAlvo = "Perna"
+        end
+    end,
+})
 
 CombatTab:CreateSection("Hitbox Expander")
 CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
@@ -617,9 +616,31 @@ CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback =
 end})
 CombatTab:CreateInput({Name = "Tamanho", PlaceholderText = "20", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
 CombatTab:CreateInput({Name = "Transparencia (0-1)", PlaceholderText = "0.7", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
+
+-- DROPDOWN DE CORES HITBOX
 CombatTab:CreateSection("Cores Hitbox")
-local coresHitbox = {{"Vermelho", Color3.fromRGB(255,30,30)}, {"Azul", Color3.fromRGB(30,100,255)}, {"Verde", Color3.fromRGB(50,255,50)}, {"Amarelo", Color3.fromRGB(255,220,0)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
-for _, c in ipairs(coresHitbox) do CombatTab:CreateButton({Name = c[1], Callback = function() Hitbox_Cor = c[2] end}) end
+local dropdownCoresHitbox = CombatTab:CreateDropdown({
+    Name = "Selecionar Cor",
+    Options = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
+    CurrentOption = "Vermelho",
+    Flag = "DropdownCoresHitbox",
+    Callback = function(Option)
+        local cores = {
+            ["Vermelho"] = Color3.fromRGB(255,30,30),
+            ["Azul"] = Color3.fromRGB(30,100,255),
+            ["Verde"] = Color3.fromRGB(50,255,50),
+            ["Amarelo"] = Color3.fromRGB(255,220,0),
+            ["Roxo"] = Color3.fromRGB(170,0,255),
+            ["Ciano"] = Color3.fromRGB(0,255,255),
+            ["Branco"] = Color3.fromRGB(255,255,255),
+            ["Rosa"] = Color3.fromRGB(255,0,180),
+        }
+        if cores[Option] then
+            AplicarCorHitbox(cores[Option])
+        end
+    end,
+})
+
 CombatTab:CreateInput({Name = "Cor RGB (ex: 255,128,0)", PlaceholderText = "255,0,0", RemoveTextAfterFocusLost = false, Callback = function(t)
     local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
     if r and g and b then Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255)) end
@@ -647,33 +668,34 @@ end
 -- Visuais
 local VisualTab = Window:CreateTab("Visuais", 4483345998)
 
--- TIMES ESP (DROPDOWN FUNCIONAL)
+-- TIMES ESP (MÚLTIPLA SELEÇÃO VIA BOTÕES)
 VisualTab:CreateSection("ESP por Times")
 VisualTab:CreateToggle({Name = "Ativar ESP por Times", CurrentValue = false, Callback = function(v)
     ESP_TimesAtivado = v
     AtualizarESP()
 end})
 
-local dropdownTimes = VisualTab:CreateDropdown({
-    Name = "Selecionar Time",
-    Options = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"},
-    CurrentOption = "",
-    Flag = "DropdownTimes",
-    Callback = function(Option)
-        if Option and Option ~= "" then
-            TimesMarcados[Option] = not TimesMarcados[Option]
-            AtualizarESP()
+VisualTab:CreateParagraph({Title = "Clique nos times para selecionar/deselecionar", Content = ""})
+
+local siglas = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
+for _, sigla in ipairs(siglas) do
+    VisualTab:CreateButton({Name = sigla .. (TimesSelecionados[sigla] and " [X]" or " [ ]"), Callback = function()
+        if TimesSelecionados[sigla] then
+            TimesSelecionados[sigla] = nil
+        else
+            TimesSelecionados[sigla] = true
         end
-    end,
-})
+        AtualizarESP()
+    end})
+end
 
 VisualTab:CreateButton({Name = "SELECIONAR TODOS", Callback = function()
-    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end
+    for _, s in ipairs(siglas) do TimesSelecionados[s] = true end
     AtualizarESP()
 end})
 
 VisualTab:CreateButton({Name = "DESMARCAR TODOS", Callback = function()
-    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end
+    TimesSelecionados = {}
     AtualizarESP()
 end})
 
@@ -685,7 +707,7 @@ VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = fun
 VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 
--- LISTA DE CORES ESP (DROPDOWN)
+-- DROPDOWN DE CORES ESP
 VisualTab:CreateSection("Cores ESP")
 local dropdownCoresESP = VisualTab:CreateDropdown({
     Name = "Selecionar Cor",
@@ -768,4 +790,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "ESP com dropdown de times e cores! Invisibilidade removida.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Alvo com PERNA, cores em dropdown, times com multipla selecao!", Duration = 5})
