@@ -72,6 +72,11 @@ local AutoJJ_Script = nil
 local BlocosAtivado = false
 local Hitboxes = {}
 
+-- SPEED HACK
+local SpeedHack_Ativado = false
+local SpeedHack_Velocidade = 50
+local SpeedHack_Conexao = nil
+
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -506,7 +511,6 @@ RunService.RenderStepped:Connect(function()
             local root = p.Character.HumanoidRootPart
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health > 0 then
-                -- Verifica filtro de times
                 local mostrar = true
                 if ESP_TimesAtivado then
                     local timePlayer = GetPlayerTime(p)
@@ -722,6 +726,42 @@ OutrosTab:CreateSection("Dash")
 OutrosTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
 OutrosTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 
+OutrosTab:CreateSection("Speed Hack")
+OutrosTab:CreateToggle({Name = "Ativar Speed Hack", CurrentValue = false, Callback = function(v)
+    SpeedHack_Ativado = v
+    
+    if v then
+        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
+        SpeedHack_Conexao = RunService.RenderStepped:Connect(function()
+            if not SpeedHack_Ativado then return end
+            
+            local char = localPlayer.Character
+            if not char then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
+            if not root or not humanoid then return end
+            
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local moveDirection = humanoid.MoveDirection
+                local speed = SpeedHack_Velocidade * 0.5
+                root.CFrame = root.CFrame + (moveDirection * speed / 60)
+            end
+        end)
+    else
+        if SpeedHack_Conexao then
+            SpeedHack_Conexao:Disconnect()
+            SpeedHack_Conexao = nil
+        end
+    end
+end})
+OutrosTab:CreateInput({Name = "Velocidade Speed", PlaceholderText = "50", RemoveTextAfterFocusLost = false, Callback = function(t)
+    local n = tonumber(t)
+    if n and n > 0 then
+        SpeedHack_Velocidade = n
+    end
+end})
+
 OutrosTab:CreateSection("FOV da Camera")
 OutrosTab:CreateInput({Name = "FOV (70 padrao)", PlaceholderText = "70", RemoveTextAfterFocusLost = false, Callback = function(t) 
     local n = tonumber(t) 
@@ -763,6 +803,8 @@ local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
    BlocosAtivado = false
+   SpeedHack_Ativado = false
+   if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
    RemoveHitboxes()
    DestruirPainelJJ()
    RemoverBotaoDash()
@@ -773,4 +815,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "TUDO CORRIGIDO! Perna com nomes certos, Tracers com filtro de time!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Speed Hack adicionado nos Outros!", Duration = 5})
