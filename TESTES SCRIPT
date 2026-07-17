@@ -313,7 +313,7 @@ local function AplicarCorHitbox(novaCor)
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local root = p.Character:FindFirstChild("HumanoidRootPart")
-            if root and Hitbox_Ativado then
+            if root then
                 root.Color = novaCor
             end
         end
@@ -617,14 +617,21 @@ CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", Remove
 
 -- DROPDOWN DE ALVO
 CombatTab:CreateSection("Alvo")
-local dropdownAlvo = CombatTab:CreateDropdown({
+CombatTab:CreateDropdown({
     Name = "Parte do Corpo",
     Options = {"Cabeca", "Tronco", "Perna"},
     CurrentOption = "Cabeca",
+    Flag = "AlvoAimbot",
     Callback = function(Option)
-        if Option == "Cabeca" then Aimbot_ParteAlvo = "Head"
-        elseif Option == "Tronco" then Aimbot_ParteAlvo = "Torso"
-        elseif Option == "Perna" then Aimbot_ParteAlvo = "Perna"
+        if Option == "Cabeca" then 
+            Aimbot_ParteAlvo = "Head"
+            Rayfield:Notify({Title = "Aimbot", Content = "Alvo: CABECA", Duration = 2})
+        elseif Option == "Tronco" then 
+            Aimbot_ParteAlvo = "Torso"
+            Rayfield:Notify({Title = "Aimbot", Content = "Alvo: TRONCO", Duration = 2})
+        elseif Option == "Perna" then 
+            Aimbot_ParteAlvo = "Perna"
+            Rayfield:Notify({Title = "Aimbot", Content = "Alvo: PERNA", Duration = 2})
         end
     end,
 })
@@ -640,10 +647,11 @@ CombatTab:CreateInput({Name = "Transparencia (0-1)", PlaceholderText = "0.7", Re
 
 -- DROPDOWN DE CORES HITBOX
 CombatTab:CreateSection("Cores Hitbox")
-local dropdownCoresHitbox = CombatTab:CreateDropdown({
+CombatTab:CreateDropdown({
     Name = "Selecionar Cor",
     Options = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
     CurrentOption = "Vermelho",
+    Flag = "CorHitbox",
     Callback = function(Option)
         local cores = {
             ["Vermelho"] = Color3.fromRGB(255,30,30),
@@ -657,6 +665,7 @@ local dropdownCoresHitbox = CombatTab:CreateDropdown({
         }
         if cores[Option] then
             AplicarCorHitbox(cores[Option])
+            Rayfield:Notify({Title = "Hitbox", Content = "Cor: " .. Option, Duration = 2})
         end
     end,
 })
@@ -688,7 +697,7 @@ end
 -- Visuais
 local VisualTab = Window:CreateTab("Visuais", 4483345998)
 
--- TIMES ESP (MÚLTIPLA SELEÇÃO VIA BOTÕES)
+-- TIMES ESP
 VisualTab:CreateSection("ESP por Times")
 VisualTab:CreateToggle({Name = "Ativar ESP por Times", CurrentValue = false, Callback = function(v)
     ESP_TimesAtivado = v
@@ -727,10 +736,11 @@ VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = func
 
 -- DROPDOWN DE CORES ESP
 VisualTab:CreateSection("Cores ESP")
-local dropdownCoresESP = VisualTab:CreateDropdown({
+VisualTab:CreateDropdown({
     Name = "Selecionar Cor",
     Options = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
     CurrentOption = "Vermelho",
+    Flag = "CorESP",
     Callback = function(Option)
         local cores = {
             ["Vermelho"] = Color3.fromRGB(255,50,50),
@@ -744,6 +754,7 @@ local dropdownCoresESP = VisualTab:CreateDropdown({
         }
         if cores[Option] then
             AplicarCorESP(cores[Option])
+            Rayfield:Notify({Title = "ESP", Content = "Cor: " .. Option, Duration = 2})
         end
     end,
 })
@@ -807,4 +818,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Cores ESP e Hitbox corrigidas! Dropdown funcional.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Tudo corrigido! Alvo, Cores ESP e Hitbox com Flag!", Duration = 5})
