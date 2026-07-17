@@ -256,7 +256,6 @@ local function AtualizarESP()
                 end
             end
             
-            -- CORRIGIDO: Tracers também respeitam o filtro de times
             if LinhasTracers[p] then 
                 LinhasTracers[p].Color = CorESP
                 LinhasTracers[p].Visible = ESP_Tracers and mostrarESP
@@ -380,7 +379,7 @@ local function ObterJogadorMaisProximoDaMira()
             elseif Aimbot_ParteAlvo == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then
-                parteBuscada = p.Character:FindFirstChild("LeftLeg") or p.Character:FindFirstChild("RightLeg") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("RightFoot")
+                parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart")
             end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
@@ -479,7 +478,7 @@ RunService.RenderStepped:Connect(function()
             elseif Aimbot_ParteAlvo == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then
-                parteRastrear = alvo.Character:FindFirstChild("LeftLeg") or alvo.Character:FindFirstChild("RightLeg") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("RightFoot")
+                parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart")
             end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
@@ -507,9 +506,23 @@ RunService.RenderStepped:Connect(function()
             local root = p.Character.HumanoidRootPart
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health > 0 then
-                local posTela, visivel = camera:WorldToViewportPoint(root.Position)
-                if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true
-                else tracer.Visible = false end
+                -- Verifica filtro de times
+                local mostrar = true
+                if ESP_TimesAtivado then
+                    local timePlayer = GetPlayerTime(p)
+                    if timePlayer then
+                        mostrar = TimesMarcados[timePlayer] or false
+                    else
+                        mostrar = false
+                    end
+                end
+                if mostrar then
+                    local posTela, visivel = camera:WorldToViewportPoint(root.Position)
+                    if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true
+                    else tracer.Visible = false end
+                else
+                    tracer.Visible = false
+                end
             else tracer.Visible = false end
         else if tracer then tracer.Visible = false end end
     end
@@ -760,4 +773,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Tudo corrigido! PERNA funcionando, Tracers filtrando por time, Invisibilidade removida.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "TUDO CORRIGIDO! Perna com nomes certos, Tracers com filtro de time!", Duration = 5})
