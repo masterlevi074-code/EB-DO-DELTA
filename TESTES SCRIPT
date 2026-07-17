@@ -255,9 +255,12 @@ local function AtualizarESP()
                     end
                 end
             end
-        end
-        if LinhasTracers[p] then 
-            LinhasTracers[p].Color = CorESP 
+            
+            -- CORRIGIDO: Tracers também respeitam o filtro de times
+            if LinhasTracers[p] then 
+                LinhasTracers[p].Color = CorESP
+                LinhasTracers[p].Visible = ESP_Tracers and mostrarESP
+            end
         end
     end
 end
@@ -377,7 +380,7 @@ local function ObterJogadorMaisProximoDaMira()
             elseif Aimbot_ParteAlvo == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then
-                parteBuscada = p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("RightFoot")
+                parteBuscada = p.Character:FindFirstChild("LeftLeg") or p.Character:FindFirstChild("RightLeg") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("RightFoot")
             end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
@@ -476,7 +479,7 @@ RunService.RenderStepped:Connect(function()
             elseif Aimbot_ParteAlvo == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then
-                parteRastrear = alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("RightFoot")
+                parteRastrear = alvo.Character:FindFirstChild("LeftLeg") or alvo.Character:FindFirstChild("RightLeg") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("RightFoot")
             end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
@@ -686,7 +689,7 @@ VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = 
 VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = function(v) ESP_Names=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
+VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 VisualTab:CreateSection("Cores ESP")
 VisualTab:CreateButton({Name = "Vermelho", Callback = function() AplicarCorESP(Color3.fromRGB(255,50,50)) end})
@@ -705,41 +708,6 @@ local OutrosTab = Window:CreateTab("Outros", 4483345998)
 OutrosTab:CreateSection("Dash")
 OutrosTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
 OutrosTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
-
-OutrosTab:CreateSection("Invisibilidade")
-OutrosTab:CreateToggle({Name = "Ficar Invisivel", CurrentValue = false, Callback = function(v)
-    if localPlayer.Character then
-        if v then
-            for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then part.Transparency = 1 end
-            end
-            for _, obj in pairs(localPlayer.Character:GetChildren()) do
-                if obj:IsA("Accessory") or obj:IsA("Hat") then
-                    for _, part in pairs(obj:GetDescendants()) do
-                        if part:IsA("BasePart") then part.Transparency = 1 end
-                    end
-                end
-            end
-        else
-            for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    if part.Name == "HumanoidRootPart" then
-                        part.Transparency = 1
-                    else
-                        part.Transparency = 0
-                    end
-                end
-            end
-            for _, obj in pairs(localPlayer.Character:GetChildren()) do
-                if obj:IsA("Accessory") or obj:IsA("Hat") then
-                    for _, part in pairs(obj:GetDescendants()) do
-                        if part:IsA("BasePart") then part.Transparency = 0 end
-                    end
-                end
-            end
-        end
-    end
-end})
 
 OutrosTab:CreateSection("FOV da Camera")
 OutrosTab:CreateInput({Name = "FOV (70 padrao)", PlaceholderText = "70", RemoveTextAfterFocusLost = false, Callback = function(t) 
@@ -792,4 +760,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Alvo PERNA adicionado! Cabeca, Tronco e Perna.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Tudo corrigido! PERNA funcionando, Tracers filtrando por time, Invisibilidade removida.", Duration = 5})
