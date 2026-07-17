@@ -28,18 +28,10 @@ local LinhasTracers = {}
 -- ESP POR TIMES
 local ESP_TimesAtivado = false
 local TimesMarcados = {
-    ["[CI]"] = false,
-    ["[EB]"] = false,
-    ["[OF]"] = false,
-    ["[BAC]"] = false,
-    ["[BPE]"] = false,
-    ["[BFE]"] = false,
-    ["[CIE]"] = false,
-    ["[BIP]"] = false,
-    ["[CAAT]"] = false,
-    ["[CIGS]"] = false,
-    ["[MD]"] = false,
-    ["[REC MEC]"] = false,
+    ["[CI]"] = false, ["[EB]"] = false, ["[OF]"] = false,
+    ["[BAC]"] = false, ["[BPE]"] = false, ["[BFE]"] = false,
+    ["[CIE]"] = false, ["[BIP]"] = false, ["[CAAT]"] = false,
+    ["[CIGS]"] = false, ["[MD]"] = false, ["[REC MEC]"] = false,
 }
 
 -- AIMBOT
@@ -153,9 +145,7 @@ local function GetPlayerTime(player)
     if player.Team then
         local teamName = player.Team.Name
         for time, _ in pairs(TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then
-                return time
-            end
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
         end
     end
     return nil
@@ -167,11 +157,7 @@ local function AtualizarESP()
             local mostrarESP = true
             if ESP_TimesAtivado then
                 local timePlayer = GetPlayerTime(p)
-                if timePlayer then
-                    mostrarESP = TimesMarcados[timePlayer] or false
-                else
-                    mostrarESP = false
-                end
+                if timePlayer then mostrarESP = TimesMarcados[timePlayer] or false else mostrarESP = false end
             end
             local h = p.Character:FindFirstChild("NoahzinESP")
             if h then h.Enabled = ESP_Chams and mostrarESP; h.FillColor = CorESP end
@@ -182,9 +168,7 @@ local function AtualizarESP()
                 local nameGui = head:FindFirstChild("NoahzinName")
                 if nameGui then
                     nameGui.Enabled = ESP_Names and mostrarESP
-                    if nameGui:FindFirstChild("TextLabel") then
-                        nameGui.TextLabel.TextColor3 = CorESP
-                    end
+                    if nameGui:FindFirstChild("TextLabel") then nameGui.TextLabel.TextColor3 = CorESP end
                 end
             end
             if LinhasTracers[p] then LinhasTracers[p].Color = CorESP; LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
@@ -240,9 +224,7 @@ local function AplicarCorESP(novaCor)
             local head = plr.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui and nameGui:FindFirstChild("TextLabel") then
-                    nameGui.TextLabel.TextColor3 = novaCor
-                end
+                if nameGui and nameGui:FindFirstChild("TextLabel") then nameGui.TextLabel.TextColor3 = novaCor end
             end
         end
         if LinhasTracers[plr] then LinhasTracers[plr].Color = novaCor end
@@ -271,8 +253,7 @@ local function EstaVisivel(alvoParte)
 end
 
 local function SaoDoMesmoTime(jogadorA, jogadorB)
-    local teamA = jogadorA.Team
-    local teamB = jogadorB.Team
+    local teamA = jogadorA.Team; local teamB = jogadorB.Team
     if teamA and teamB and teamA == teamB then return true end
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
         if teamA.TeamColor == teamB.TeamColor then return true end
@@ -291,8 +272,7 @@ end
 
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
-    local melhorAlvo = nil
-    local melhorPontuacao = math.huge
+    local melhorAlvo = nil; local melhorPontuacao = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
@@ -405,9 +385,7 @@ RunService.RenderStepped:Connect(function()
             if hum and root and hum.Health > 0 and Hitbox_Ativado then
                 root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
                 root.Transparency = Hitbox_Transparencia
-                root.Material = Hitbox_Material
-                root.Color = Hitbox_Cor
-                root.CanCollide = false
+                root.Material = Hitbox_Material; root.Color = Hitbox_Cor; root.CanCollide = false
             end
         end
     end
@@ -509,621 +487,58 @@ local Window = WindUI:CreateWindow({
     SideBarWidth = 200,
 })
 
--- Principal
-local MainTab = Window:Tab({
-    Title = "Principal",
-    Icon = "house",
-})
+-- ==========================================
+-- PRINCIPAL
+-- ==========================================
+local MainTab = Window:Tab({Title = "Principal", Icon = "house"})
 
-MainTab:Button({
-    Title = "Resetar",
-    Desc = "Reseta seu personagem",
-    Callback = function()
-        if localPlayer.Character then
-            localPlayer.Character:BreakJoints()
-        end
-    end,
-})
+MainTab:Button({Title = "Resetar", Desc = "Reseta seu personagem", Callback = function()
+    if localPlayer.Character then localPlayer.Character:BreakJoints() end
+end})
 
-MainTab:Button({
-    Title = "--- Auto JJ Polichinelos ---",
-    Desc = "",
-    Callback = function() end,
-})
+MainTab:Section({Title = "Auto JJ Polichinelos"})
 
-MainTab:Toggle({
-    Title = "Ativar Auto JJ",
-    Desc = "Auto JJ Polichinelos",
-    Default = false,
-    Callback = function(v)
-        AutoJJ_Ativado = v
-        if v then IniciarAutoJJ() else DestruirPainelJJ() end
-    end,
-})
+MainTab:Toggle({Title = "Ativar Auto JJ", Desc = "Auto JJ Polichinelos", Default = false, Callback = function(v)
+    AutoJJ_Ativado = v
+    if v then IniciarAutoJJ() else DestruirPainelJJ() end
+end})
 
-MainTab:Button({
-    Title = "--- Blocos Parkour ---",
-    Desc = "",
-    Callback = function() end,
-})
+MainTab:Section({Title = "Blocos Parkour"})
 
-MainTab:Toggle({
-    Title = "Ativar Blocos",
-    Desc = "Cria blocos de parkour",
-    Default = false,
-    Callback = function(v)
-        BlocosAtivado = v
-        if v then CreateHitboxes() else RemoveHitboxes() end
-    end,
-})
+MainTab:Toggle({Title = "Ativar Blocos", Desc = "Cria blocos de parkour", Default = false, Callback = function(v)
+    BlocosAtivado = v
+    if v then CreateHitboxes() else RemoveHitboxes() end
+end})
 
--- Combate
-local CombatTab = Window:Tab({
-    Title = "Combate",
-    Icon = "swords",
-})
+-- ==========================================
+-- COMBATE
+-- ==========================================
+local CombatTab = Window:Tab({Title = "Combate", Icon = "swords"})
 
-CombatTab:Button({
-    Title = "--- Aimbot ---",
-    Desc = "",
-    Callback = function() end,
-})
+CombatTab:Section({Title = "Aimbot"})
 
-CombatTab:Toggle({
-    Title = "Ativar Aimbot",
-    Desc = "Mira automaticamente",
-    Default = false,
-    Callback = function(v) Aimbot_Ativado = v end,
-})
+CombatTab:Toggle({Title = "Ativar Aimbot", Desc = "Mira automaticamente", Default = false, Callback = function(v) Aimbot_Ativado = v end})
+CombatTab:Toggle({Title = "Mostrar FOV", Desc = "Mostra o círculo do FOV", Default = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
+CombatTab:Toggle({Title = "Team Check", Desc = "Não mira em aliados", Default = false, Callback = function(v) Aimbot_TeamCheck = v end})
+CombatTab:Toggle({Title = "Wall Check", Desc = "Não mira através de paredes", Default = false, Callback = function(v) Aimbot_WallCheck = v end})
+CombatTab:Toggle({Title = "Priorizar Perto", Desc = "Mira no mais próximo", Default = false, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
+CombatTab:Toggle({Title = "So mirar com item", Desc = "Só mira com arma na mão", Default = false, Callback = function(v) Aimbot_SoComItem = v end})
+CombatTab:Input({Title = "Raio FOV", Desc = "Tamanho do FOV", Placeholder = "100", Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
+CombatTab:Input({Title = "Suavidade", Desc = "Suavidade da mira", Placeholder = "0.15", Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
+CombatTab:Input({Title = "Offset FOV Tela", Desc = "Ajuste vertical do FOV", Placeholder = "-40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
+CombatTab:Input({Title = "Offset Mira (px)", Desc = "Ajuste fino da mira", Placeholder = "40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
 
-CombatTab:Toggle({
-    Title = "Mostrar FOV",
-    Desc = "Mostra o círculo do FOV",
-    Default = false,
-    Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end,
-})
+CombatTab:Section({Title = "Alvo"})
 
-CombatTab:Toggle({
-    Title = "Team Check",
-    Desc = "Não mira em aliados",
-    Default = false,
-    Callback = function(v) Aimbot_TeamCheck = v end,
-})
+CombatTab:Button({Title = "CABECA", Desc = "Mirar na cabeça", Callback = function() Aimbot_ParteAlvo = "Head" end})
+CombatTab:Button({Title = "TRONCO", Desc = "Mirar no tronco", Callback = function() Aimbot_ParteAlvo = "Torso" end})
+CombatTab:Button({Title = "PERNA", Desc = "Mirar nas pernas", Callback = function() Aimbot_ParteAlvo = "Perna" end})
 
-CombatTab:Toggle({
-    Title = "Wall Check",
-    Desc = "Não mira através de paredes",
-    Default = false,
-    Callback = function(v) Aimbot_WallCheck = v end,
-})
+CombatTab:Section({Title = "Hitbox Expander"})
 
-CombatTab:Toggle({
-    Title = "Priorizar Perto",
-    Desc = "Mira no mais próximo",
-    Default = false,
-    Callback = function(v) Aimbot_PrioridadeDistancia = v end,
-})
-
-CombatTab:Toggle({
-    Title = "So mirar com item",
-    Desc = "Só mira com arma na mão",
-    Default = false,
-    Callback = function(v) Aimbot_SoComItem = v end,
-})
-
-CombatTab:Input({
-    Title = "Raio FOV",
-    Desc = "Tamanho do FOV",
-    Placeholder = "100",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end
-    end,
-})
-
-CombatTab:Input({
-    Title = "Suavidade",
-    Desc = "Suavidade da mira",
-    Placeholder = "0.15",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end
-    end,
-})
-
-CombatTab:Input({
-    Title = "Offset FOV Tela",
-    Desc = "Ajuste vertical do FOV",
-    Placeholder = "-40",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then Aimbot_OffsetTelaY = n end
-    end,
-})
-
-CombatTab:Input({
-    Title = "Offset Mira (px)",
-    Desc = "Ajuste fino da mira",
-    Placeholder = "40",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then Aimbot_OffsetPixels = n end
-    end,
-})
-
-CombatTab:Button({
-    Title = "--- Alvo ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-CombatTab:Button({
-    Title = "CABECA",
-    Desc = "Mirar na cabeça",
-    Callback = function() Aimbot_ParteAlvo = "Head" end,
-})
-
-CombatTab:Button({
-    Title = "TRONCO",
-    Desc = "Mirar no tronco",
-    Callback = function() Aimbot_ParteAlvo = "Torso" end,
-})
-
-CombatTab:Button({
-    Title = "PERNA",
-    Desc = "Mirar nas pernas",
-    Callback = function() Aimbot_ParteAlvo = "Perna" end,
-})
-
-CombatTab:Button({
-    Title = "--- Hitbox Expander ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-CombatTab:Toggle({
-    Title = "Ativar Hitbox",
-    Desc = "Expande a hitbox dos jogadores",
-    Default = false,
-    Callback = function(v)
-        Hitbox_Ativado = v
-        if not v then
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-                    p.Character.HumanoidRootPart.Transparency = 1
-                    p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
-                    p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
-                end
-            end
-        end
-    end,
-})
-
-CombatTab:Input({
-    Title = "Tamanho",
-    Desc = "Tamanho da hitbox",
-    Placeholder = "20",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then Hitbox_Tamanho = n end
-    end,
-})
-
-CombatTab:Input({
-    Title = "Transparencia (0-1)",
-    Desc = "Transparência da hitbox",
-    Placeholder = "0.7",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end
-    end,
-})
-
-CombatTab:Button({
-    Title = "--- Cores Hitbox ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-local coresHitbox = {
-    {"Vermelho", Color3.fromRGB(255,30,30)},
-    {"Azul", Color3.fromRGB(30,100,255)},
-    {"Verde", Color3.fromRGB(50,255,50)},
-    {"Amarelo", Color3.fromRGB(255,220,0)},
-    {"Roxo", Color3.fromRGB(170,0,255)},
-    {"Ciano", Color3.fromRGB(0,255,255)},
-    {"Branco", Color3.fromRGB(255,255,255)},
-    {"Rosa", Color3.fromRGB(255,0,180)},
-}
-
-for _, c in ipairs(coresHitbox) do
-    CombatTab:Button({
-        Title = c[1],
-        Desc = "Cor " .. c[1],
-        Callback = function() Hitbox_Cor = c[2] end,
-    })
-end
-
-CombatTab:Input({
-    Title = "Cor RGB (ex: 255,128,0)",
-    Desc = "Cor personalizada",
-    Placeholder = "255,0,0",
-    Callback = function(t)
-        local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
-        if r and g and b then
-            Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255))
-        end
-    end,
-})
-
--- Visuais
-local VisualTab = Window:Tab({
-    Title = "Visuais",
-    Icon = "eye",
-})
-
-VisualTab:Button({
-    Title = "--- ESP por Times ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-VisualTab:Toggle({
-    Title = "Ativar ESP por Times",
-    Desc = "Filtra ESP por times",
-    Default = false,
-    Callback = function(v)
-        ESP_TimesAtivado = v
-        AtualizarESP()
-    end,
-})
-
-local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
-for _, nomeTime in ipairs(timesOrdenados) do
-    VisualTab:Button({
-        Title = nomeTime,
-        Desc = "Marcar/Desmarcar " .. nomeTime,
-        Callback = function()
-            TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]
-            AtualizarESP()
-        end,
-    })
-end
-
-VisualTab:Button({
-    Title = "SELECIONAR TODOS",
-    Desc = "Marca todos os times",
-    Callback = function()
-        for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end
-        AtualizarESP()
-    end,
-})
-
-VisualTab:Button({
-    Title = "DESMARCAR TODOS",
-    Desc = "Desmarca todos os times",
-    Callback = function()
-        for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end
-        AtualizarESP()
-    end,
-})
-
-VisualTab:Button({
-    Title = "--- ESP ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-VisualTab:Toggle({
-    Title = "ESP Completo",
-    Desc = "Ativa todos os ESP",
-    Default = false,
-    Callback = function(v)
-        ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v
-        AtualizarESP()
-    end,
-})
-
-VisualTab:Toggle({
-    Title = "ESP Box",
-    Desc = "Caixa ao redor do jogador",
-    Default = false,
-    Callback = function(v) ESP_Box=v; AtualizarESP() end,
-})
-
-VisualTab:Toggle({
-    Title = "ESP Names",
-    Desc = "Nome do jogador",
-    Default = false,
-    Callback = function(v) ESP_Names=v; AtualizarESP() end,
-})
-
-VisualTab:Toggle({
-    Title = "ESP Chams",
-    Desc = "Destaca o jogador",
-    Default = false,
-    Callback = function(v) ESP_Chams=v; AtualizarESP() end,
-})
-
-VisualTab:Toggle({
-    Title = "ESP Tracers",
-    Desc = "Linhas até os jogadores",
-    Default = false,
-    Callback = function(v) ESP_Tracers=v; AtualizarESP() end,
-})
-
-VisualTab:Toggle({
-    Title = "ESP Vida",
-    Desc = "Mostra a vida do jogador",
-    Default = false,
-    Callback = function(v) ESP_Vida=v; AtualizarESP() end,
-})
-
-VisualTab:Button({
-    Title = "--- Cores ESP ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-local coresESP = {
-    {"Vermelho", Color3.fromRGB(255,50,50)},
-    {"Azul", Color3.fromRGB(50,150,255)},
-    {"Verde", Color3.fromRGB(50,255,100)},
-    {"Amarelo", Color3.fromRGB(255,220,50)},
-    {"Roxo", Color3.fromRGB(170,0,255)},
-    {"Ciano", Color3.fromRGB(0,255,255)},
-    {"Branco", Color3.fromRGB(255,255,255)},
-    {"Rosa", Color3.fromRGB(255,0,180)},
-}
-
-for _, c in ipairs(coresESP) do
-    VisualTab:Button({
-        Title = c[1],
-        Desc = "Cor " .. c[1],
-        Callback = function() AplicarCorESP(c[2]) end,
-    })
-end
-
-VisualTab:Button({
-    Title = "--- Luz ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-VisualTab:Button({
-    Title = "Fullbright",
-    Desc = "Ilumina o mapa",
-    Callback = function()
-        Lighting.Brightness=2
-        Lighting.ClockTime=14
-        Lighting.GlobalShadows=false
-        Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128)
-    end,
-})
-
--- Outros
-local OutrosTab = Window:Tab({
-    Title = "Outros",
-    Icon = "cog",
-})
-
-OutrosTab:Button({
-    Title = "--- Dash ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-OutrosTab:Toggle({
-    Title = "Botao de Dash",
-    Desc = "Ativa botão de dash flutuante",
-    Default = false,
-    Callback = function(v)
-        if v then CriarBotaoDash() else RemoverBotaoDash() end
-    end,
-})
-
-OutrosTab:Input({
-    Title = "Distancia Dash",
-    Desc = "Distância do dash em studs",
-    Placeholder = "30",
-    Callback = function(t)
-        local n = tonumber(t)
-        if n then dashStuds = n end
-    end,
-})
-
-OutrosTab:Button({
-    Title = "--- Speed Hack ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-OutrosTab:Toggle({
-    Title = "Ativar Speed Hack",
-    Desc = "Velocidade aumentada",
-    Default = false,
-    Callback = function(v)
-        SpeedHack_Ativado = v
-        if v then
-            if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
-            SpeedHack_Conexao = RunService.RenderStepped:Connect(function()
-                if not SpeedHack_Ativado then return end
-                local char = localPlayer.Character
-                if not char then return end
-                local root = char:FindFirstChild("HumanoidRootPart")
-                local humanoid = char:FindFirstChild("Humanoid")
-                if not root or not humanoid then return end
-                if humanoid.MoveDirection.Magnitude > 0 then
-                    local moveDirection = humanoid.MoveDirection
-                    local speed = SpeedHack_Velocidade * 0.5
-                    root.CFrame = root.CFrame + (moveDirection * speed / 60)
-                end
-            end)
-        else
-            if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
-        end
-    end,
-})
-
-OutrosTab:Slider({
-    Title = "Velocidade Speed",
-    Desc = "Ajuste a velocidade",
-    Value = {Min = 1, Max = 200, Default = 50},
-    Step = 1,
-    Callback = function(v)
-        SpeedHack_Velocidade = v
-    end,
-})
-
-OutrosTab:Button({
-    Title = "--- Underground ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-OutrosTab:Toggle({
-    Title = "Ativar Underground",
-    Desc = "Vai para baixo do mapa",
-    Default = false,
-    Callback = function(v)
-        Underground_Ativado = v
-        local char = localPlayer.Character
-        if not char or not char:FindFirstChild("HumanoidRootPart") then
-            Underground_Ativado = false
-            return
-        end
-        local root = char.HumanoidRootPart
-        
-        if v then
-            Underground_Voltando = false
-            if not Underground_CameraPart then
-                Underground_CameraPart = Instance.new("Part")
-                Underground_CameraPart.Name = "CameraGhost"
-                Underground_CameraPart.Size = Vector3.new(1, 1, 1)
-                Underground_CameraPart.Anchored = true
-                Underground_CameraPart.CanCollide = false
-                Underground_CameraPart.Transparency = 1
-                Underground_CameraPart.Parent = Workspace
-            end
-            Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
-            root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
-            
-            if Underground_Conexao then Underground_Conexao:Disconnect() end
-            Underground_Conexao = RunService.Heartbeat:Connect(function()
-                if not Underground_Ativado or Underground_Voltando then return end
-                local charAtual = localPlayer.Character
-                if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
-                local rootAtual = charAtual.HumanoidRootPart
-                if rootAtual.Position.Y < -22 then
-                    rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z)
-                end
-                if Underground_CameraPart then
-                    Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z)
-                end
-            end)
-            
-            if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect() end
-            local camera = Workspace.CurrentCamera
-            camera.CameraSubject = Underground_CameraPart
-            camera.CameraType = Enum.CameraType.Follow
-        else
-            Underground_Voltando = true
-            if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
-            local camera = Workspace.CurrentCamera
-            if camera then
-                camera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
-                camera.CameraType = Enum.CameraType.Follow
-            end
-            if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
-            root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
-            task.wait(0.5)
-            Underground_Voltando = false
-        end
-    end,
-})
-
-OutrosTab:Button({
-    Title = "--- FOV da Camera ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-OutrosTab:Slider({
-    Title = "FOV da Camera",
-    Desc = "Ajuste o FOV (30-120)",
-    Value = {Min = 30, Max = 120, Default = 70},
-    Step = 1,
-    Callback = function(v)
-        Workspace.CurrentCamera.FieldOfView = v
-    end,
-})
-
-OutrosTab:Button({
-    Title = "Resetar FOV",
-    Desc = "Volta ao FOV padrão (70)",
-    Callback = function()
-        Workspace.CurrentCamera.FieldOfView = 70
-    end,
-})
-
-OutrosTab:Button({
-    Title = "--- Teleporte para Jogador ---",
-    Desc = "",
-    Callback = function() end,
-})
-
-OutrosTab:Input({
-    Title = "Nome do Jogador",
-    Desc = "Digite o nome para teleportar",
-    Placeholder = "Digite o nome...",
-    Callback = function(t)
-        if t ~= "" then
-            local encontrado = false
-            local texto = t:lower()
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= localPlayer then
-                    local nome = p.Name:lower()
-                    local display = p.DisplayName:lower()
-                    if nome:find(texto, 1, true) or display:find(texto, 1, true) then
-                        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
-                            localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-                            WindUI:Notify({Title = "TP", Content = "Teleportado para " .. p.Name})
-                            encontrado = true
-                            break
-                        end
-                    end
-                end
-            end
-            if not encontrado then
-                WindUI:Notify({Title = "TP", Content = "Jogador nao encontrado!"})
-            end
-        end
-    end,
-})
-
--- Configs
-local ConfigTab = Window:Tab({
-    Title = "Configs",
-    Icon = "trash",
-})
-
-ConfigTab:Button({
-    Title = "Destruir Tudo",
-    Desc = "Remove tudo e fecha o painel",
-    Callback = function()
-        AutoJJ_Ativado = false
-        BlocosAtivado = false
-        SpeedHack_Ativado = false
-        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
-        Underground_Ativado = false
-        if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
-        if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect(); Underground_ConexaoCamera = nil end
-        if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
-        RemoveHitboxes()
-        DestruirPainelJJ()
-        RemoverBotaoDash()
-        if FOVCircle then FOVCircle:Destroy() end
+CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadores", Default = false, Callback = function(v)
+    Hitbox_Ativado = v
+    if not v then
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
@@ -1132,18 +547,227 @@ ConfigTab:Button({
                 p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
             end
         end
-        for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr.Character then
-                local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
-                local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
-                local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
+    end
+end})
+CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
+CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox", Placeholder = "0.7", Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
+
+CombatTab:Section({Title = "Cores Hitbox"})
+
+local coresHitbox = {{"Vermelho", Color3.fromRGB(255,30,30)}, {"Azul", Color3.fromRGB(30,100,255)}, {"Verde", Color3.fromRGB(50,255,50)}, {"Amarelo", Color3.fromRGB(255,220,0)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
+for _, c in ipairs(coresHitbox) do
+    CombatTab:Button({Title = c[1], Desc = "Cor " .. c[1], Callback = function() Hitbox_Cor = c[2] end})
+end
+CombatTab:Input({Title = "Cor RGB (ex: 255,128,0)", Desc = "Cor personalizada", Placeholder = "255,0,0", Callback = function(t)
+    local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
+    if r and g and b then Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255)) end
+end})
+
+CombatTab:Section({Title = "Lista de Exclusao"})
+
+CombatTab:Dropdown({Title = "Jogador", Values = ObterListaJogadores(), Callback = function(Value) DropdownSelecionado = Value end})
+CombatTab:Button({Title = "Adicionar a Lista", Desc = "Adiciona jogador selecionado", Callback = function()
+    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+        JogadoresIgnorados[DropdownSelecionado] = true
+        WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " adicionado!"})
+    end
+end})
+CombatTab:Button({Title = "Remover da Lista", Desc = "Remove jogador selecionado", Callback = function()
+    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
+        JogadoresIgnorados[DropdownSelecionado] = nil
+        WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " removido!"})
+    end
+end})
+CombatTab:Button({Title = "Limpar Lista", Desc = "Remove todos da lista", Callback = function()
+    JogadoresIgnorados = {}
+    WindUI:Notify({Title = "Whitelist", Content = "Lista limpa!"})
+end})
+
+-- ==========================================
+-- VISUAIS
+-- ==========================================
+local VisualTab = Window:Tab({Title = "Visuais", Icon = "eye"})
+
+VisualTab:Section({Title = "ESP por Times"})
+
+VisualTab:Toggle({Title = "Ativar ESP por Times", Desc = "Filtra ESP por times", Default = false, Callback = function(v)
+    ESP_TimesAtivado = v; AtualizarESP()
+end})
+
+local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
+for _, nomeTime in ipairs(timesOrdenados) do
+    VisualTab:Button({Title = nomeTime, Desc = "Marcar/Desmarcar " .. nomeTime, Callback = function()
+        TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]; AtualizarESP()
+    end})
+end
+
+VisualTab:Button({Title = "SELECIONAR TODOS", Desc = "Marca todos os times", Callback = function()
+    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end; AtualizarESP()
+end})
+VisualTab:Button({Title = "DESMARCAR TODOS", Desc = "Desmarca todos os times", Callback = function()
+    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end; AtualizarESP()
+end})
+
+VisualTab:Section({Title = "ESP"})
+
+VisualTab:Toggle({Title = "ESP Completo", Desc = "Ativa todos os ESP", Default = false, Callback = function(v)
+    ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP()
+end})
+VisualTab:Toggle({Title = "ESP Box", Desc = "Caixa ao redor do jogador", Default = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
+VisualTab:Toggle({Title = "ESP Names", Desc = "Nome do jogador", Default = false, Callback = function(v) ESP_Names=v; AtualizarESP() end})
+VisualTab:Toggle({Title = "ESP Chams", Desc = "Destaca o jogador", Default = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
+VisualTab:Toggle({Title = "ESP Tracers", Desc = "Linhas até os jogadores", Default = false, Callback = function(v) ESP_Tracers=v; AtualizarESP() end})
+VisualTab:Toggle({Title = "ESP Vida", Desc = "Mostra a vida do jogador", Default = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
+
+VisualTab:Section({Title = "Cores ESP"})
+
+local coresESP = {{"Vermelho", Color3.fromRGB(255,50,50)}, {"Azul", Color3.fromRGB(50,150,255)}, {"Verde", Color3.fromRGB(50,255,100)}, {"Amarelo", Color3.fromRGB(255,220,50)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
+for _, c in ipairs(coresESP) do
+    VisualTab:Button({Title = c[1], Desc = "Cor " .. c[1], Callback = function() AplicarCorESP(c[2]) end})
+end
+
+VisualTab:Section({Title = "Luz"})
+
+VisualTab:Button({Title = "Fullbright", Desc = "Ilumina o mapa", Callback = function()
+    Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128)
+end})
+
+-- ==========================================
+-- OUTROS
+-- ==========================================
+local OutrosTab = Window:Tab({Title = "Outros", Icon = "cog"})
+
+OutrosTab:Section({Title = "Dash"})
+
+OutrosTab:Toggle({Title = "Botao de Dash", Desc = "Ativa botão de dash flutuante", Default = false, Callback = function(v)
+    if v then CriarBotaoDash() else RemoverBotaoDash() end
+end})
+OutrosTab:Input({Title = "Distancia Dash", Desc = "Distância do dash em studs", Placeholder = "30", Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+
+OutrosTab:Section({Title = "Speed Hack"})
+
+OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", Default = false, Callback = function(v)
+    SpeedHack_Ativado = v
+    if v then
+        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
+        SpeedHack_Conexao = RunService.RenderStepped:Connect(function()
+            if not SpeedHack_Ativado then return end
+            local char = localPlayer.Character
+            if not char then return end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
+            if not root or not humanoid then return end
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local moveDirection = humanoid.MoveDirection
+                local speed = SpeedHack_Velocidade * 0.5
+                root.CFrame = root.CFrame + (moveDirection * speed / 60)
+            end
+        end)
+    else
+        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
+    end
+end})
+OutrosTab:Slider({Title = "Velocidade Speed", Desc = "Ajuste a velocidade", Value = {Min = 1, Max = 200, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
+
+OutrosTab:Section({Title = "Underground"})
+
+OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa", Default = false, Callback = function(v)
+    Underground_Ativado = v
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end
+    local root = char.HumanoidRootPart
+    if v then
+        Underground_Voltando = false
+        if not Underground_CameraPart then
+            Underground_CameraPart = Instance.new("Part")
+            Underground_CameraPart.Name = "CameraGhost"; Underground_CameraPart.Size = Vector3.new(1, 1, 1)
+            Underground_CameraPart.Anchored = true; Underground_CameraPart.CanCollide = false
+            Underground_CameraPart.Transparency = 1; Underground_CameraPart.Parent = Workspace
+        end
+        Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
+        if Underground_Conexao then Underground_Conexao:Disconnect() end
+        Underground_Conexao = RunService.Heartbeat:Connect(function()
+            if not Underground_Ativado or Underground_Voltando then return end
+            local charAtual = localPlayer.Character
+            if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
+            local rootAtual = charAtual.HumanoidRootPart
+            if rootAtual.Position.Y < -22 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z) end
+            if Underground_CameraPart then Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z) end
+        end)
+        if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect() end
+        local camera = Workspace.CurrentCamera
+        camera.CameraSubject = Underground_CameraPart; camera.CameraType = Enum.CameraType.Follow
+    else
+        Underground_Voltando = true
+        if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
+        local camera = Workspace.CurrentCamera
+        if camera then camera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid"); camera.CameraType = Enum.CameraType.Follow end
+        if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+        root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        task.wait(0.5); Underground_Voltando = false
+    end
+end})
+
+OutrosTab:Section({Title = "FOV da Camera"})
+
+OutrosTab:Slider({Title = "FOV da Camera", Desc = "Ajuste o FOV (30-120)", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
+OutrosTab:Button({Title = "Resetar FOV", Desc = "Volta ao FOV padrão (70)", Callback = function() Workspace.CurrentCamera.FieldOfView = 70 end})
+
+OutrosTab:Section({Title = "Teleporte para Jogador"})
+
+OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleportar", Placeholder = "Digite o nome...", Callback = function(t)
+    if t ~= "" then
+        local encontrado = false; local texto = t:lower()
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= localPlayer then
+                local nome = p.Name:lower(); local display = p.DisplayName:lower()
+                if nome:find(texto, 1, true) or display:find(texto, 1, true) then
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+                        WindUI:Notify({Title = "TP", Content = "Teleportado para " .. p.Name})
+                        encontrado = true; break
+                    end
+                end
             end
         end
-        Window:Destroy()
-    end,
-})
+        if not encontrado then WindUI:Notify({Title = "TP", Content = "Jogador nao encontrado!"}) end
+    end
+end})
+
+-- ==========================================
+-- CONFIGS
+-- ==========================================
+local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
+
+ConfigTab:Button({Title = "Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
+    AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
+    if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
+    Underground_Ativado = false
+    if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
+    if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect(); Underground_ConexaoCamera = nil end
+    if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+    RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
+    if FOVCircle then FOVCircle:Destroy() end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+            p.Character.HumanoidRootPart.Transparency = 1
+            p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
+            p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
+        end
+    end
+    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Character then
+            local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
+            local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
+            local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
+        end
+    end
+    Window:Destroy()
+end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta - WindUI carregado com sucesso!")
+print("✅ Eb do Delta - WindUI com Sections!")
