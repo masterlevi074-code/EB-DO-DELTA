@@ -647,28 +647,51 @@ end
 -- Visuais
 local VisualTab = Window:CreateTab("Visuais", 4483345998)
 
--- TIMES ESP
+-- TIMES ESP (LISTA COMPACTA)
 VisualTab:CreateSection("ESP por Times")
 VisualTab:CreateToggle({Name = "Ativar ESP por Times", CurrentValue = false, Callback = function(v)
     ESP_TimesAtivado = v
     AtualizarESP()
 end})
 
-local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
-for _, nomeTime in ipairs(timesOrdenados) do
-    VisualTab:CreateButton({Name = nomeTime .. (TimesMarcados[nomeTime] and " [X]" or " [ ]"), Callback = function()
-        TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]
-        AtualizarESP()
-    end})
+local TimesSelecionadosLabel = VisualTab:CreateParagraph({Title = "Times Selecionados", Content = "Nenhum"})
+
+local function AtualizarTextoSelecionados()
+    local selecionados = {}
+    for time, marcado in pairs(TimesMarcados) do
+        if marcado then table.insert(selecionados, time) end
+    end
+    if #selecionados == 0 then
+        TimesSelecionadosLabel:Set({Title = "Times Selecionados", Content = "Nenhum"})
+    else
+        TimesSelecionadosLabel:Set({Title = "Times Selecionados (" .. #selecionados .. ")", Content = table.concat(selecionados, ", ")})
+    end
 end
+
+local dropdownTimes = VisualTab:CreateDropdown({
+    Name = "Selecionar Time",
+    Options = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"},
+    CurrentOption = "",
+    Flag = "DropdownTimes",
+    Callback = function(Option)
+        if Option and Option ~= "" then
+            TimesMarcados[Option] = not TimesMarcados[Option]
+            AtualizarTextoSelecionados()
+            AtualizarESP()
+            dropdownTimes:Refresh({"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}, true)
+        end
+    end,
+})
 
 VisualTab:CreateButton({Name = "SELECIONAR TODOS", Callback = function()
     for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end
+    AtualizarTextoSelecionados()
     AtualizarESP()
 end})
 
 VisualTab:CreateButton({Name = "DESMARCAR TODOS", Callback = function()
     for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end
+    AtualizarTextoSelecionados()
     AtualizarESP()
 end})
 
@@ -783,4 +806,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "ESP por Times adicionado! Selecione os times na aba Visuais.", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "ESP por Times com lista compacta! Selecione no dropdown.", Duration = 5})
