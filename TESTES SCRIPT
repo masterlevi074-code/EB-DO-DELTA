@@ -606,7 +606,7 @@ end
 -- ==========================================
 -- WIND UI
 -- ==========================================
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/2vasy/MadeByVaz/refs/heads/main/WindUI_Source.lua"))()
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/refs/heads/main/WindUI_Library.lua"))()
 
 local Window = WindUI:CreateWindow({
     Title = "Eb do Delta",
@@ -894,17 +894,11 @@ CombatTab:CreateButton({
     end,
 })
 
-CombatTab:CreateLabel({
-    Title = "Ignorados",
-    Text = "Nenhum",
-})
-
 function AtualizarListaIgnorados()
     local lista = {}
     for nome in pairs(JogadoresIgnorados) do
         table.insert(lista, " - " .. nome)
     end
-    -- Nota: WindUI não tem Paragraph, então usamos notificação
     WindUI:Notify({
         Title = "Ignorados (" .. #lista .. ")",
         Content = #lista == 0 and "Nenhum" or table.concat(lista, "\n"),
