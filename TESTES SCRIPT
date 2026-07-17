@@ -525,7 +525,11 @@ MainTab:Button({
     end,
 })
 
-MainTab:Divider("Auto JJ Polichinelos")
+MainTab:Button({
+    Title = "--- Auto JJ Polichinelos ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 MainTab:Toggle({
     Title = "Ativar Auto JJ",
@@ -537,7 +541,11 @@ MainTab:Toggle({
     end,
 })
 
-MainTab:Divider("Blocos Parkour")
+MainTab:Button({
+    Title = "--- Blocos Parkour ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 MainTab:Toggle({
     Title = "Ativar Blocos",
@@ -555,7 +563,11 @@ local CombatTab = Window:Tab({
     Icon = "swords",
 })
 
-CombatTab:Divider("Aimbot")
+CombatTab:Button({
+    Title = "--- Aimbot ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 CombatTab:Toggle({
     Title = "Ativar Aimbot",
@@ -639,7 +651,11 @@ CombatTab:Input({
     end,
 })
 
-CombatTab:Divider("Alvo")
+CombatTab:Button({
+    Title = "--- Alvo ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 CombatTab:Button({
     Title = "CABECA",
@@ -659,7 +675,11 @@ CombatTab:Button({
     Callback = function() Aimbot_ParteAlvo = "Perna" end,
 })
 
-CombatTab:Divider("Hitbox Expander")
+CombatTab:Button({
+    Title = "--- Hitbox Expander ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 CombatTab:Toggle({
     Title = "Ativar Hitbox",
@@ -700,7 +720,11 @@ CombatTab:Input({
     end,
 })
 
-CombatTab:Divider("Cores Hitbox")
+CombatTab:Button({
+    Title = "--- Cores Hitbox ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 local coresHitbox = {
     {"Vermelho", Color3.fromRGB(255,30,30)},
@@ -739,7 +763,11 @@ local VisualTab = Window:Tab({
     Icon = "eye",
 })
 
-VisualTab:Divider("ESP por Times")
+VisualTab:Button({
+    Title = "--- ESP por Times ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 VisualTab:Toggle({
     Title = "Ativar ESP por Times",
@@ -781,7 +809,11 @@ VisualTab:Button({
     end,
 })
 
-VisualTab:Divider("ESP")
+VisualTab:Button({
+    Title = "--- ESP ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 VisualTab:Toggle({
     Title = "ESP Completo",
@@ -828,7 +860,11 @@ VisualTab:Toggle({
     Callback = function(v) ESP_Vida=v; AtualizarESP() end,
 })
 
-VisualTab:Divider("Cores ESP")
+VisualTab:Button({
+    Title = "--- Cores ESP ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 local coresESP = {
     {"Vermelho", Color3.fromRGB(255,50,50)},
@@ -849,7 +885,11 @@ for _, c in ipairs(coresESP) do
     })
 end
 
-VisualTab:Divider("Luz")
+VisualTab:Button({
+    Title = "--- Luz ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 VisualTab:Button({
     Title = "Fullbright",
@@ -868,7 +908,11 @@ local OutrosTab = Window:Tab({
     Icon = "cog",
 })
 
-OutrosTab:Divider("Dash")
+OutrosTab:Button({
+    Title = "--- Dash ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 OutrosTab:Toggle({
     Title = "Botao de Dash",
@@ -889,7 +933,11 @@ OutrosTab:Input({
     end,
 })
 
-OutrosTab:Divider("Speed Hack")
+OutrosTab:Button({
+    Title = "--- Speed Hack ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 OutrosTab:Toggle({
     Title = "Ativar Speed Hack",
@@ -928,7 +976,11 @@ OutrosTab:Slider({
     end,
 })
 
-OutrosTab:Divider("Underground")
+OutrosTab:Button({
+    Title = "--- Underground ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 OutrosTab:Toggle({
     Title = "Ativar Underground",
@@ -991,7 +1043,11 @@ OutrosTab:Toggle({
     end,
 })
 
-OutrosTab:Divider("FOV da Camera")
+OutrosTab:Button({
+    Title = "--- FOV da Camera ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 OutrosTab:Slider({
     Title = "FOV da Camera",
@@ -1011,7 +1067,11 @@ OutrosTab:Button({
     end,
 })
 
-OutrosTab:Divider("Teleporte para Jogador")
+OutrosTab:Button({
+    Title = "--- Teleporte para Jogador ---",
+    Desc = "",
+    Callback = function() end,
+})
 
 OutrosTab:Input({
     Title = "Nome do Jogador",
