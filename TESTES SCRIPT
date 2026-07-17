@@ -77,6 +77,15 @@ local SpeedHack_Ativado = false
 local SpeedHack_Velocidade = 50
 local SpeedHack_Conexao = nil
 
+-- UNDERGROUND
+local Underground_Ativado = false
+local Underground_Conexao = nil
+local Underground_ConexaoCamera = nil
+local Underground_yAbaixo = -19
+local Underground_yCamera = 4.7
+local Underground_Voltando = false
+local Underground_CameraPart = nil
+
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -762,6 +771,90 @@ OutrosTab:CreateInput({Name = "Velocidade Speed", PlaceholderText = "50", Remove
     end
 end})
 
+OutrosTab:CreateSection("Underground")
+OutrosTab:CreateToggle({Name = "Ativar Underground", CurrentValue = false, Callback = function(v)
+    Underground_Ativado = v
+    
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then 
+        Underground_Ativado = false
+        return 
+    end
+    local root = char.HumanoidRootPart
+    
+    if v then
+        Underground_Voltando = false
+        
+        -- Cria parte invisível no chão pra câmera seguir
+        if not Underground_CameraPart then
+            Underground_CameraPart = Instance.new("Part")
+            Underground_CameraPart.Name = "CameraGhost"
+            Underground_CameraPart.Size = Vector3.new(1, 1, 1)
+            Underground_CameraPart.Anchored = true
+            Underground_CameraPart.CanCollide = false
+            Underground_CameraPart.Transparency = 1
+            Underground_CameraPart.Parent = Workspace
+        end
+        Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        
+        -- Vai direto pro Y = -19
+        root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
+        
+        -- Loop ANTI-VOID
+        if Underground_Conexao then Underground_Conexao:Disconnect() end
+        Underground_Conexao = RunService.Heartbeat:Connect(function()
+            if not Underground_Ativado or Underground_Voltando then return end
+            
+            local charAtual = localPlayer.Character
+            if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
+            local rootAtual = charAtual.HumanoidRootPart
+            
+            if rootAtual.Position.Y < -22 then
+                rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z)
+            end
+            
+            -- Atualiza posição do fantasma
+            if Underground_CameraPart then
+                Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z)
+            end
+        end)
+        
+        -- Câmera segue o fantasma
+        if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect() end
+        local camera = Workspace.CurrentCamera
+        camera.CameraSubject = Underground_CameraPart
+        camera.CameraType = Enum.CameraType.Follow
+        
+    else
+        Underground_Voltando = true
+        
+        -- Para o loop anti-void
+        if Underground_Conexao then 
+            Underground_Conexao:Disconnect()
+            Underground_Conexao = nil 
+        end
+        
+        -- Reseta câmera
+        local camera = Workspace.CurrentCamera
+        if camera then
+            camera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+            camera.CameraType = Enum.CameraType.Follow
+        end
+        
+        -- Remove fantasma
+        if Underground_CameraPart then
+            Underground_CameraPart:Destroy()
+            Underground_CameraPart = nil
+        end
+        
+        -- Sobe o jogador
+        root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        
+        task.wait(0.5)
+        Underground_Voltando = false
+    end
+end})
+
 OutrosTab:CreateSection("FOV da Camera")
 OutrosTab:CreateInput({Name = "FOV (70 padrao)", PlaceholderText = "70", RemoveTextAfterFocusLost = false, Callback = function(t) 
     local n = tonumber(t) 
@@ -805,6 +898,10 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    BlocosAtivado = false
    SpeedHack_Ativado = false
    if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
+   Underground_Ativado = false
+   if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
+   if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect(); Underground_ConexaoCamera = nil end
+   if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
    RemoveHitboxes()
    DestruirPainelJJ()
    RemoverBotaoDash()
@@ -815,4 +912,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Speed Hack adicionado nos Outros!", Duration = 5})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Underground adicionado nos Outros!", Duration = 5})
