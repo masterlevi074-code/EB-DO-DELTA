@@ -25,6 +25,23 @@ local ESP_Vida = false
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 
+-- ESP POR TIMES
+local ESP_TimesAtivado = false
+local TimesMarcados = {
+    ["[CI]"] = false,
+    ["[EB]"] = false,
+    ["[OF]"] = false,
+    ["[BAC]"] = false,
+    ["[BPE]"] = false,
+    ["[BFE]"] = false,
+    ["[CIE]"] = false,
+    ["[BIP]"] = false,
+    ["[CAAT]"] = false,
+    ["[CIGS]"] = false,
+    ["[MD]"] = false,
+    ["[REC MEC]"] = false,
+}
+
 -- AIMBOT
 local Aimbot_Ativado = false
 local Aimbot_UsarFOV = false
@@ -38,7 +55,7 @@ local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
-local Aimbot_SoComItem = false  -- NOVO: Só mirar com item equipado
+local Aimbot_SoComItem = false
 
 -- HITBOX
 local Hitbox_Ativado = false
@@ -50,6 +67,146 @@ local Hitbox_Material = Enum.Material.Neon
 -- AUTO JJ
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
+
+-- BLOCOS PARKOUR
+local BlocosAtivado = false
+local Hitboxes = {}
+
+-- SPEED HACK
+local SpeedHack_Ativado = false
+local SpeedHack_Velocidade = 50
+local SpeedHack_Conexao = nil
+
+-- UNDERGROUND
+local Underground_Ativado = false
+local Underground_Conexao = nil
+local Underground_ConexaoCamera = nil
+local Underground_yAbaixo = -19
+local Underground_yCamera = 4.7
+local Underground_Voltando = false
+local Underground_CameraPart = nil
+
+local data = {
+    {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.11, 21.28, -661.68), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.30, 29.29, -661.72), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.08, 37.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.08, 45.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.25, 53.36, -661.86), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.82, 61.36, -662.00), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.60, 69.40, -661.98), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.71, 77.42, -661.90), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.28, 85.44, -662.14), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.42, 93.48, -662.05), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.94, 101.46, -661.80), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.94, 109.48, -661.78), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(185.08, 5.26, -618.66), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.36, 13.28, -618.65), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.32, 21.29, -618.70), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.65, 29.34, -618.67), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.12, 37.36, -618.43), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(186.30, 45.34, -617.87), size = Vector3.new(5.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.41, 53.36, -618.05), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.62, 61.40, -617.79), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.58, 69.40, -617.79), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(185.87, 77.42, -618.33), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.73, 85.44, -618.62), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.68, 93.48, -618.49), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.83, 101.46, -617.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.57, 109.48, -618.45), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(270.22, 4.24, -661.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(277.86, 4.24, -655.56), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(269.80, 4.24, -649.96), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(284.45, 4.24, -660.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(284.59, 4.24, -650.23), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(267.14, 5.04, -627.94), size = Vector3.new(4.00, 0.50, 32.00)},
+    {pos = Vector3.new(288.33, 5.04, -627.86), size = Vector3.new(4.00, 0.50, 31.00)},
+    {pos = Vector3.new(277.48, 7.63, -591.97), size = Vector3.new(4.00, 0.50, 27.00)},
+    {pos = Vector3.new(271.76, 7.64, -569.98), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(279.08, 7.64, -567.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(265.48, 7.64, -564.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(271.34, 7.64, -559.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(259.46, 7.64, -561.92), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(260.50, 7.64, -554.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(250.93, 7.64, -561.91), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(248.66, 7.64, -554.60), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(243.06, 7.64, -565.74), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(235.96, 7.64, -560.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(240.08, 7.64, -592.47), size = Vector3.new(4.00, 0.50, 27.00)},
+    {pos = Vector3.new(394.19, 5.06, -850.78), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.19, 7.45, -855.82), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(392.91, 5.06, -861.09), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(384.07, 10.15, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(377.51, 12.94, -855.73), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(370.87, 14.68, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(365.12, 16.20, -856.03), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(358.50, 17.61, -855.96), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(351.76, 19.27, -856.05), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(345.37, 20.53, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(339.00, 21.54, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(334.51, 21.54, -850.11), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(328.83, 21.54, -855.97), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(335.00, 21.54, -861.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(324.43, 21.54, -861.35), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(324.69, 21.54, -850.36), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(318.73, 21.54, -855.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(313.47, 21.54, -861.90), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(308.27, 21.54, -855.88), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(314.49, 21.54, -850.04), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(303.58, 21.54, -861.59), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(303.61, 21.54, -850.61), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(298.50, 21.54, -856.16), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(393.87, 2.87, -892.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(394.65, 2.87, -902.16), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.37, 5.04, -892.40), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.57, 5.04, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(383.37, 7.79, -892.63), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(383.64, 7.79, -903.27), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(378.64, 9.35, -892.48), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(378.64, 9.35, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(373.27, 11.53, -892.90), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(372.82, 11.53, -903.33), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(368.47, 11.53, -892.69), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(367.91, 11.53, -903.02), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(362.88, 11.53, -894.04), size = Vector3.new(4.00, 0.50, 7.00)},
+    {pos = Vector3.new(358.03, 11.53, -901.74), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(352.36, 11.53, -894.75), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(347.47, 11.53, -899.21), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(333.21, 11.53, -897.81), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(325.73, 11.53, -898.53), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(318.25, 11.53, -897.79), size = Vector3.new(5.00, 0.50, 11.00)},
+    {pos = Vector3.new(310.71, 11.53, -898.95), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(303.10, 11.53, -898.29), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(295.54, 11.53, -898.01), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(288.21, 11.53, -898.79), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(149.54, 1.04, -856.00), size = Vector3.new(3.00, 0.50, 13.00)},
+    {pos = Vector3.new(148.21, 7.50, -855.93), size = Vector3.new(4.00, 0.50, 13.00)},
+    {pos = Vector3.new(148.27, 13.38, -856.27), size = Vector3.new(4.00, 0.50, 13.00)},
+    {pos = Vector3.new(162.71, 13.70, -859.82), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(170.73, 13.70, -852.89), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(181.41, 13.70, -859.17), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(190.97, 13.70, -853.25), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(217.92, 11.53, -848.28), size = Vector3.new(32.00, 0.50, 4.00)},
+    {pos = Vector3.new(217.99, 12.04, -863.62), size = Vector3.new(29.00, 0.50, 4.00)},
+    {pos = Vector3.new(243.52, 12.04, -855.57), size = Vector3.new(14.00, 0.50, 3.00)},
+    {pos = Vector3.new(150.43, 5.27, -897.87), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(150.71, 13.28, -898.27), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(150.28, 21.29, -898.42), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.45, 29.30, -898.11), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(150.52, 37.31, -898.44), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.56, 45.32, -897.73), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.95, 53.33, -898.02), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(167.23, 53.26, -903.84), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(172.90, 53.26, -900.06), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(167.09, 53.26, -890.73), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(181.65, 53.26, -902.00), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(180.48, 53.26, -893.06), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(199.10, 53.33, -897.28), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(210.50, 53.33, -897.85), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(223.52, 53.33, -898.25), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(235.61, 53.33, -897.82), size = Vector3.new(5.00, 0.50, 5.00)},
+}
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -64,20 +221,60 @@ FOVCircle.Filled = false
 -- ==========================================
 -- FUNÇÕES ESP
 -- ==========================================
+local function GetPlayerTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then
+                return time
+            end
+        end
+    end
+    return nil
+end
+
 local function AtualizarESP()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
+            local mostrarESP = true
+            
+            if ESP_TimesAtivado then
+                local timePlayer = GetPlayerTime(p)
+                if timePlayer then
+                    mostrarESP = TimesMarcados[timePlayer] or false
+                else
+                    mostrarESP = false
+                end
+            end
+            
             local h = p.Character:FindFirstChild("NoahzinESP")
-            if h then h.Enabled = ESP_Chams; h.FillColor = CorESP end
+            if h then 
+                h.Enabled = ESP_Chams and mostrarESP
+                h.FillColor = CorESP 
+            end
+            
             local box = p.Character:FindFirstChild("NoahzinBox")
-            if box then box.Visible = ESP_Box; box.Color3 = CorESP end
+            if box then 
+                box.Visible = ESP_Box and mostrarESP
+                box.Color3 = CorESP 
+            end
+            
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui then nameGui.Enabled = ESP_Names; nameGui.TextLabel.TextColor3 = CorESP end
+                if nameGui then 
+                    nameGui.Enabled = ESP_Names and mostrarESP
+                    if nameGui:FindFirstChild("TextLabel") then
+                        nameGui.TextLabel.TextColor3 = CorESP
+                    end
+                end
+            end
+            
+            if LinhasTracers[p] then 
+                LinhasTracers[p].Color = CorESP
+                LinhasTracers[p].Visible = ESP_Tracers and mostrarESP
             end
         end
-        if LinhasTracers[p] then LinhasTracers[p].Color = CorESP end
     end
 end
 
@@ -169,24 +366,17 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
--- NOVO: Verifica se o jogador tem item equipado
 local function TemItemEquipado()
     if localPlayer.Character then
         for _, child in pairs(localPlayer.Character:GetChildren()) do
-            if child:IsA("Tool") then
-                return true
-            end
+            if child:IsA("Tool") then return true end
         end
     end
     return false
 end
 
 local function ObterJogadorMaisProximoDaMira()
-    -- NOVO: Se a opção estiver ativada e não tiver item, não mira
-    if Aimbot_SoComItem and not TemItemEquipado() then
-        return nil
-    end
-    
+    if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil
     local melhorPontuacao = math.huge
     local camera = Workspace.CurrentCamera
@@ -197,10 +387,14 @@ local function ObterJogadorMaisProximoDaMira()
         if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
-            local parteBuscada = Aimbot_ParteAlvo
-            if parteBuscada == "Torso" then
+            local parteBuscada = nil
+            if Aimbot_ParteAlvo == "Head" then
+                parteBuscada = p.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then
                 parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            else parteBuscada = p.Character:FindFirstChild("Head") end
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart")
+            end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
@@ -221,7 +415,7 @@ local function ObterJogadorMaisProximoDaMira()
 end
 
 -- ==========================================
--- AUTO JJ - CORRIGIDO (DESTROI PELO TÍTULO "Auto jjs")
+-- AUTO JJ
 -- ==========================================
 local function CarregarScriptJJ()
     if not AutoJJ_Script then
@@ -240,19 +434,12 @@ local function DestruirPainelJJ()
         for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
             if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end
         end
-        
         for _, gui in pairs(todosGuis) do
             local nome = gui.Name:lower()
-            if nome:find("auto") or nome:find("jj") then
-                gui:Destroy()
-            else
-                for _, child in pairs(gui:GetDescendants()) do
-                    if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then
-                        gui:Destroy()
-                        break
-                    end
-                end
-            end
+            if nome:find("auto") or nome:find("jj") then gui:Destroy()
+            else for _, child in pairs(gui:GetDescendants()) do
+                if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then gui:Destroy(); break end
+            end end
         end
     end)
     AutoJJ_Script = nil
@@ -260,11 +447,30 @@ end
 
 local function IniciarAutoJJ()
     CarregarScriptJJ()
-    if AutoJJ_Script then
-        pcall(function()
-            AutoJJ_Script()
-        end)
+    if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end
+end
+
+-- ==========================================
+-- BLOCOS PARKOUR
+-- ==========================================
+local function CreateHitboxes()
+    for _, v in ipairs(data) do
+        local p = Instance.new("Part", workspace)
+        p.Name = "BlocoParkour"
+        p.Size = v.size
+        p.Position = v.pos
+        p.Anchored = true
+        p.CanCollide = true
+        p.Transparency = 0.7
+        p.Color = Color3.fromRGB(0, 255, 100)
+        p.Material = Enum.Material.Neon
+        table.insert(Hitboxes, p)
     end
+end
+
+local function RemoveHitboxes()
+    for _, v in pairs(Hitboxes) do if v then v:Destroy() end end
+    Hitboxes = {}
 end
 
 -- ==========================================
@@ -280,10 +486,14 @@ RunService.RenderStepped:Connect(function()
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
-            local parteRastrear = Aimbot_ParteAlvo
-            if parteRastrear == "Torso" then
+            local parteRastrear = nil
+            if Aimbot_ParteAlvo == "Head" then
+                parteRastrear = alvo.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then
                 parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            else parteRastrear = alvo.Character:FindFirstChild("Head") end
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart")
+            end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -310,9 +520,22 @@ RunService.RenderStepped:Connect(function()
             local root = p.Character.HumanoidRootPart
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health > 0 then
-                local posTela, visivel = camera:WorldToViewportPoint(root.Position)
-                if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true
-                else tracer.Visible = false end
+                local mostrar = true
+                if ESP_TimesAtivado then
+                    local timePlayer = GetPlayerTime(p)
+                    if timePlayer then
+                        mostrar = TimesMarcados[timePlayer] or false
+                    else
+                        mostrar = false
+                    end
+                end
+                if mostrar then
+                    local posTela, visivel = camera:WorldToViewportPoint(root.Position)
+                    if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true
+                    else tracer.Visible = false end
+                else
+                    tracer.Visible = false
+                end
             else tracer.Visible = false end
         else if tracer then tracer.Visible = false end end
     end
@@ -324,6 +547,19 @@ RunService.RenderStepped:Connect(function()
                 local nameGui = head:FindFirstChild("NoahzinName")
                 if nameGui and nameGui:FindFirstChild("TextLabel") then
                     nameGui.TextLabel.Text = ESP_Vida and string.format("%s [%d/%d]", p.Name, math.floor(hum.Health), math.floor(hum.MaxHealth)) or p.Name
+                end
+            end
+        end
+    end
+    
+    -- BLOCOS PARKOUR
+    if BlocosAtivado and localPlayer.Character then
+        local hrp = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local velY = hrp.AssemblyLinearVelocity.Y
+            for _, part in pairs(Hitboxes) do
+                if part then
+                    part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1))
                 end
             end
         end
@@ -379,19 +615,18 @@ local Window = Rayfield:CreateWindow({
 
 -- Principal
 local MainTab = Window:CreateTab("Principal", 4483362458)
-MainTab:CreateSection("Movimentacao")
-MainTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-MainTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 MainTab:CreateButton({Name = "Resetar", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 
 MainTab:CreateSection("Auto JJ Polichinelos")
 MainTab:CreateToggle({Name = "Ativar Auto JJ", CurrentValue = false, Callback = function(v)
     AutoJJ_Ativado = v
-    if v then 
-        IniciarAutoJJ()
-    else
-        DestruirPainelJJ()
-    end
+    if v then IniciarAutoJJ() else DestruirPainelJJ() end
+end})
+
+MainTab:CreateSection("Blocos Parkour")
+MainTab:CreateToggle({Name = "Ativar Blocos", CurrentValue = false, Callback = function(v)
+    BlocosAtivado = v
+    if v then CreateHitboxes() else RemoveHitboxes() end
 end})
 
 -- Combate
@@ -410,6 +645,7 @@ CombatTab:CreateInput({Name = "Offset Mira (px)", PlaceholderText = "40", Remove
 CombatTab:CreateSection("Alvo")
 CombatTab:CreateButton({Name = "CABECA", Callback = function() Aimbot_ParteAlvo = "Head" end})
 CombatTab:CreateButton({Name = "TRONCO", Callback = function() Aimbot_ParteAlvo = "Torso" end})
+CombatTab:CreateButton({Name = "PERNA", Callback = function() Aimbot_ParteAlvo = "Perna" end})
 
 CombatTab:CreateSection("Hitbox Expander")
 CombatTab:CreateToggle({Name = "Ativar Hitbox", CurrentValue = false, Callback = function(v) 
@@ -448,12 +684,38 @@ end
 
 -- Visuais
 local VisualTab = Window:CreateTab("Visuais", 4483345998)
+
+-- TIMES ESP
+VisualTab:CreateSection("ESP por Times")
+VisualTab:CreateToggle({Name = "Ativar ESP por Times", CurrentValue = false, Callback = function(v)
+    ESP_TimesAtivado = v
+    AtualizarESP()
+end})
+
+local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
+for _, nomeTime in ipairs(timesOrdenados) do
+    VisualTab:CreateButton({Name = nomeTime .. (TimesMarcados[nomeTime] and " [X]" or " [ ]"), Callback = function()
+        TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]
+        AtualizarESP()
+    end})
+end
+
+VisualTab:CreateButton({Name = "SELECIONAR TODOS", Callback = function()
+    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end
+    AtualizarESP()
+end})
+
+VisualTab:CreateButton({Name = "DESMARCAR TODOS", Callback = function()
+    for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = false end
+    AtualizarESP()
+end})
+
 VisualTab:CreateSection("ESP")
 VisualTab:CreateToggle({Name = "ESP Completo", CurrentValue = false, Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Box", CurrentValue = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Names", CurrentValue = false, Callback = function(v) ESP_Names=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Chams", CurrentValue = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
-VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v end})
+VisualTab:CreateToggle({Name = "ESP Tracers", CurrentValue = false, Callback = function(v) ESP_Tracers=v; AtualizarESP() end})
 VisualTab:CreateToggle({Name = "ESP Vida", CurrentValue = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 VisualTab:CreateSection("Cores ESP")
 VisualTab:CreateButton({Name = "Vermelho", Callback = function() AplicarCorESP(Color3.fromRGB(255,50,50)) end})
@@ -467,10 +729,180 @@ VisualTab:CreateButton({Name = "Rosa", Callback = function() AplicarCorESP(Color
 VisualTab:CreateSection("Luz")
 VisualTab:CreateButton({Name = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
+-- Outros
+local OutrosTab = Window:CreateTab("Outros", 4483345998)
+OutrosTab:CreateSection("Dash")
+OutrosTab:CreateToggle({Name = "Botao de Dash", CurrentValue = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
+OutrosTab:CreateInput({Name = "Distancia Dash", PlaceholderText = "30", RemoveTextAfterFocusLost = false, Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+
+OutrosTab:CreateSection("Speed Hack")
+OutrosTab:CreateToggle({Name = "Ativar Speed Hack", CurrentValue = false, Callback = function(v)
+    SpeedHack_Ativado = v
+    
+    if v then
+        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
+        SpeedHack_Conexao = RunService.RenderStepped:Connect(function()
+            if not SpeedHack_Ativado then return end
+            
+            local char = localPlayer.Character
+            if not char then return end
+            
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
+            if not root or not humanoid then return end
+            
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local moveDirection = humanoid.MoveDirection
+                local speed = SpeedHack_Velocidade * 0.5
+                root.CFrame = root.CFrame + (moveDirection * speed / 60)
+            end
+        end)
+    else
+        if SpeedHack_Conexao then
+            SpeedHack_Conexao:Disconnect()
+            SpeedHack_Conexao = nil
+        end
+    end
+end})
+OutrosTab:CreateInput({Name = "Velocidade Speed", PlaceholderText = "50", RemoveTextAfterFocusLost = false, Callback = function(t)
+    local n = tonumber(t)
+    if n and n > 0 then
+        SpeedHack_Velocidade = n
+    end
+end})
+
+OutrosTab:CreateSection("Underground")
+OutrosTab:CreateToggle({Name = "Ativar Underground", CurrentValue = false, Callback = function(v)
+    Underground_Ativado = v
+    
+    local char = localPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then 
+        Underground_Ativado = false
+        return 
+    end
+    local root = char.HumanoidRootPart
+    
+    if v then
+        Underground_Voltando = false
+        
+        -- Cria parte invisível no chão pra câmera seguir
+        if not Underground_CameraPart then
+            Underground_CameraPart = Instance.new("Part")
+            Underground_CameraPart.Name = "CameraGhost"
+            Underground_CameraPart.Size = Vector3.new(1, 1, 1)
+            Underground_CameraPart.Anchored = true
+            Underground_CameraPart.CanCollide = false
+            Underground_CameraPart.Transparency = 1
+            Underground_CameraPart.Parent = Workspace
+        end
+        Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        
+        -- Vai direto pro Y = -19
+        root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
+        
+        -- Loop ANTI-VOID
+        if Underground_Conexao then Underground_Conexao:Disconnect() end
+        Underground_Conexao = RunService.Heartbeat:Connect(function()
+            if not Underground_Ativado or Underground_Voltando then return end
+            
+            local charAtual = localPlayer.Character
+            if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
+            local rootAtual = charAtual.HumanoidRootPart
+            
+            if rootAtual.Position.Y < -22 then
+                rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z)
+            end
+            
+            -- Atualiza posição do fantasma
+            if Underground_CameraPart then
+                Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z)
+            end
+        end)
+        
+        -- Câmera segue o fantasma
+        if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect() end
+        local camera = Workspace.CurrentCamera
+        camera.CameraSubject = Underground_CameraPart
+        camera.CameraType = Enum.CameraType.Follow
+        
+    else
+        Underground_Voltando = true
+        
+        -- Para o loop anti-void
+        if Underground_Conexao then 
+            Underground_Conexao:Disconnect()
+            Underground_Conexao = nil 
+        end
+        
+        -- Reseta câmera
+        local camera = Workspace.CurrentCamera
+        if camera then
+            camera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid")
+            camera.CameraType = Enum.CameraType.Follow
+        end
+        
+        -- Remove fantasma
+        if Underground_CameraPart then
+            Underground_CameraPart:Destroy()
+            Underground_CameraPart = nil
+        end
+        
+        -- Sobe o jogador
+        root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        
+        task.wait(0.5)
+        Underground_Voltando = false
+    end
+end})
+
+OutrosTab:CreateSection("FOV da Camera")
+OutrosTab:CreateInput({Name = "FOV (70 padrao)", PlaceholderText = "70", RemoveTextAfterFocusLost = false, Callback = function(t) 
+    local n = tonumber(t) 
+    if n and n >= 30 and n <= 120 then 
+        Workspace.CurrentCamera.FieldOfView = n 
+    end
+end})
+OutrosTab:CreateButton({Name = "Resetar FOV", Callback = function()
+    Workspace.CurrentCamera.FieldOfView = 70
+end})
+
+OutrosTab:CreateSection("Teleporte para Jogador")
+OutrosTab:CreateInput({Name = "Nome do Jogador (iniciais tbm)", PlaceholderText = "Digite o nome...", RemoveTextAfterFocusLost = false, Callback = function(t)
+    if t ~= "" then
+        local encontrado = false
+        local texto = t:lower()
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= localPlayer then
+                local nome = p.Name:lower()
+                local display = p.DisplayName:lower()
+                if nome:find(texto, 1, true) or display:find(texto, 1, true) then
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                        localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+                        Rayfield:Notify({Title = "TP", Content = "Teleportado para " .. p.Name, Duration = 3})
+                        encontrado = true
+                        break
+                    end
+                end
+            end
+        end
+        if not encontrado then
+            Rayfield:Notify({Title = "TP", Content = "Jogador nao encontrado!", Duration = 3})
+        end
+    end
+end})
+
 -- Configs
 local ConfigTab = Window:CreateTab("Configs", 4483345998)
 ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    AutoJJ_Ativado = false
+   BlocosAtivado = false
+   SpeedHack_Ativado = false
+   if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
+   Underground_Ativado = false
+   if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
+   if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect(); Underground_ConexaoCamera = nil end
+   if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+   RemoveHitboxes()
    DestruirPainelJJ()
    RemoverBotaoDash()
    if FOVCircle then FOVCircle:Destroy() end
@@ -480,4 +912,4 @@ ConfigTab:CreateButton({Name = "Destruir Tudo", Callback = function()
    Rayfield:Destroy()
 end})
 
-Rayfield:Notify({Title = "Eb do Delta", Content = "Aimbot com opcao 'So mirar com item' adicionada!", Duration = 3})
+Rayfield:Notify({Title = "Eb do Delta", Content = "Underground adicionado nos Outros!", Duration = 5})
