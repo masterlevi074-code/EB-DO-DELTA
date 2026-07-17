@@ -165,7 +165,6 @@ local function AtualizarESP()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= localPlayer and p.Character then
             local mostrarESP = true
-            
             if ESP_TimesAtivado then
                 local timePlayer = GetPlayerTime(p)
                 if timePlayer then
@@ -174,34 +173,21 @@ local function AtualizarESP()
                     mostrarESP = false
                 end
             end
-            
             local h = p.Character:FindFirstChild("NoahzinESP")
-            if h then 
-                h.Enabled = ESP_Chams and mostrarESP
-                h.FillColor = CorESP 
-            end
-            
+            if h then h.Enabled = ESP_Chams and mostrarESP; h.FillColor = CorESP end
             local box = p.Character:FindFirstChild("NoahzinBox")
-            if box then 
-                box.Visible = ESP_Box and mostrarESP
-                box.Color3 = CorESP 
-            end
-            
+            if box then box.Visible = ESP_Box and mostrarESP; box.Color3 = CorESP end
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui then 
+                if nameGui then
                     nameGui.Enabled = ESP_Names and mostrarESP
                     if nameGui:FindFirstChild("TextLabel") then
                         nameGui.TextLabel.TextColor3 = CorESP
                     end
                 end
             end
-            
-            if LinhasTracers[p] then 
-                LinhasTracers[p].Color = CorESP
-                LinhasTracers[p].Visible = ESP_Tracers and mostrarESP
-            end
+            if LinhasTracers[p] then LinhasTracers[p].Color = CorESP; LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
         end
     end
 end
@@ -316,13 +302,9 @@ local function ObterJogadorMaisProximoDaMira()
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
             local parteBuscada = nil
-            if Aimbot_ParteAlvo == "Head" then
-                parteBuscada = p.Character:FindFirstChild("Head")
-            elseif Aimbot_ParteAlvo == "Torso" then
-                parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            elseif Aimbot_ParteAlvo == "Perna" then
-                parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart")
-            end
+            if Aimbot_ParteAlvo == "Head" then parteBuscada = p.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
+            elseif Aimbot_ParteAlvo == "Perna" then parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart") end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
@@ -356,12 +338,8 @@ end
 local function DestruirPainelJJ()
     pcall(function()
         local todosGuis = {}
-        for _, gui in pairs(CoreGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end
-        end
-        for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do
-            if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end
-        end
+        for _, gui in pairs(CoreGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
+        for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
         for _, gui in pairs(todosGuis) do
             local nome = gui.Name:lower()
             if nome:find("auto") or nome:find("jj") then gui:Destroy()
@@ -384,14 +362,9 @@ end
 local function CreateHitboxes()
     for _, v in ipairs(data) do
         local p = Instance.new("Part", workspace)
-        p.Name = "BlocoParkour"
-        p.Size = v.size
-        p.Position = v.pos
-        p.Anchored = true
-        p.CanCollide = true
-        p.Transparency = 0.7
-        p.Color = Color3.fromRGB(0, 255, 100)
-        p.Material = Enum.Material.Neon
+        p.Name = "BlocoParkour"; p.Size = v.size; p.Position = v.pos
+        p.Anchored = true; p.CanCollide = true; p.Transparency = 0.7
+        p.Color = Color3.fromRGB(0, 255, 100); p.Material = Enum.Material.Neon
         table.insert(Hitboxes, p)
     end
 end
@@ -415,13 +388,9 @@ RunService.RenderStepped:Connect(function()
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
             local parteRastrear = nil
-            if Aimbot_ParteAlvo == "Head" then
-                parteRastrear = alvo.Character:FindFirstChild("Head")
-            elseif Aimbot_ParteAlvo == "Torso" then
-                parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            elseif Aimbot_ParteAlvo == "Perna" then
-                parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            end
+            if Aimbot_ParteAlvo == "Head" then parteRastrear = alvo.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
+            elseif Aimbot_ParteAlvo == "Perna" then parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart") end
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
@@ -451,19 +420,13 @@ RunService.RenderStepped:Connect(function()
                 local mostrar = true
                 if ESP_TimesAtivado then
                     local timePlayer = GetPlayerTime(p)
-                    if timePlayer then
-                        mostrar = TimesMarcados[timePlayer] or false
-                    else
-                        mostrar = false
-                    end
+                    if timePlayer then mostrar = TimesMarcados[timePlayer] or false else mostrar = false end
                 end
                 if mostrar then
                     local posTela, visivel = camera:WorldToViewportPoint(root.Position)
                     if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true
                     else tracer.Visible = false end
-                else
-                    tracer.Visible = false
-                end
+                else tracer.Visible = false end
             else tracer.Visible = false end
         else if tracer then tracer.Visible = false end end
     end
@@ -479,15 +442,12 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
-    
     if BlocosAtivado and localPlayer.Character then
         local hrp = localPlayer.Character:FindFirstChild("HumanoidRootPart")
         if hrp then
             local velY = hrp.AssemblyLinearVelocity.Y
             for _, part in pairs(Hitboxes) do
-                if part then
-                    part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1))
-                end
+                if part then part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1)) end
             end
         end
     end
@@ -533,6 +493,8 @@ end
 -- ==========================================
 -- WIND UI
 -- ==========================================
+task.wait(0.5)
+
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 local Window = WindUI:CreateWindow({
@@ -951,10 +913,7 @@ OutrosTab:Toggle({
                 end
             end)
         else
-            if SpeedHack_Conexao then
-                SpeedHack_Conexao:Disconnect()
-                SpeedHack_Conexao = nil
-            end
+            if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
         end
     end,
 })
@@ -1126,3 +1085,5 @@ ConfigTab:Button({
 })
 
 Window:SelectTab(1)
+
+print("✅ Eb do Delta - WindUI carregado com sucesso!")
