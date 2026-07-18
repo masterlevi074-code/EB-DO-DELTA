@@ -11,9 +11,9 @@ local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 
 if CoreGui:FindFirstChild("WindUI") then CoreGui.WindUI:Destroy() end
-ifq localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
+if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
 if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
-if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
+if CoreGui:FindFirstChild("FakeAdminGUI") then CoreGui.FakeAdminGUI:Destroy() end
 
 local dashStuds = 30
 local dashButtonScreen = nil
@@ -87,8 +87,11 @@ local PasseLivre_Centro = Vector3.new(-13, 3.0, -494.5)
 local PasseLivre_Raio = 3
 local PasseLivre_NoClipAtivo = false
 
--- MODO STREAMER
-local ModoStreamer_Ativado = false
+-- FAKE ADMIN
+local Admin_Ativado = false
+local Admin_Prefixo = "!"
+local Admin_GodMode = false
+local Admin_Invisivel = false
 
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -223,7 +226,7 @@ FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
 -- ==========================================
--- FUNÇÕES ESP (CORRIGIDO COM PCALL)
+-- FUNÇÕES ESP
 -- ==========================================
 local function GetPlayerTime(player)
     if player.Team then
@@ -599,6 +602,216 @@ local function TrocarServidor(tipo)
 end
 
 -- ==========================================
+-- FAKE ADMIN - SISTEMA DE COMANDOS
+-- ==========================================
+local function EncontrarJogador(nome)
+    nome = nome:lower()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name:lower():find(nome, 1, true) or (p.DisplayName and p.DisplayName:lower():find(nome, 1, true)) then
+            return p
+        end
+    end
+    return nil
+end
+
+local function ExecutarComandoAdmin(mensagem)
+    if not Admin_Ativado then return end
+    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
+    
+    local comando = mensagem:sub(#Admin_Prefixo + 1)
+    local args = comando:split(" ")
+    local cmd = args[1]:lower()
+    table.remove(args, 1)
+    local resto = table.concat(args, " ")
+    
+    -- HELP
+    if cmd == "help" or cmd == "cmds" then
+        local lista = "📋 COMANDOS: to, bring, kill, respawn, freeze, unfreeze, explode, fling, spin, noclip, fly, speed, god, ungod, invis, vis, view, unview, sit, jump"
+        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage(lista) end)
+        
+    -- TO (Teleporte)
+    elseif cmd == "to" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
+            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+        
+    -- BRING
+    elseif cmd == "bring" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
+            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+        
+    -- KILL
+    elseif cmd == "kill" then
+        if resto == "all" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer and p.Character then pcall(function() p.Character:BreakJoints() end) end
+            end
+        else
+            local alvo = EncontrarJogador(resto)
+            if alvo and alvo.Character then pcall(function() alvo.Character:BreakJoints() end) end
+        end
+        
+    -- RESPAWN
+    elseif cmd == "respawn" then
+        if resto == "all" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end
+            end
+        else
+            local alvo = EncontrarJogador(resto)
+            if alvo then pcall(function() alvo:LoadCharacter() end) end
+        end
+        
+    -- FREEZE
+    elseif cmd == "freeze" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Anchored = true
+        end
+        
+    -- UNFREEZE
+    elseif cmd == "unfreeze" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Anchored = false
+        end
+        
+    -- EXPLODE
+    elseif cmd == "explode" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
+        end
+        
+    -- FLING
+    elseif cmd == "fling" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-200,200), 500, math.random(-200,200))
+        end
+        
+    -- SPIN
+    elseif cmd == "spin" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.RotVelocity = Vector3.new(0, 100, 0)
+        end
+        
+    -- NOCLIP
+    elseif cmd == "noclip" then
+        if localPlayer.Character then
+            local pode = not localPlayer.Character.HumanoidRootPart.CanCollide
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = pode end
+            end
+        end
+        
+    -- FLY
+    elseif cmd == "fly" then
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+            localPlayer.Character.Humanoid.PlatformStand = not localPlayer.Character.Humanoid.PlatformStand
+        end
+        
+    -- SPEED
+    elseif cmd == "speed" then
+        local valor = tonumber(resto) or 50
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+            localPlayer.Character.Humanoid.WalkSpeed = valor
+        end
+        
+    -- GOD
+    elseif cmd == "god" then
+        Admin_GodMode = true
+        
+    -- UNGOD
+    elseif cmd == "ungod" then
+        Admin_GodMode = false
+        
+    -- INVIS
+    elseif cmd == "invis" then
+        if localPlayer.Character then
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.Transparency = 0.9 end
+            end
+            Admin_Invisivel = true
+        end
+        
+    -- VIS
+    elseif cmd == "vis" then
+        if localPlayer.Character then
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.Transparency = 0 end
+            end
+            Admin_Invisivel = false
+        end
+        
+    -- VIEW
+    elseif cmd == "view" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character then
+            Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character
+        end
+        
+    -- UNVIEW
+    elseif cmd == "unview" then
+        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
+        
+    -- SIT
+    elseif cmd == "sit" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+            alvo.Character.Humanoid.Sit = true
+        end
+        
+    -- JUMP
+    elseif cmd == "jump" then
+        local alvo = EncontrarJogador(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+            alvo.Character.Humanoid.Jump = true
+        end
+    end
+end
+
+-- Conecta ao chat
+pcall(function()
+    game:GetService("TextChatService").MessageReceived:Connect(function(message)
+        if message.TextSource == localPlayer then
+            ExecutarComandoAdmin(message.Text)
+        end
+    end)
+end)
+
+pcall(function()
+    localPlayer.Chatted:Connect(function(mensagem)
+        ExecutarComandoAdmin(mensagem)
+    end)
+end)
+
+-- God Mode loop
+RunService.Heartbeat:Connect(function()
+    if Admin_GodMode and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        localPlayer.Character.Humanoid.Health = localPlayer.Character.Humanoid.MaxHealth
+    end
+end)
+
+-- Indicador
+local AdminIndicador = Instance.new("TextLabel")
+AdminIndicador.Size = UDim2.new(0, 100, 0, 20)
+AdminIndicador.Position = UDim2.new(0.01, 0, 0.05, 0)
+AdminIndicador.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+AdminIndicador.BackgroundTransparency = 0.5
+AdminIndicador.Text = "ADMIN: OFF"
+AdminIndicador.TextColor3 = Color3.fromRGB(255, 100, 100)
+AdminIndicador.Font = Enum.Font.SourceSansBold
+AdminIndicador.TextSize = 12
+AdminIndicador.BorderSizePixel = 0
+AdminIndicador.Parent = CoreGui
+Instance.new("UICorner", AdminIndicador).CornerRadius = UDim.new(0, 4)
+
+-- ==========================================
 -- WIND UI
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
@@ -625,17 +838,13 @@ MainTab:Button({Title = "Resetar", Desc = "Reseta seu personagem", Callback = fu
 end})
 
 MainTab:Section({Title = "Auto JJ Polichinelos"})
-
 MainTab:Toggle({Title = "Ativar Auto JJ", Desc = "Auto JJ Polichinelos", Default = false, Callback = function(v)
-    AutoJJ_Ativado = v
-    if v then IniciarAutoJJ() else DestruirPainelJJ() end
+    AutoJJ_Ativado = v; if v then IniciarAutoJJ() else DestruirPainelJJ() end
 end})
 
 MainTab:Section({Title = "Blocos Parkour"})
-
 MainTab:Toggle({Title = "Ativar Blocos", Desc = "Cria blocos de parkour", Default = false, Callback = function(v)
-    BlocosAtivado = v
-    if v then CreateHitboxes() else RemoveHitboxes() end
+    BlocosAtivado = v; if v then CreateHitboxes() else RemoveHitboxes() end
 end})
 
 -- ==========================================
@@ -644,7 +853,6 @@ end})
 local CombatTab = Window:Tab({Title = "Combate", Icon = "swords"})
 
 CombatTab:Section({Title = "Aimbot"})
-
 CombatTab:Toggle({Title = "Ativar Aimbot", Desc = "Mira automaticamente", Default = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:Toggle({Title = "Mostrar FOV", Desc = "Mostra o círculo do FOV", Default = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
 CombatTab:Toggle({Title = "Team Check", Desc = "Não mira em aliados", Default = false, Callback = function(v) Aimbot_TeamCheck = v end})
@@ -655,22 +863,17 @@ CombatTab:Input({Title = "Raio FOV", Desc = "Tamanho do FOV", Placeholder = "100
 CombatTab:Input({Title = "Suavidade", Desc = "Suavidade da mira", Placeholder = "0.15", Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
 CombatTab:Input({Title = "Offset FOV Tela", Desc = "Ajuste vertical do FOV", Placeholder = "-40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
 CombatTab:Input({Title = "Offset Mira (px)", Desc = "Ajuste fino da mira", Placeholder = "40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
-
 CombatTab:Dropdown({Title = "Cor do FOV", Values = {"Branco", "Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Rosa"}, Callback = function(Value)
     local cores = {["Branco"] = Color3.fromRGB(255,255,255), ["Vermelho"] = Color3.fromRGB(255,50,50), ["Azul"] = Color3.fromRGB(50,150,255), ["Verde"] = Color3.fromRGB(50,255,100), ["Amarelo"] = Color3.fromRGB(255,220,50), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
-    Aimbot_CorFOV = cores[Value]; FOVCircle.Color = cores[Value]
-    WindUI:Notify({Title = "FOV", Content = "Cor: " .. Value})
+    Aimbot_CorFOV = cores[Value]; FOVCircle.Color = cores[Value]; WindUI:Notify({Title = "FOV", Content = "Cor: " .. Value})
 end})
 
 CombatTab:Section({Title = "Alvo"})
-
 CombatTab:Dropdown({Title = "Parte do Corpo", Values = {"Head", "Torso", "Perna"}, Callback = function(Value)
-    Aimbot_ParteAlvo = Value
-    WindUI:Notify({Title = "Alvo", Content = "Mirando na: " .. Value})
+    Aimbot_ParteAlvo = Value; WindUI:Notify({Title = "Alvo", Content = "Mirando na: " .. Value})
 end})
 
 CombatTab:Section({Title = "Hitbox Expander"})
-
 CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadores", Default = false, Callback = function(v)
     Hitbox_Ativado = v
     if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
@@ -680,15 +883,12 @@ CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "2
 CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox", Placeholder = "0.7", Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
 
 CombatTab:Section({Title = "Cores Hitbox"})
-
 CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {["Vermelho"] = Color3.fromRGB(255,30,30), ["Azul"] = Color3.fromRGB(30,100,255), ["Verde"] = Color3.fromRGB(50,255,50), ["Amarelo"] = Color3.fromRGB(255,220,0), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
-    Hitbox_Cor = cores[Value]
-    WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
+    Hitbox_Cor = cores[Value]; WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
 end})
 
 CombatTab:Section({Title = "Lista de Exclusao"})
-
 CombatTab:Dropdown({Title = "Jogador", Values = ObterListaJogadores(), Callback = function(Value) DropdownSelecionado = Value end})
 CombatTab:Button({Title = "Adicionar a Lista", Desc = "Adiciona jogador selecionado", Callback = function()
     if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = true; WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " adicionado!"}) end
@@ -706,18 +906,15 @@ end})
 local VisualTab = Window:Tab({Title = "Visuais", Icon = "eye"})
 
 VisualTab:Section({Title = "ESP por Times"})
-
 VisualTab:Toggle({Title = "Ativar ESP por Times", Desc = "Filtra ESP por times", Default = false, Callback = function(v)
     ESP_TimesAtivado = v; AtualizarESP()
 end})
-
 local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
 for _, nomeTime in ipairs(timesOrdenados) do
     VisualTab:Button({Title = nomeTime, Desc = "Marcar/Desmarcar " .. nomeTime, Callback = function()
         TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]; AtualizarESP()
     end})
 end
-
 VisualTab:Button({Title = "SELECIONAR TODOS", Desc = "Marca todos os times", Callback = function()
     for time, _ in pairs(TimesMarcados) do TimesMarcados[time] = true end; AtualizarESP()
 end})
@@ -726,7 +923,6 @@ VisualTab:Button({Title = "DESMARCAR TODOS", Desc = "Desmarca todos os times", C
 end})
 
 VisualTab:Section({Title = "ESP"})
-
 VisualTab:Toggle({Title = "ESP Completo", Desc = "Ativa todos os ESP", Default = false, Callback = function(v)
     ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP()
 end})
@@ -737,15 +933,12 @@ VisualTab:Toggle({Title = "ESP Tracers", Desc = "Linhas até os jogadores", Defa
 VisualTab:Toggle({Title = "ESP Vida", Desc = "Mostra a vida do jogador", Default = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
 
 VisualTab:Section({Title = "Cores ESP"})
-
 VisualTab:Dropdown({Title = "Cor do ESP", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {["Vermelho"] = Color3.fromRGB(255,50,50), ["Azul"] = Color3.fromRGB(50,150,255), ["Verde"] = Color3.fromRGB(50,255,100), ["Amarelo"] = Color3.fromRGB(255,220,50), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
-    AplicarCorESP(cores[Value])
-    WindUI:Notify({Title = "ESP", Content = "Cor: " .. Value})
+    AplicarCorESP(cores[Value]); WindUI:Notify({Title = "ESP", Content = "Cor: " .. Value})
 end})
 
 VisualTab:Section({Title = "Luz"})
-
 VisualTab:Button({Title = "Fullbright", Desc = "Ilumina o mapa", Callback = function()
     Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128)
 end})
@@ -778,7 +971,7 @@ OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", De
         if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     end
 end})
-OutrosTab:Slider({Title = "Velocidade Speed", Desc = "Ajuste a velocidade", Value = {Min = 1, Max = 200, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
+OutrosTab:Slider({Title = "Velocidade Speed", Desc = "Ajuste a velocidade", Value = {Min = 1, Max = 500, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
 
 OutrosTab:Section({Title = "Underground"})
 OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa", Default = false, Callback = function(v)
@@ -830,8 +1023,7 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
                 if not PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = true
                     for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end end
-                    root.CanCollide = false
-                    WindUI:Notify({Title = "Passe Livre", Content = "✅ Noclip ATIVADO na área!"})
+                    root.CanCollide = false; WindUI:Notify({Title = "Passe Livre", Content = "✅ Noclip ATIVADO na área!"})
                 end
             else
                 if PasseLivre_NoClipAtivo then
@@ -882,6 +1074,53 @@ end})
 -- ==========================================
 local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 
+ConfigTab:Section({Title = "Admin"})
+ConfigTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v)
+    Admin_Ativado = v
+    if v then
+        AdminIndicador.Text = "ADMIN: ON"
+        AdminIndicador.TextColor3 = Color3.fromRGB(100, 255, 100)
+        WindUI:Notify({Title = "Admin", Content = "🟢 Modo Admin ATIVADO! Use !help no chat"})
+    else
+        AdminIndicador.Text = "ADMIN: OFF"
+        AdminIndicador.TextColor3 = Color3.fromRGB(255, 100, 100)
+        Admin_GodMode = false
+        WindUI:Notify({Title = "Admin", Content = "🔴 Modo Admin DESATIVADO!"})
+    end
+end})
+
+ConfigTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t)
+    if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo alterado para: " .. t}) end
+end})
+
+ConfigTab:Button({Title = "📋 Lista de Comandos", Desc = "Ver todos os comandos FE", Callback = function()
+    WindUI:Notify({Title = "Comandos Admin (" .. Admin_Prefixo .. ")", Content = [[
+!to (nome) - Teleporta até jogador
+!bring (nome) - Traz jogador
+!kill (nome) - Mata jogador
+!kill all - Mata todos
+!respawn (nome) - Respawna
+!respawn all - Respawna todos
+!freeze (nome) - Congela
+!unfreeze (nome) - Descongela
+!explode (nome) - Explode
+!fling (nome) - Arremessa
+!spin (nome) - Gira jogador
+!noclip - Atravessar paredes
+!fly - Modo voo
+!speed (num) - Velocidade
+!god - Modo Deus
+!ungod - Desativa Deus
+!invis - Invisível
+!vis - Visível
+!view (nome) - Observar
+!unview - Parar de ver
+!sit (nome) - Força sentar
+!jump (nome) - Força pular
+!help - Lista de comandos
+    }})
+end})
+
 ConfigTab:Section({Title = "Servidor"})
 ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function()
     WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."}); task.wait(3); TrocarServidor("rejoin")
@@ -893,41 +1132,12 @@ ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servido
     WindUI:Notify({Title = "Servidor", Content = "Procurando servidor vazio..."}); task.wait(1); TrocarServidor("vazio")
 end})
 
-ConfigTab:Section({Title = "Modo Streamer"})
-ConfigTab:Toggle({Title = "Ativar Modo Streamer", Desc = "Esconde o painel (3 toques no botão fantasma)", Default = false, Callback = function(v)
-    ModoStreamer_Ativado = v
-    if v then
-        if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
-        local detector = Instance.new("TextButton")
-        detector.Name = "StreamerDetector"; detector.Size = UDim2.new(0, 60, 0, 60); detector.Position = UDim2.new(0.8, 0, 0.5, 0)
-        detector.BackgroundColor3 = Color3.fromRGB(255, 255, 255); detector.BackgroundTransparency = 0.9
-        detector.BorderSizePixel = 0; detector.Text = ""; detector.Active = true; detector.Draggable = true; detector.ZIndex = 999; detector.Parent = CoreGui
-        local stroke = Instance.new("UIStroke"); stroke.Color = Color3.fromRGB(255, 255, 255); stroke.Thickness = 0.5; stroke.Transparency = 0.5; stroke.Parent = detector
-        local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(1, 0); corner.Parent = detector
-        pcall(function() Window:SetVisibility(false) end)
-        local clickCount = 0; local lastClickTime = 0
-        detector.MouseButton1Click:Connect(function()
-            local now = tick()
-            if now - lastClickTime > 1.5 then clickCount = 0 end
-            lastClickTime = now; clickCount = clickCount + 1
-            detector.BackgroundTransparency = 0.6; task.wait(0.15); detector.BackgroundTransparency = 0.9
-            if clickCount >= 3 then clickCount = 0; pcall(function() Window:ToggleVisibility() end) end
-        end)
-        spawn(function() while ModoStreamer_Ativado and detector and detector.Parent do task.wait(45); pcall(function() detector:TweenPosition(UDim2.new(math.random(10, 80)/100, 0, math.random(10, 80)/100, 0), "InOut", "Linear", 1) end) end end)
-        WindUI:Notify({Title = "Streamer", Content = "🟢 Painel escondido! 3 toques no botão fantasma"})
-    else
-        if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
-        pcall(function() Window:SetVisibility(true) end)
-        WindUI:Notify({Title = "Streamer", Content = "🔴 Modo desativado! Painel visível"})
-    end
-end})
-
 ConfigTab:Section({Title = "Informações"})
 ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function()
-    WindUI:Notify({Title = "Eb do Delta v2.0", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\nESP CORRIGIDO!"})
+    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ Fake Admin FE incluso!"})
 end})
 ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v2.0 - ESP COM PCALL"})
+    WindUI:Notify({Title = "Versão", Content = "v3.0 - Fake Admin FE"})
 end})
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -944,8 +1154,8 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     PasseLivre_Ativado = false
     if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
-    ModoStreamer_Ativado = false
-    if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
+    Admin_Ativado = false; Admin_GodMode = false
+    if AdminIndicador then AdminIndicador:Destroy() end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
@@ -956,4 +1166,5 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta v2.0 - ESP CORRIGIDO COM PCALL!")
+print("✅ Noxys Hub - Fake Admin FE CARREGADO!")
+print("🎩 Use !help no chat para ver os comandos")
