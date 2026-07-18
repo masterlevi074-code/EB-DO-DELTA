@@ -530,9 +530,14 @@ CombatTab:Input({Title = "Offset Mira (px)", Desc = "Ajuste fino da mira", Place
 
 CombatTab:Section({Title = "Alvo"})
 
-CombatTab:Button({Title = "CABECA", Desc = "Mirar na cabeça", Callback = function() Aimbot_ParteAlvo = "Head" end})
-CombatTab:Button({Title = "TRONCO", Desc = "Mirar no tronco", Callback = function() Aimbot_ParteAlvo = "Torso" end})
-CombatTab:Button({Title = "PERNA", Desc = "Mirar nas pernas", Callback = function() Aimbot_ParteAlvo = "Perna" end})
+CombatTab:Dropdown({
+    Title = "Parte do Corpo",
+    Values = {"Head", "Torso", "Perna"},
+    Callback = function(Value)
+        Aimbot_ParteAlvo = Value
+        WindUI:Notify({Title = "Alvo", Content = "Mirando na: " .. Value})
+    end,
+})
 
 CombatTab:Section({Title = "Hitbox Expander"})
 
@@ -554,14 +559,24 @@ CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox
 
 CombatTab:Section({Title = "Cores Hitbox"})
 
-local coresHitbox = {{"Vermelho", Color3.fromRGB(255,30,30)}, {"Azul", Color3.fromRGB(30,100,255)}, {"Verde", Color3.fromRGB(50,255,50)}, {"Amarelo", Color3.fromRGB(255,220,0)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
-for _, c in ipairs(coresHitbox) do
-    CombatTab:Button({Title = c[1], Desc = "Cor " .. c[1], Callback = function() Hitbox_Cor = c[2] end})
-end
-CombatTab:Input({Title = "Cor RGB (ex: 255,128,0)", Desc = "Cor personalizada", Placeholder = "255,0,0", Callback = function(t)
-    local r, g, b = t:match("(%d+)%s*,%s*(%d+)%s*,%s*(%d+)")
-    if r and g and b then Hitbox_Cor = Color3.fromRGB(math.clamp(tonumber(r),0,255), math.clamp(tonumber(g),0,255), math.clamp(tonumber(b),0,255)) end
-end})
+CombatTab:Dropdown({
+    Title = "Cor da Hitbox",
+    Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
+    Callback = function(Value)
+        local cores = {
+            ["Vermelho"] = Color3.fromRGB(255,30,30),
+            ["Azul"] = Color3.fromRGB(30,100,255),
+            ["Verde"] = Color3.fromRGB(50,255,50),
+            ["Amarelo"] = Color3.fromRGB(255,220,0),
+            ["Roxo"] = Color3.fromRGB(170,0,255),
+            ["Ciano"] = Color3.fromRGB(0,255,255),
+            ["Branco"] = Color3.fromRGB(255,255,255),
+            ["Rosa"] = Color3.fromRGB(255,0,180),
+        }
+        Hitbox_Cor = cores[Value]
+        WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
+    end,
+})
 
 CombatTab:Section({Title = "Lista de Exclusao"})
 
@@ -621,10 +636,24 @@ VisualTab:Toggle({Title = "ESP Vida", Desc = "Mostra a vida do jogador", Default
 
 VisualTab:Section({Title = "Cores ESP"})
 
-local coresESP = {{"Vermelho", Color3.fromRGB(255,50,50)}, {"Azul", Color3.fromRGB(50,150,255)}, {"Verde", Color3.fromRGB(50,255,100)}, {"Amarelo", Color3.fromRGB(255,220,50)}, {"Roxo", Color3.fromRGB(170,0,255)}, {"Ciano", Color3.fromRGB(0,255,255)}, {"Branco", Color3.fromRGB(255,255,255)}, {"Rosa", Color3.fromRGB(255,0,180)}}
-for _, c in ipairs(coresESP) do
-    VisualTab:Button({Title = c[1], Desc = "Cor " .. c[1], Callback = function() AplicarCorESP(c[2]) end})
-end
+VisualTab:Dropdown({
+    Title = "Cor do ESP",
+    Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
+    Callback = function(Value)
+        local cores = {
+            ["Vermelho"] = Color3.fromRGB(255,50,50),
+            ["Azul"] = Color3.fromRGB(50,150,255),
+            ["Verde"] = Color3.fromRGB(50,255,100),
+            ["Amarelo"] = Color3.fromRGB(255,220,50),
+            ["Roxo"] = Color3.fromRGB(170,0,255),
+            ["Ciano"] = Color3.fromRGB(0,255,255),
+            ["Branco"] = Color3.fromRGB(255,255,255),
+            ["Rosa"] = Color3.fromRGB(255,0,180),
+        }
+        AplicarCorESP(cores[Value])
+        WindUI:Notify({Title = "ESP", Content = "Cor: " .. Value})
+    end,
+})
 
 VisualTab:Section({Title = "Luz"})
 
@@ -770,4 +799,4 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta - WindUI com Sections!")
+print("✅ Eb do Delta - WindUI com Dropdowns!")
