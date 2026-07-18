@@ -11,7 +11,7 @@ local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 
 if CoreGui:FindFirstChild("WindUI") then CoreGui.WindUI:Destroy() end
-if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
+ifq localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
 if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
 if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
 
