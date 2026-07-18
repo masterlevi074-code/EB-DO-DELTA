@@ -82,7 +82,7 @@ local Underground_CameraPart = nil
 local PasseLivre_Ativado = false
 local PasseLivre_Conexao = nil
 local PasseLivre_Centro = Vector3.new(-13, 3.0, -494.5)
-local PasseLivre_Raio = 8
+local PasseLivre_Raio = 3
 local PasseLivre_NoClipAtivo = false
 
 local data = {
@@ -747,7 +747,7 @@ end})
 
 OutrosTab:Section({Title = "Passe Livre"})
 
-OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 8 studs)", Default = false, Callback = function(v)
+OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 3 studs)", Default = false, Callback = function(v)
     PasseLivre_Ativado = v
     
     if v then
@@ -766,17 +766,18 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
             if distancia <= PasseLivre_Raio then
                 if not PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = true
-                    for _, part in pairs(char:GetChildren()) do
-                        if part:IsA("BasePart") then
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
                             part.CanCollide = false
                         end
                     end
+                    root.CanCollide = false
                     WindUI:Notify({Title = "Passe Livre", Content = "✅ Noclip ATIVADO na área!"})
                 end
             else
                 if PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = false
-                    for _, part in pairs(char:GetChildren()) do
+                    for _, part in pairs(char:GetDescendants()) do
                         if part:IsA("BasePart") then
                             part.CanCollide = true
                         end
@@ -792,7 +793,7 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
             PasseLivre_NoClipAtivo = false
             local char = localPlayer.Character
             if char then
-                for _, part in pairs(char:GetChildren()) do
+                for _, part in pairs(char:GetDescendants()) do
                     if part:IsA("BasePart") then
                         part.CanCollide = true
                     end
@@ -803,7 +804,7 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
     end
 end})
 
-OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "8", Callback = function(t)
+OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t)
     local n = tonumber(t)
     if n and n > 0 then
         PasseLivre_Raio = n
@@ -854,7 +855,7 @@ ConfigTab:Button({Title = "Destruir Tudo", Desc = "Remove tudo e fecha o painel"
     if PasseLivre_NoClipAtivo then
         local char = localPlayer.Character
         if char then
-            for _, part in pairs(char:GetChildren()) do
+            for _, part in pairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then part.CanCollide = true end
             end
         end
@@ -882,4 +883,4 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta - Completo com Passe Livre!")
+print("✅ Eb do Delta - Completo! Raio Passe Livre: 3 studs")
