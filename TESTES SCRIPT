@@ -776,17 +776,19 @@ local function ExecutarComandoAdmin(mensagem)
 end
 
 -- Conecta ao chat
-pcall(function()
-    game:GetService("TextChatService").MessageReceived:Connect(function(message)
-        if message.TextSource == localPlayer then
-            ExecutarComandoAdmin(message.Text)
-        end
+task.spawn(function()
+    pcall(function()
+        game:GetService("TextChatService").MessageReceived:Connect(function(message)
+            if message.TextSource == localPlayer then
+                ExecutarComandoAdmin(message.Text)
+            end
+        end)
     end)
-end)
-
-pcall(function()
-    localPlayer.Chatted:Connect(function(mensagem)
-        ExecutarComandoAdmin(mensagem)
+    
+    pcall(function()
+        localPlayer.Chatted:Connect(function(mensagem)
+            ExecutarComandoAdmin(mensagem)
+        end)
     end)
 end)
 
@@ -797,7 +799,11 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Indicador
+-- Cria ScreenGui para o indicador
+local AdminGui = Instance.new("ScreenGui")
+AdminGui.Name = "FakeAdminGUI"
+AdminGui.Parent = CoreGui
+
 local AdminIndicador = Instance.new("TextLabel")
 AdminIndicador.Size = UDim2.new(0, 100, 0, 20)
 AdminIndicador.Position = UDim2.new(0.01, 0, 0.05, 0)
@@ -808,13 +814,17 @@ AdminIndicador.TextColor3 = Color3.fromRGB(255, 100, 100)
 AdminIndicador.Font = Enum.Font.SourceSansBold
 AdminIndicador.TextSize = 12
 AdminIndicador.BorderSizePixel = 0
-AdminIndicador.Parent = CoreGui
-Instance.new("UICorner", AdminIndicador).CornerRadius = UDim.new(0, 4)
+AdminIndicador.Parent = AdminGui
+pcall(function()
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = AdminIndicador
+end)
 
 -- ==========================================
 -- WIND UI
 -- ==========================================
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/WindUI_Library.lua"))()
 
 local Window = WindUI:CreateWindow({
     Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
@@ -1155,7 +1165,7 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
     Admin_Ativado = false; Admin_GodMode = false
-    if AdminIndicador then AdminIndicador:Destroy() end
+    if AdminGui then AdminGui:Destroy() end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
@@ -1167,4 +1177,4 @@ end})
 Window:SelectTab(1)
 
 print("✅ Noxys Hub - Fake Admin FE CARREGADO!")
-print("🎩 Use !help no chat para ver os comandos")
+print("🎩 Ative o Admin na aba Configs e use !help no chat")
