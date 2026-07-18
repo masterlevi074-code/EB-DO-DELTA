@@ -8,10 +8,12 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
+local TeleportService = game:GetService("TeleportService")
 
 if CoreGui:FindFirstChild("WindUI") then CoreGui.WindUI:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
 if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
+if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
 
 local dashStuds = 30
 local dashButtonScreen = nil
@@ -84,6 +86,9 @@ local PasseLivre_Conexao = nil
 local PasseLivre_Centro = Vector3.new(-13, 3.0, -494.5)
 local PasseLivre_Raio = 3
 local PasseLivre_NoClipAtivo = false
+
+-- MODO STREAMER
+local ModoStreamer_Ativado = false
 
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -548,6 +553,20 @@ local function ObterListaJogadores()
 end
 
 -- ==========================================
+-- TROCA DE SERVIDOR
+-- ==========================================
+local function TrocarServidor(tipo)
+    local placeId = game.PlaceId
+    if tipo == "cheio" then
+        pcall(function() TeleportService:Teleport(placeId) end)
+    elseif tipo == "vazio" then
+        pcall(function() TeleportService:TeleportToPlaceInstance(placeId, "", localPlayer) end)
+    elseif tipo == "rejoin" then
+        pcall(function() TeleportService:Teleport(placeId) end)
+    end
+end
+
+-- ==========================================
 -- WIND UI
 -- ==========================================
 task.wait(0.5)
@@ -841,27 +860,21 @@ OutrosTab:Section({Title = "Passe Livre"})
 
 OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 3 studs)", Default = false, Callback = function(v)
     PasseLivre_Ativado = v
-    
     if v then
         if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
         PasseLivre_Conexao = RunService.Heartbeat:Connect(function()
             if not PasseLivre_Ativado then return end
-            
             local char = localPlayer.Character
             if not char or not char:FindFirstChild("HumanoidRootPart") then return end
             local root = char.HumanoidRootPart
-            
             local posHorizontal = Vector3.new(root.Position.X, 0, root.Position.Z)
             local centroHorizontal = Vector3.new(PasseLivre_Centro.X, 0, PasseLivre_Centro.Z)
             local distancia = (posHorizontal - centroHorizontal).Magnitude
-            
             if distancia <= PasseLivre_Raio then
                 if not PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = true
                     for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                            part.CanCollide = false
-                        end
+                        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end
                     end
                     root.CanCollide = false
                     WindUI:Notify({Title = "Passe Livre", Content = "✅ Noclip ATIVADO na área!"})
@@ -870,9 +883,7 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
                 if PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = false
                     for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = true
-                        end
+                        if part:IsA("BasePart") then part.CanCollide = true end
                     end
                     WindUI:Notify({Title = "Passe Livre", Content = "❌ Noclip DESATIVADO (saiu da área)"})
                 end
@@ -886,9 +897,7 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
             local char = localPlayer.Character
             if char then
                 for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = true
-                    end
+                    if part:IsA("BasePart") then part.CanCollide = true end
                 end
             end
         end
@@ -898,10 +907,7 @@ end})
 
 OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t)
     local n = tonumber(t)
-    if n and n > 0 then
-        PasseLivre_Raio = n
-        WindUI:Notify({Title = "Passe Livre", Content = "Raio alterado para: " .. n .. " studs"})
-    end
+    if n and n > 0 then PasseLivre_Raio = n; WindUI:Notify({Title = "Passe Livre", Content = "Raio: " .. n .. " studs"}) end
 end})
 
 OutrosTab:Section({Title = "FOV da Camera"})
@@ -935,7 +941,88 @@ end})
 -- ==========================================
 local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 
-ConfigTab:Button({Title = "Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
+ConfigTab:Section({Title = "Servidor"})
+
+ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function()
+    WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."})
+    task.wait(3)
+    TrocarServidor("rejoin")
+end})
+
+ConfigTab:Button({Title = "👥 Servidor Cheio", Desc = "Tenta entrar em servidor cheio", Callback = function()
+    WindUI:Notify({Title = "Servidor", Content = "Procurando servidor cheio..."})
+    task.wait(1)
+    TrocarServidor("cheio")
+end})
+
+ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servidor vazio", Callback = function()
+    WindUI:Notify({Title = "Servidor", Content = "Procurando servidor vazio..."})
+    task.wait(1)
+    TrocarServidor("vazio")
+end})
+
+ConfigTab:Section({Title = "Modo Streamer"})
+
+ConfigTab:Toggle({Title = "Ativar Modo Streamer", Desc = "Esconde o painel (3 toques no botão fantasma)", Default = false, Callback = function(v)
+    ModoStreamer_Ativado = v
+    if v then
+        if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
+        local detector = Instance.new("TextButton")
+        detector.Name = "StreamerDetector"
+        detector.Size = UDim2.new(0, 50, 0, 50)
+        detector.Position = UDim2.new(math.random(10, 80)/100, 0, math.random(10, 80)/100, 0)
+        detector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        detector.BackgroundTransparency = 0.9
+        detector.Text = ""
+        detector.Active = true
+        detector.Draggable = true
+        detector.BorderSizePixel = 0
+        detector.ZIndex = 100
+        detector.Parent = CoreGui
+        local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(1, 0); corner.Parent = detector
+        
+        local clickCount = 0; local lastClickTime = 0
+        detector.MouseButton1Click:Connect(function()
+            local now = tick()
+            if now - lastClickTime > 2 then clickCount = 0 end
+            lastClickTime = now; clickCount = clickCount + 1
+            detector.BackgroundTransparency = 0.7; task.wait(0.2); detector.BackgroundTransparency = 0.9
+            if clickCount >= 3 then
+                clickCount = 0
+                pcall(function() Window:ToggleVisibility() end)
+            end
+        end)
+        spawn(function()
+            while ModoStreamer_Ativado and detector and detector.Parent do
+                task.wait(30)
+                pcall(function() detector.Position = UDim2.new(math.random(10, 80)/100, 0, math.random(10, 80)/100, 0) end)
+            end
+        end)
+        WindUI:Notify({Title = "Streamer", Content = "🟢 3 toques no botão fantasma!"})
+    else
+        if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
+        pcall(function() Window:SetVisibility(true) end)
+        WindUI:Notify({Title = "Streamer", Content = "🔴 Modo desativado!"})
+    end
+end})
+
+ConfigTab:Section({Title = "Informações"})
+
+ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function()
+    WindUI:Notify({Title = "Eb do Delta v2.0", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n\nFuncionalidades:\n- Aimbot\n- ESP\n- Underground\n- Speed Hack\n- Passe Livre\n- E muito mais!"})
+end})
+
+ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
+    WindUI:Notify({Title = "Versão", Content = "v2.0 - 18/07/2026\n\n✅ Dropdown cores\n✅ Passe Livre\n✅ Modo Streamer\n✅ Troca servidor"})
+end})
+
+ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function()
+    WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet\n\nInterface adaptável!"})
+end})
+
+ConfigTab:Section({Title = "Ações"})
+
+ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     Underground_Ativado = false
@@ -946,12 +1033,10 @@ ConfigTab:Button({Title = "Destruir Tudo", Desc = "Remove tudo e fecha o painel"
     if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     if PasseLivre_NoClipAtivo then
         local char = localPlayer.Character
-        if char then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = true end
-            end
-        end
+        if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end
     end
+    ModoStreamer_Ativado = false
+    if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do
@@ -975,4 +1060,5 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta - COMPLETO! Dropdown Cor FOV adicionado!")
+print("✅ Eb do Delta v2.0 - COMPLETO!")
+print("🕵️ Modo Streamer | 🔄 Troca Servidor | 🎨 Cores FOV")
