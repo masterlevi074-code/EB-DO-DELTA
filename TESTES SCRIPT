@@ -223,15 +223,13 @@ FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
 -- ==========================================
--- FUNÇÕES ESP (SISTEMA ORIGINAL QUE FUNCIONA)
+-- FUNÇÕES ESP (CORRIGIDO - CRIA SEMPRE)
 -- ==========================================
 local function GetPlayerTime(player)
     if player.Team then
         local teamName = player.Team.Name
         for time, _ in pairs(TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then
-                return time
-            end
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
         end
     end
     return nil
@@ -251,29 +249,61 @@ local function AtualizarESP()
                 end
             end
             
+            -- ESP Chams - Força criação se não existir
             local h = p.Character:FindFirstChild("NoahzinESP")
-            if h then 
-                h.Enabled = ESP_Chams and mostrarESP
-                h.FillColor = CorESP 
+            if not h then
+                h = Instance.new("Highlight")
+                h.Name = "NoahzinESP"
+                h.FillColor = CorESP
+                h.OutlineColor = Color3.new(1,1,1)
+                h.FillTransparency = 0.5
+                h.Parent = p.Character
             end
+            h.Enabled = ESP_Chams and mostrarESP
+            if mostrarESP then h.FillColor = CorESP end
             
+            -- ESP Box - Força criação se não existir
             local box = p.Character:FindFirstChild("NoahzinBox")
-            if box then 
-                box.Visible = ESP_Box and mostrarESP
-                box.Color3 = CorESP 
+            if not box then
+                box = Instance.new("SelectionBox")
+                box.Name = "NoahzinBox"
+                box.Adornee = p.Character
+                box.LineThickness = 0.05
+                box.SurfaceTransparency = 1
+                box.Parent = p.Character
             end
+            box.Visible = ESP_Box and mostrarESP
+            if mostrarESP then box.Color3 = CorESP end
             
+            -- ESP Name - Força criação se não existir
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui then 
-                    nameGui.Enabled = ESP_Names and mostrarESP
-                    if nameGui:FindFirstChild("TextLabel") then
-                        nameGui.TextLabel.TextColor3 = CorESP
-                    end
+                if not nameGui then
+                    nameGui = Instance.new("BillboardGui")
+                    nameGui.Name = "NoahzinName"
+                    nameGui.Size = UDim2.new(0, 100, 0, 20)
+                    nameGui.AlwaysOnTop = true
+                    nameGui.ExtentsOffset = Vector3.new(0, 3, 0)
+                    nameGui.Parent = head
+                    
+                    local tl = Instance.new("TextLabel")
+                    tl.Size = UDim2.new(1, 0, 1, 0)
+                    tl.BackgroundTransparency = 1
+                    tl.Text = p.Name
+                    tl.TextColor3 = CorESP
+                    tl.Font = Enum.Font.GothamBold
+                    tl.TextSize = 12
+                    tl.TextStrokeTransparency = 0
+                    tl.Parent = nameGui
+                end
+                nameGui.Enabled = ESP_Names and mostrarESP
+                if nameGui:FindFirstChild("TextLabel") then
+                    nameGui.TextLabel.TextColor3 = CorESP
                 end
             end
             
+            -- ESP Tracers
             if LinhasTracers[p] then 
                 LinhasTracers[p].Color = CorESP
                 LinhasTracers[p].Visible = ESP_Tracers and mostrarESP
@@ -283,34 +313,26 @@ local function AtualizarESP()
 end
 
 local function CriarESP(p)
-    local function AdicionarUI(c)
-        if p == localPlayer then return end
-        local head = c:WaitForChild("Head", 5)
-        if not head then return end
-        local h = c:FindFirstChild("NoahzinESP") or Instance.new("Highlight")
-        h.Name = "NoahzinESP"; h.FillColor = CorESP; h.OutlineColor = Color3.new(1,1,1)
-        h.FillTransparency = 0.5; h.Enabled = ESP_Chams; h.Parent = c
-        local bg = head:FindFirstChild("NoahzinName") or Instance.new("BillboardGui")
-        bg.Name = "NoahzinName"; bg.Size = UDim2.new(0, 100, 0, 20)
-        bg.AlwaysOnTop = true; bg.ExtentsOffset = Vector3.new(0, 3, 0)
-        bg.Enabled = ESP_Names; bg.Parent = head
-        local tl = bg:FindFirstChild("TextLabel") or Instance.new("TextLabel")
-        tl.Size = UDim2.new(1, 0, 1, 0); tl.BackgroundTransparency = 1
-        tl.Text = p.Name; tl.TextColor3 = CorESP; tl.Font = Enum.Font.GothamBold
-        tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
-        local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
-        box.Name = "NoahzinBox"; box.Adornee = c; box.Color3 = CorESP
-        box.LineThickness = 0.05; box.SurfaceTransparency = 1
-        box.Visible = ESP_Box; box.Parent = c
-        if not LinhasTracers[p] then
-            local tracer = Drawing.new("Line")
-            tracer.Visible = false; tracer.Color = CorESP; tracer.Thickness = 1.2
-            LinhasTracers[p] = tracer
-        end
-        task.spawn(AtualizarESP)
+    if p == localPlayer then return end
+    
+    -- Só registra o tracer, o resto é criado pelo AtualizarESP
+    if not LinhasTracers[p] then
+        local tracer = Drawing.new("Line")
+        tracer.Visible = false
+        tracer.Color = CorESP
+        tracer.Thickness = 1.2
+        LinhasTracers[p] = tracer
     end
-    if p.Character then AdicionarUI(p.Character) end
-    p.CharacterAdded:Connect(AdicionarUI)
+    
+    -- Força atualização imediata
+    if p.Character then
+        AtualizarESP()
+    end
+    
+    p.CharacterAdded:Connect(function()
+        task.wait(1)
+        AtualizarESP()
+    end)
 end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
@@ -330,9 +352,7 @@ local function AplicarCorESP(novaCor)
             local head = plr.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui and nameGui:FindFirstChild("TextLabel") then
-                    nameGui.TextLabel.TextColor3 = novaCor
-                end
+                if nameGui and nameGui:FindFirstChild("TextLabel") then nameGui.TextLabel.TextColor3 = novaCor end
             end
         end
         if LinhasTracers[plr] then LinhasTracers[plr].Color = novaCor end
@@ -361,8 +381,7 @@ local function EstaVisivel(alvoParte)
 end
 
 local function SaoDoMesmoTime(jogadorA, jogadorB)
-    local teamA = jogadorA.Team
-    local teamB = jogadorB.Team
+    local teamA = jogadorA.Team; local teamB = jogadorB.Team
     if teamA and teamB and teamA == teamB then return true end
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
         if teamA.TeamColor == teamB.TeamColor then return true end
@@ -381,8 +400,7 @@ end
 
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
-    local melhorAlvo = nil
-    local melhorPontuacao = math.huge
+    local melhorAlvo = nil; local melhorPontuacao = math.huge
     local camera = Workspace.CurrentCamera
     local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
@@ -392,13 +410,9 @@ local function ObterJogadorMaisProximoDaMira()
             if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
             local parteBuscada = nil
-            if Aimbot_ParteAlvo == "Head" then
-                parteBuscada = p.Character:FindFirstChild("Head")
-            elseif Aimbot_ParteAlvo == "Torso" then
-                parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            elseif Aimbot_ParteAlvo == "Perna" then
-                parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart")
-            end
+            if Aimbot_ParteAlvo == "Head" then parteBuscada = p.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
+            elseif Aimbot_ParteAlvo == "Perna" then parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart") end
             if parteBuscada then
                 if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
@@ -654,50 +668,24 @@ CombatTab:Input({Title = "Suavidade", Desc = "Suavidade da mira", Placeholder = 
 CombatTab:Input({Title = "Offset FOV Tela", Desc = "Ajuste vertical do FOV", Placeholder = "-40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
 CombatTab:Input({Title = "Offset Mira (px)", Desc = "Ajuste fino da mira", Placeholder = "40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
 
-CombatTab:Dropdown({
-    Title = "Cor do FOV",
-    Values = {"Branco", "Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Rosa"},
-    Callback = function(Value)
-        local cores = {
-            ["Branco"] = Color3.fromRGB(255,255,255),
-            ["Vermelho"] = Color3.fromRGB(255,50,50),
-            ["Azul"] = Color3.fromRGB(50,150,255),
-            ["Verde"] = Color3.fromRGB(50,255,100),
-            ["Amarelo"] = Color3.fromRGB(255,220,50),
-            ["Roxo"] = Color3.fromRGB(170,0,255),
-            ["Ciano"] = Color3.fromRGB(0,255,255),
-            ["Rosa"] = Color3.fromRGB(255,0,180),
-        }
-        Aimbot_CorFOV = cores[Value]
-        FOVCircle.Color = cores[Value]
-        WindUI:Notify({Title = "FOV", Content = "Cor: " .. Value})
-    end,
-})
+CombatTab:Dropdown({Title = "Cor do FOV", Values = {"Branco", "Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Rosa"}, Callback = function(Value)
+    local cores = {["Branco"] = Color3.fromRGB(255,255,255), ["Vermelho"] = Color3.fromRGB(255,50,50), ["Azul"] = Color3.fromRGB(50,150,255), ["Verde"] = Color3.fromRGB(50,255,100), ["Amarelo"] = Color3.fromRGB(255,220,50), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
+    Aimbot_CorFOV = cores[Value]; FOVCircle.Color = cores[Value]
+    WindUI:Notify({Title = "FOV", Content = "Cor: " .. Value})
+end})
 
 CombatTab:Section({Title = "Alvo"})
 
-CombatTab:Dropdown({
-    Title = "Parte do Corpo",
-    Values = {"Head", "Torso", "Perna"},
-    Callback = function(Value)
-        Aimbot_ParteAlvo = Value
-        WindUI:Notify({Title = "Alvo", Content = "Mirando na: " .. Value})
-    end,
-})
+CombatTab:Dropdown({Title = "Parte do Corpo", Values = {"Head", "Torso", "Perna"}, Callback = function(Value)
+    Aimbot_ParteAlvo = Value
+    WindUI:Notify({Title = "Alvo", Content = "Mirando na: " .. Value})
+end})
 
 CombatTab:Section({Title = "Hitbox Expander"})
 
 CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadores", Default = false, Callback = function(v)
     Hitbox_Ativado = v
-    if not v then
-        for _, p in pairs(Players:GetPlayers()) do
-            if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-                p.Character.HumanoidRootPart.Transparency = 1
-                p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
-                p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
-            end
-        end
+    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
     end
 end})
 CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
@@ -705,43 +693,23 @@ CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox
 
 CombatTab:Section({Title = "Cores Hitbox"})
 
-CombatTab:Dropdown({
-    Title = "Cor da Hitbox",
-    Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
-    Callback = function(Value)
-        local cores = {
-            ["Vermelho"] = Color3.fromRGB(255,30,30),
-            ["Azul"] = Color3.fromRGB(30,100,255),
-            ["Verde"] = Color3.fromRGB(50,255,50),
-            ["Amarelo"] = Color3.fromRGB(255,220,0),
-            ["Roxo"] = Color3.fromRGB(170,0,255),
-            ["Ciano"] = Color3.fromRGB(0,255,255),
-            ["Branco"] = Color3.fromRGB(255,255,255),
-            ["Rosa"] = Color3.fromRGB(255,0,180),
-        }
-        Hitbox_Cor = cores[Value]
-        WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
-    end,
-})
+CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
+    local cores = {["Vermelho"] = Color3.fromRGB(255,30,30), ["Azul"] = Color3.fromRGB(30,100,255), ["Verde"] = Color3.fromRGB(50,255,50), ["Amarelo"] = Color3.fromRGB(255,220,0), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
+    Hitbox_Cor = cores[Value]
+    WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
+end})
 
 CombatTab:Section({Title = "Lista de Exclusao"})
 
 CombatTab:Dropdown({Title = "Jogador", Values = ObterListaJogadores(), Callback = function(Value) DropdownSelecionado = Value end})
 CombatTab:Button({Title = "Adicionar a Lista", Desc = "Adiciona jogador selecionado", Callback = function()
-    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
-        JogadoresIgnorados[DropdownSelecionado] = true
-        WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " adicionado!"})
-    end
+    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = true; WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " adicionado!"}) end
 end})
 CombatTab:Button({Title = "Remover da Lista", Desc = "Remove jogador selecionado", Callback = function()
-    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
-        JogadoresIgnorados[DropdownSelecionado] = nil
-        WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " removido!"})
-    end
+    if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = nil; WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " removido!"}) end
 end})
 CombatTab:Button({Title = "Limpar Lista", Desc = "Remove todos da lista", Callback = function()
-    JogadoresIgnorados = {}
-    WindUI:Notify({Title = "Whitelist", Content = "Lista limpa!"})
+    JogadoresIgnorados = {}; WindUI:Notify({Title = "Whitelist", Content = "Lista limpa!"})
 end})
 
 -- ==========================================
@@ -782,24 +750,11 @@ VisualTab:Toggle({Title = "ESP Vida", Desc = "Mostra a vida do jogador", Default
 
 VisualTab:Section({Title = "Cores ESP"})
 
-VisualTab:Dropdown({
-    Title = "Cor do ESP",
-    Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"},
-    Callback = function(Value)
-        local cores = {
-            ["Vermelho"] = Color3.fromRGB(255,50,50),
-            ["Azul"] = Color3.fromRGB(50,150,255),
-            ["Verde"] = Color3.fromRGB(50,255,100),
-            ["Amarelo"] = Color3.fromRGB(255,220,50),
-            ["Roxo"] = Color3.fromRGB(170,0,255),
-            ["Ciano"] = Color3.fromRGB(0,255,255),
-            ["Branco"] = Color3.fromRGB(255,255,255),
-            ["Rosa"] = Color3.fromRGB(255,0,180),
-        }
-        AplicarCorESP(cores[Value])
-        WindUI:Notify({Title = "ESP", Content = "Cor: " .. Value})
-    end,
-})
+VisualTab:Dropdown({Title = "Cor do ESP", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
+    local cores = {["Vermelho"] = Color3.fromRGB(255,50,50), ["Azul"] = Color3.fromRGB(50,150,255), ["Verde"] = Color3.fromRGB(50,255,100), ["Amarelo"] = Color3.fromRGB(255,220,50), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
+    AplicarCorESP(cores[Value])
+    WindUI:Notify({Title = "ESP", Content = "Cor: " .. Value})
+end})
 
 VisualTab:Section({Title = "Luz"})
 
@@ -813,28 +768,21 @@ end})
 local OutrosTab = Window:Tab({Title = "Outros", Icon = "cog"})
 
 OutrosTab:Section({Title = "Dash"})
-
-OutrosTab:Toggle({Title = "Botao de Dash", Desc = "Ativa botão de dash flutuante", Default = false, Callback = function(v)
-    if v then CriarBotaoDash() else RemoverBotaoDash() end
-end})
+OutrosTab:Toggle({Title = "Botao de Dash", Desc = "Ativa botão de dash flutuante", Default = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
 OutrosTab:Input({Title = "Distancia Dash", Desc = "Distância do dash em studs", Placeholder = "30", Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 
 OutrosTab:Section({Title = "Speed Hack"})
-
 OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", Default = false, Callback = function(v)
     SpeedHack_Ativado = v
     if v then
         if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
         SpeedHack_Conexao = RunService.RenderStepped:Connect(function()
             if not SpeedHack_Ativado then return end
-            local char = localPlayer.Character
-            if not char then return end
-            local root = char:FindFirstChild("HumanoidRootPart")
-            local humanoid = char:FindFirstChild("Humanoid")
+            local char = localPlayer.Character; if not char then return end
+            local root = char:FindFirstChild("HumanoidRootPart"); local humanoid = char:FindFirstChild("Humanoid")
             if not root or not humanoid then return end
             if humanoid.MoveDirection.Magnitude > 0 then
-                local moveDirection = humanoid.MoveDirection
-                local speed = SpeedHack_Velocidade * 0.5
+                local moveDirection = humanoid.MoveDirection; local speed = SpeedHack_Velocidade * 0.5
                 root.CFrame = root.CFrame + (moveDirection * speed / 60)
             end
         end)
@@ -845,34 +793,28 @@ end})
 OutrosTab:Slider({Title = "Velocidade Speed", Desc = "Ajuste a velocidade", Value = {Min = 1, Max = 200, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
 
 OutrosTab:Section({Title = "Underground"})
-
 OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa", Default = false, Callback = function(v)
     Underground_Ativado = v
-    local char = localPlayer.Character
-    if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end
+    local char = localPlayer.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end
     local root = char.HumanoidRootPart
     if v then
         Underground_Voltando = false
         if not Underground_CameraPart then
-            Underground_CameraPart = Instance.new("Part")
-            Underground_CameraPart.Name = "CameraGhost"; Underground_CameraPart.Size = Vector3.new(1, 1, 1)
-            Underground_CameraPart.Anchored = true; Underground_CameraPart.CanCollide = false
-            Underground_CameraPart.Transparency = 1; Underground_CameraPart.Parent = Workspace
+            Underground_CameraPart = Instance.new("Part"); Underground_CameraPart.Name = "CameraGhost"; Underground_CameraPart.Size = Vector3.new(1, 1, 1)
+            Underground_CameraPart.Anchored = true; Underground_CameraPart.CanCollide = false; Underground_CameraPart.Transparency = 1; Underground_CameraPart.Parent = Workspace
         end
         Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
         root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
         if Underground_Conexao then Underground_Conexao:Disconnect() end
         Underground_Conexao = RunService.Heartbeat:Connect(function()
             if not Underground_Ativado or Underground_Voltando then return end
-            local charAtual = localPlayer.Character
-            if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
+            local charAtual = localPlayer.Character; if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
             local rootAtual = charAtual.HumanoidRootPart
             if rootAtual.Position.Y < -22 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z) end
             if Underground_CameraPart then Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z) end
         end)
         if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect() end
-        local camera = Workspace.CurrentCamera
-        camera.CameraSubject = Underground_CameraPart; camera.CameraType = Enum.CameraType.Follow
+        local camera = Workspace.CurrentCamera; camera.CameraSubject = Underground_CameraPart; camera.CameraType = Enum.CameraType.Follow
     else
         Underground_Voltando = true
         if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
@@ -885,15 +827,13 @@ OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa",
 end})
 
 OutrosTab:Section({Title = "Passe Livre"})
-
 OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 3 studs)", Default = false, Callback = function(v)
     PasseLivre_Ativado = v
     if v then
         if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
         PasseLivre_Conexao = RunService.Heartbeat:Connect(function()
             if not PasseLivre_Ativado then return end
-            local char = localPlayer.Character
-            if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+            local char = localPlayer.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then return end
             local root = char.HumanoidRootPart
             local posHorizontal = Vector3.new(root.Position.X, 0, root.Position.Z)
             local centroHorizontal = Vector3.new(PasseLivre_Centro.X, 0, PasseLivre_Centro.Z)
@@ -901,18 +841,14 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
             if distancia <= PasseLivre_Raio then
                 if not PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = true
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end
-                    end
+                    for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end end
                     root.CanCollide = false
                     WindUI:Notify({Title = "Passe Livre", Content = "✅ Noclip ATIVADO na área!"})
                 end
             else
                 if PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = false
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") then part.CanCollide = true end
-                    end
+                    for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end
                     WindUI:Notify({Title = "Passe Livre", Content = "❌ Noclip DESATIVADO (saiu da área)"})
                 end
             end
@@ -923,28 +859,18 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
         if PasseLivre_NoClipAtivo then
             PasseLivre_NoClipAtivo = false
             local char = localPlayer.Character
-            if char then
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = true end
-                end
-            end
+            if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end
         end
         WindUI:Notify({Title = "Passe Livre", Content = "🔴 Sistema desativado!"})
     end
 end})
-
-OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t)
-    local n = tonumber(t)
-    if n and n > 0 then PasseLivre_Raio = n; WindUI:Notify({Title = "Passe Livre", Content = "Raio: " .. n .. " studs"}) end
-end})
+OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t) local n = tonumber(t) if n and n > 0 then PasseLivre_Raio = n; WindUI:Notify({Title = "Passe Livre", Content = "Raio: " .. n .. " studs"}) end end})
 
 OutrosTab:Section({Title = "FOV da Camera"})
-
 OutrosTab:Slider({Title = "FOV da Camera", Desc = "Ajuste o FOV (30-120)", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
 OutrosTab:Button({Title = "Resetar FOV", Desc = "Volta ao FOV padrão (70)", Callback = function() Workspace.CurrentCamera.FieldOfView = 70 end})
 
 OutrosTab:Section({Title = "Teleporte para Jogador"})
-
 OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleportar", Placeholder = "Digite o nome...", Callback = function(t)
     if t ~= "" then
         local encontrado = false; local texto = t:lower()
@@ -954,8 +880,7 @@ OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleporta
                 if nome:find(texto, 1, true) or display:find(texto, 1, true) then
                     if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
                         localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-                        WindUI:Notify({Title = "TP", Content = "Teleportado para " .. p.Name})
-                        encontrado = true; break
+                        WindUI:Notify({Title = "TP", Content = "Teleportado para " .. p.Name}); encontrado = true; break
                     end
                 end
             end
@@ -965,88 +890,42 @@ OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleporta
 end})
 
 -- ==========================================
--- CONFIGS-- ==========================================
+-- CONFIGS
+-- ==========================================
 local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 
 ConfigTab:Section({Title = "Servidor"})
-
 ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function()
-    WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."})
-    task.wait(3)
-    TrocarServidor("rejoin")
+    WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."}); task.wait(3); TrocarServidor("rejoin")
 end})
-
 ConfigTab:Button({Title = "👥 Servidor Cheio", Desc = "Tenta entrar em servidor cheio", Callback = function()
-    WindUI:Notify({Title = "Servidor", Content = "Procurando servidor cheio..."})
-    task.wait(1)
-    TrocarServidor("cheio")
+    WindUI:Notify({Title = "Servidor", Content = "Procurando servidor cheio..."}); task.wait(1); TrocarServidor("cheio")
 end})
-
 ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servidor vazio", Callback = function()
-    WindUI:Notify({Title = "Servidor", Content = "Procurando servidor vazio..."})
-    task.wait(1)
-    TrocarServidor("vazio")
+    WindUI:Notify({Title = "Servidor", Content = "Procurando servidor vazio..."}); task.wait(1); TrocarServidor("vazio")
 end})
 
 ConfigTab:Section({Title = "Modo Streamer"})
-
 ConfigTab:Toggle({Title = "Ativar Modo Streamer", Desc = "Esconde o painel (3 toques no botão fantasma)", Default = false, Callback = function(v)
     ModoStreamer_Ativado = v
-    
     if v then
         if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
-        
         local detector = Instance.new("TextButton")
-        detector.Name = "StreamerDetector"
-        detector.Size = UDim2.new(0, 60, 0, 60)
-        detector.Position = UDim2.new(0.8, 0, 0.5, 0)
-        detector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        detector.BackgroundTransparency = 0.9
-        detector.BorderSizePixel = 0
-        detector.Text = ""
-        detector.Active = true
-        detector.Draggable = true
-        detector.ZIndex = 999
-        detector.Parent = CoreGui
-        
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = Color3.fromRGB(255, 255, 255)
-        stroke.Thickness = 0.5
-        stroke.Transparency = 0.5
-        stroke.Parent = detector
-        
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(1, 0)
-        corner.Parent = detector
-        
+        detector.Name = "StreamerDetector"; detector.Size = UDim2.new(0, 60, 0, 60); detector.Position = UDim2.new(0.8, 0, 0.5, 0)
+        detector.BackgroundColor3 = Color3.fromRGB(255, 255, 255); detector.BackgroundTransparency = 0.9
+        detector.BorderSizePixel = 0; detector.Text = ""; detector.Active = true; detector.Draggable = true; detector.ZIndex = 999; detector.Parent = CoreGui
+        local stroke = Instance.new("UIStroke"); stroke.Color = Color3.fromRGB(255, 255, 255); stroke.Thickness = 0.5; stroke.Transparency = 0.5; stroke.Parent = detector
+        local corner = Instance.new("UICorner"); corner.CornerRadius = UDim.new(1, 0); corner.Parent = detector
         pcall(function() Window:SetVisibility(false) end)
-        
-        local clickCount = 0
-        local lastClickTime = 0
-        
+        local clickCount = 0; local lastClickTime = 0
         detector.MouseButton1Click:Connect(function()
             local now = tick()
             if now - lastClickTime > 1.5 then clickCount = 0 end
-            lastClickTime = now
-            clickCount = clickCount + 1
-            detector.BackgroundTransparency = 0.6
-            task.wait(0.15)
-            detector.BackgroundTransparency = 0.9
-            if clickCount >= 3 then
-                clickCount = 0
-                pcall(function() Window:ToggleVisibility() end)
-            end
+            lastClickTime = now; clickCount = clickCount + 1
+            detector.BackgroundTransparency = 0.6; task.wait(0.15); detector.BackgroundTransparency = 0.9
+            if clickCount >= 3 then clickCount = 0; pcall(function() Window:ToggleVisibility() end) end
         end)
-        
-        spawn(function()
-            while ModoStreamer_Ativado and detector and detector.Parent do
-                task.wait(45)
-                pcall(function()
-                    detector:TweenPosition(UDim2.new(math.random(10, 80)/100, 0, math.random(10, 80)/100, 0), "InOut", "Linear", 1)
-                end)
-            end
-        end)
-        
+        spawn(function() while ModoStreamer_Ativado and detector and detector.Parent do task.wait(45); pcall(function() detector:TweenPosition(UDim2.new(math.random(10, 80)/100, 0, math.random(10, 80)/100, 0), "InOut", "Linear", 1) end) end end)
         WindUI:Notify({Title = "Streamer", Content = "🟢 Painel escondido! 3 toques no botão fantasma"})
     else
         if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
@@ -1056,21 +935,17 @@ ConfigTab:Toggle({Title = "Ativar Modo Streamer", Desc = "Esconde o painel (3 to
 end})
 
 ConfigTab:Section({Title = "Informações"})
-
 ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function()
-    WindUI:Notify({Title = "Eb do Delta v2.0", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\nESP ORIGINAL RESTAURADO!"})
+    WindUI:Notify({Title = "Eb do Delta v2.0", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\nESP CORRIGIDO!"})
 end})
-
 ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v2.0 - ESP FUNCIONANDO 100%"})
+    WindUI:Notify({Title = "Versão", Content = "v2.0 - ESP ATUALIZADO"})
 end})
-
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
 end})
 
 ConfigTab:Section({Title = "Ações"})
-
 ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
@@ -1080,34 +955,17 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
     PasseLivre_Ativado = false
     if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
-    if PasseLivre_NoClipAtivo then
-        local char = localPlayer.Character
-        if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end
-    end
+    if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
     ModoStreamer_Ativado = false
     if CoreGui:FindFirstChild("StreamerDetector") then CoreGui.StreamerDetector:Destroy() end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
-            p.Character.HumanoidRootPart.Transparency = 1
-            p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255)
-            p.Character.HumanoidRootPart.Material = Enum.Material.Plastic
-        end
-    end
+    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr.Character then
-            local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
-            local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
-            local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end
-        end
-    end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
     Window:Destroy()
 end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta v2.0 - ESP ORIGINAL 100% FUNCIONAL!")
-print("👁️ Chams | 📦 Box | 📝 Names | 📏 Tracers | ❤️ Vida")
+print("✅ Eb do Delta v2.0 - ESP CORRIGIDO! Cria elementos automaticamente!")
