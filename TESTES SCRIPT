@@ -604,10 +604,10 @@ end
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 local Window = WindUI:CreateWindow({
-    Title = "Eb do Delta",
+    Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
     Icon = "shield",
-    Author = "Noahzin",
-    Folder = "EbDoDelta",
+    Author = "Por Noahzin",
+    Folder = "Noxys Hub",
     Size = UDim2.fromOffset(580, 460),
     Transparent = true,
     Theme = "Dark",
