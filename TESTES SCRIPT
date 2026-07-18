@@ -78,6 +78,13 @@ local Underground_yCamera = 4.7
 local Underground_Voltando = false
 local Underground_CameraPart = nil
 
+-- PASSE LIVRE
+local PasseLivre_Ativado = false
+local PasseLivre_Conexao = nil
+local PasseLivre_Centro = Vector3.new(-13, 3.0, -494.5)
+local PasseLivre_Raio = 8
+local PasseLivre_NoClipAtivo = false
+
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -738,6 +745,72 @@ OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa",
     end
 end})
 
+OutrosTab:Section({Title = "Passe Livre"})
+
+OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 8 studs)", Default = false, Callback = function(v)
+    PasseLivre_Ativado = v
+    
+    if v then
+        if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
+        PasseLivre_Conexao = RunService.Heartbeat:Connect(function()
+            if not PasseLivre_Ativado then return end
+            
+            local char = localPlayer.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+            local root = char.HumanoidRootPart
+            
+            local posHorizontal = Vector3.new(root.Position.X, 0, root.Position.Z)
+            local centroHorizontal = Vector3.new(PasseLivre_Centro.X, 0, PasseLivre_Centro.Z)
+            local distancia = (posHorizontal - centroHorizontal).Magnitude
+            
+            if distancia <= PasseLivre_Raio then
+                if not PasseLivre_NoClipAtivo then
+                    PasseLivre_NoClipAtivo = true
+                    for _, part in pairs(char:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                    WindUI:Notify({Title = "Passe Livre", Content = "✅ Noclip ATIVADO na área!"})
+                end
+            else
+                if PasseLivre_NoClipAtivo then
+                    PasseLivre_NoClipAtivo = false
+                    for _, part in pairs(char:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                    WindUI:Notify({Title = "Passe Livre", Content = "❌ Noclip DESATIVADO (saiu da área)"})
+                end
+            end
+        end)
+        WindUI:Notify({Title = "Passe Livre", Content = "🟢 Sistema ativo! Vá até a área."})
+    else
+        if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
+        if PasseLivre_NoClipAtivo then
+            PasseLivre_NoClipAtivo = false
+            local char = localPlayer.Character
+            if char then
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
+            end
+        end
+        WindUI:Notify({Title = "Passe Livre", Content = "🔴 Sistema desativado!"})
+    end
+end})
+
+OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "8", Callback = function(t)
+    local n = tonumber(t)
+    if n and n > 0 then
+        PasseLivre_Raio = n
+        WindUI:Notify({Title = "Passe Livre", Content = "Raio alterado para: " .. n .. " studs"})
+    end
+end})
+
 OutrosTab:Section({Title = "FOV da Camera"})
 
 OutrosTab:Slider({Title = "FOV da Camera", Desc = "Ajuste o FOV (30-120)", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
@@ -776,6 +849,16 @@ ConfigTab:Button({Title = "Destruir Tudo", Desc = "Remove tudo e fecha o painel"
     if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect(); Underground_ConexaoCamera = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+    PasseLivre_Ativado = false
+    if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
+    if PasseLivre_NoClipAtivo then
+        local char = localPlayer.Character
+        if char then
+            for _, part in pairs(char:GetChildren()) do
+                if part:IsA("BasePart") then part.CanCollide = true end
+            end
+        end
+    end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do
@@ -799,4 +882,4 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Eb do Delta - WindUI com Dropdowns!")
+print("✅ Eb do Delta - Completo com Passe Livre!")
