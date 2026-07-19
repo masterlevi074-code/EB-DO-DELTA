@@ -1017,22 +1017,71 @@ OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleporta
 end})
 
 -- ==========================================
--- CONFIGS
+-- ADMIN
 -- ==========================================
-local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
+local AdminTab = Window:Tab({Title = "Admin", Icon = "crown"})
 
-ConfigTab:Section({Title = "Admin"})
-ConfigTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v)
+AdminTab:Section({Title = "Controle de Admin"})
+AdminTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v)
     Admin_Ativado = v
     WindUI:Notify({Title = "Admin", Content = v and "🟢 Admin ATIVADO! Use !help no chat" or "🔴 Admin DESATIVADO!"})
     if not v then Admin_GodMode = false end
 end})
-ConfigTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t)
+AdminTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t)
     if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo: " .. t}) end
 end})
-ConfigTab:Button({Title = "📋 Lista de Comandos", Desc = "Ver todos os comandos FE", Callback = function()
+
+AdminTab:Section({Title = "Comandos"})
+AdminTab:Button({Title = "📋 Lista de Comandos", Desc = "Ver todos os comandos FE", Callback = function()
     WindUI:Notify({Title = "Comandos (" .. Admin_Prefixo .. ")", Content = "!to, !bring, !kill, !respawn, !freeze, !unfreeze, !explode, !fling, !spin, !noclip, !fly, !speed, !god, !ungod, !invis, !vis, !view, !unview, !sit, !jump, !help"})
 end})
+
+AdminTab:Section({Title = "Comandos Rápidos"})
+AdminTab:Button({Title = "🛡️ God Mode", Desc = "Ativar/Desativar modo Deus", Callback = function()
+    Admin_GodMode = not Admin_GodMode
+    WindUI:Notify({Title = "Admin", Content = Admin_GodMode and "🛡️ God Mode ATIVADO" or "🛡️ God Mode DESATIVADO"})
+end})
+AdminTab:Button({Title = "👻 Invisível", Desc = "Ficar invisível", Callback = function()
+    Admin_Invisivel = not Admin_Invisivel
+    if localPlayer.Character then
+        for _, part in pairs(localPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.Transparency = Admin_Invisivel and 0.9 or 0 end
+        end
+    end
+    WindUI:Notify({Title = "Admin", Content = Admin_Invisivel and "👻 Invisível" or "👁️ Visível"})
+end})
+AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback = function()
+    if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        localPlayer.Character.Humanoid.PlatformStand = not localPlayer.Character.Humanoid.PlatformStand
+        WindUI:Notify({Title = "Admin", Content = localPlayer.Character.Humanoid.PlatformStand and "🕊️ Fly ON" or "🕊️ Fly OFF"})
+    end
+end})
+AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes", Callback = function()
+    if localPlayer.Character then
+        local pode = not localPlayer.Character.HumanoidRootPart.CanCollide
+        for _, part in pairs(localPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then part.CanCollide = pode end
+        end
+        WindUI:Notify({Title = "Admin", Content = pode and "👻 NoClip ON" or "👻 NoClip OFF"})
+    end
+end})
+AdminTab:Button({Title = "💀 Kill All", Desc = "Matar todos os jogadores", Callback = function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= localPlayer and p.Character then pcall(function() p.Character:BreakJoints() end) end
+    end
+    WindUI:Notify({Title = "Admin", Content = "💀 Todos foram mortos!"})
+end})
+AdminTab:Button({Title = "🔄 Respawn All", Desc = "Respawnar todos os jogadores", Callback = function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end
+    end
+    WindUI:Notify({Title = "Admin", Content = "🔄 Todos respawnados!"})
+end})
+
+-- ==========================================
+-- CONFIGS
+-- ==========================================
+local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 
 ConfigTab:Section({Title = "Servidor"})
 ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function()
@@ -1050,7 +1099,7 @@ ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback
     WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ Fake Admin FE incluso!"})
 end})
 ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v3.0 - Fake Admin FE + Hitbox Corrigida"})
+    WindUI:Notify({Title = "Versão", Content = "v3.0 - Aba Admin + Hitbox Corrigida"})
 end})
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -1078,4 +1127,4 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Noxys Hub - Fake Admin FE + Hitbox Corrigida!")
+print("✅ Noxys Hub - Aba Admin + Comandos Rápidos!")
