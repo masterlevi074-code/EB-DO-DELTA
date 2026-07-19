@@ -473,7 +473,7 @@ local function RemoveHitboxes()
 end
 
 -- ==========================================
--- LOOP PRINCIPAL
+-- LOOP PRINCIPAL (CORRIGIDO COM PCALL)
 -- ==========================================
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
@@ -503,7 +503,9 @@ RunService.RenderStepped:Connect(function()
             if hum and root and hum.Health > 0 and Hitbox_Ativado then
                 root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
                 root.Transparency = Hitbox_Transparencia
-                root.Material = Hitbox_Material; root.Color = Hitbox_Cor; root.CanCollide = false
+                pcall(function() root.Material = Hitbox_Material end)
+                pcall(function() root.Color = Hitbox_Cor end)
+                root.CanCollide = false
             end
         end
     end
@@ -820,7 +822,7 @@ end})
 CombatTab:Section({Title = "Hitbox Expander"})
 CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadores", Default = false, Callback = function(v)
     Hitbox_Ativado = v
-    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
+    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
     end
 end})
 CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
@@ -829,7 +831,8 @@ CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox
 CombatTab:Section({Title = "Cores Hitbox"})
 CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {["Vermelho"] = Color3.fromRGB(255,30,30), ["Azul"] = Color3.fromRGB(30,100,255), ["Verde"] = Color3.fromRGB(50,255,50), ["Amarelo"] = Color3.fromRGB(255,220,0), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
-    Hitbox_Cor = cores[Value]; WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
+    if cores[Value] then Hitbox_Cor = cores[Value] end
+    WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
 end})
 
 CombatTab:Section({Title = "Lista de Exclusao"})
@@ -1047,7 +1050,7 @@ ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback
     WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ Fake Admin FE incluso!"})
 end})
 ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v3.0 - Fake Admin FE"})
+    WindUI:Notify({Title = "Versão", Content = "v3.0 - Fake Admin FE + Hitbox Corrigida"})
 end})
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -1067,7 +1070,7 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     Admin_Ativado = false; Admin_GodMode = false
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
-    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
+    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
     Window:Destroy()
@@ -1075,5 +1078,4 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Noxys Hub - Fake Admin FE CARREGADO!")
-print("🎩 Ative o Admin na aba Configs e use !help no chat")
+print("✅ Noxys Hub - Fake Admin FE + Hitbox Corrigida!")
