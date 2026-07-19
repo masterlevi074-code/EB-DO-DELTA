@@ -95,6 +95,10 @@ local ChatLogs_Painel = nil
 local ChatLogs_Ativado = false
 local ChatHistorico = {}
 
+-- CMD BAR
+local CmdBar_Painel = nil
+local CmdBar_Aberto = false
+
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -525,65 +529,129 @@ end
 local function ExecutarComandoAdmin(mensagem)
     if not Admin_Ativado then return end
     if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
-    local comando = mensagem:sub(#Admin_Prefixo + 1); local args = comando:split(" "); local cmd = args[1]:lower()
-    table.remove(args, 1); local resto = table.concat(args, " ")
+    
+    local comando = mensagem:sub(#Admin_Prefixo + 1)
+    local args = comando:split(" ")
+    local cmd = args[1]:lower()
+    table.remove(args, 1)
+    local resto = table.concat(args, " ")
     
     if cmd == "help" or cmd == "h" then
-        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 " .. Admin_Prefixo .. "to/t, bring/br, res, re, explode/ex, noclip/nc, fly/f, view/vw, unview/uv, sit/s, jump/j, chatlogs/clogs, help/h") end)
+        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 " .. Admin_Prefixo .. "to/t, bring/br, res, re, explode/ex, noclip/nc, fly/f, view/vw, unview/uv, sit/s, jump/j, chatlogs/clogs, cmdbar/cmd, help/h") end)
+        
     elseif cmd == "to" or cmd == "t" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
-            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0) end
+            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+        
     elseif cmd == "bring" or cmd == "br" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
-            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0) end
+            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+        
     elseif cmd == "respawn" or cmd == "res" then
-        if resto == "all" or resto == "a" then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end end
-        else local alvo = EncontrarJogadorAdmin(resto); if alvo then pcall(function() alvo:LoadCharacter() end) end end
+        if resto == "all" or resto == "a" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer then
+                    pcall(function() if p.Character and p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end)
+                end
+            end
+            task.wait(0.1)
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end
+            end
+        else
+            local alvo = EncontrarJogadorAdmin(resto)
+            if alvo then
+                pcall(function() if alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Health = 0 end end)
+                task.wait(0.1)
+                pcall(function() alvo:LoadCharacter() end)
+            end
+        end
+        
     elseif cmd == "reset" or cmd == "re" then
         if resto == "all" or resto == "a" then
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local pos = p.Character.HumanoidRootPart.CFrame; pcall(function() p:LoadCharacter() end)
-                    task.wait(0.1); if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.CFrame = pos end
+                    local pos = p.Character.HumanoidRootPart.CFrame
+                    pcall(function() if p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end)
+                    task.wait(0.1)
+                    pcall(function() p:LoadCharacter() end)
+                    task.wait(0.3)
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        pcall(function() p.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0) end)
+                    end
                 end
             end
         else
             local alvo = EncontrarJogadorAdmin(resto)
             if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
-                local pos = alvo.Character.HumanoidRootPart.CFrame; pcall(function() alvo:LoadCharacter() end)
-                task.wait(0.1); if alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then alvo.Character.HumanoidRootPart.CFrame = pos end
+                local pos = alvo.Character.HumanoidRootPart.CFrame
+                pcall(function() if alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Health = 0 end end)
+                task.wait(0.1)
+                pcall(function() alvo:LoadCharacter() end)
+                task.wait(0.3)
+                if alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+                    pcall(function() alvo.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0) end)
+                end
             end
         end
+        
     elseif cmd == "explode" or cmd == "ex" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
-            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100)) end
+            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
+        end
+        
     elseif cmd == "noclip" or cmd == "nc" then
         if localPlayer.Character then
-            local humanoid = localPlayer.Character:FindFirstChild("Humanoid")
-            if humanoid then humanoid.HipHeight = humanoid.HipHeight == 0 and 2 or 0; humanoid.PlatformStand = humanoid.HipHeight == 0 end
+            local pode = false
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide == false then pode = true; break end
+            end
+            if pode then
+                for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = true end
+                end
+            else
+                for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end
         end
+        
     elseif cmd == "fly" or cmd == "f" then
         if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local humanoid = localPlayer.Character.Humanoid; local root = localPlayer.Character.HumanoidRootPart
-            if humanoid.PlatformStand then humanoid.PlatformStand = false; humanoid.HipHeight = 2
-            else humanoid.PlatformStand = true; humanoid.HipHeight = 0; root.Velocity = Vector3.new(0, 50, 0) end
+            if humanoid.PlatformStand then
+                humanoid.PlatformStand = false; humanoid.HipHeight = 2
+            else
+                humanoid.PlatformStand = true; humanoid.HipHeight = 0; root.Velocity = Vector3.new(0, 50, 0)
+            end
         end
+        
     elseif cmd == "view" or cmd == "vw" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character then Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
+        
     elseif cmd == "unview" or cmd == "uv" then
         Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
+        
     elseif cmd == "sit" or cmd == "s" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Sit = true end
+        
     elseif cmd == "jump" or cmd == "j" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Jump = true end
+        
     elseif cmd == "chatlogs" or cmd == "clogs" then
         CriarPainelChatLogs()
+        
+    elseif cmd == "cmdbar" or cmd == "cmdbar2" or cmd == "cmd" then
+        CriarCmdBar()
     end
 end
 
@@ -647,16 +715,128 @@ task.spawn(function()
 end)
 
 -- ==========================================
+-- CMD BAR - PAINEL DE COMANDOS RÁPIDO
+-- ==========================================
+local function CriarCmdBar()
+    if CmdBar_Painel then
+        CmdBar_Painel:Destroy()
+        CmdBar_Painel = nil
+        CmdBar_Aberto = false
+        return
+    end
+    
+    CmdBar_Aberto = true
+    
+    local painel = Instance.new("ScreenGui")
+    painel.Name = "CmdBarGUI"
+    painel.Parent = CoreGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 100)
+    frame.Position = UDim2.new(0.5, -150, 0.3, -50)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    frame.BorderSizePixel = 0
+    frame.Active = true
+    frame.Draggable = true
+    frame.Parent = painel
+    
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    Instance.new("UIStroke", frame).Thickness = 1.5
+    
+    local titulo = Instance.new("TextLabel")
+    titulo.Size = UDim2.new(1, 0, 0, 25)
+    titulo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo
+    titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titulo.Font = Enum.Font.SourceSansBold
+    titulo.TextSize = 12
+    titulo.Parent = frame
+    Instance.new("UICorner", titulo).CornerRadius = UDim.new(0, 10)
+    
+    local fechar = Instance.new("TextButton")
+    fechar.Size = UDim2.new(0, 20, 0, 20)
+    fechar.Position = UDim2.new(1, -25, 0, 3)
+    fechar.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    fechar.Text = "X"
+    fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    fechar.Font = Enum.Font.SourceSansBold
+    fechar.TextSize = 10
+    fechar.Parent = frame
+    Instance.new("UICorner", fechar).CornerRadius = UDim.new(1, 0)
+    
+    fechar.MouseButton1Click:Connect(function()
+        CmdBar_Aberto = false
+        painel:Destroy()
+        CmdBar_Painel = nil
+    end)
+    
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(1, -20, 0, 35)
+    input.Position = UDim2.new(0, 10, 0, 35)
+    input.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    input.TextColor3 = Color3.fromRGB(255, 255, 255)
+    input.PlaceholderText = "Digite o comando (ex: to Nome, res all)..."
+    input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    input.Font = Enum.Font.Code
+    input.TextSize = 11
+    input.Parent = frame
+    Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
+    
+    local executar = Instance.new("TextButton")
+    executar.Size = UDim2.new(1, -20, 0, 25)
+    executar.Position = UDim2.new(0, 10, 0, 72)
+    executar.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    executar.Text = "▶ EXECUTAR"
+    executar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    executar.Font = Enum.Font.SourceSansBold
+    executar.TextSize = 11
+    executar.Parent = frame
+    Instance.new("UICorner", executar).CornerRadius = UDim.new(0, 6)
+    
+    local function ExecutarComandoCmdBar()
+        local texto = input.Text
+        if texto ~= "" then
+            if not texto:sub(1, #Admin_Prefixo) == Admin_Prefixo then
+                texto = Admin_Prefixo .. texto
+            end
+            ExecutarComandoAdmin(texto)
+            input.Text = ""
+        end
+    end
+    
+    executar.MouseButton1Click:Connect(ExecutarComandoCmdBar)
+    
+    input.FocusLost:Connect(function(enterPressed)
+        if enterPressed then ExecutarComandoCmdBar() end
+    end)
+    
+    task.wait(0.1)
+    input:CaptureFocus()
+    
+    CmdBar_Painel = painel
+    WindUI:Notify({Title = "CmdBar", Content = "💻 Barra de comandos aberta!"})
+end
+
+-- ==========================================
 -- WIND UI
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 local Window = WindUI:CreateWindow({
-    Title = "Exército Brasileiro 🇧🇷 | Noxys Hub", Icon = "shield", Author = "Por Noahzin", Folder = "Noxys Hub",
-    Size = UDim2.fromOffset(580, 460), Transparent = true, Theme = "Dark", Resizable = true, SideBarWidth = 200,
+    Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
+    Icon = "shield",
+    Author = "Por Noahzin",
+    Folder = "Noxys Hub",
+    Size = UDim2.fromOffset(580, 460),
+    Transparent = true,
+    Theme = "Dark",
+    Resizable = true,
+    SideBarWidth = 200,
 })
 
+-- ==========================================
 -- PRINCIPAL
+-- ==========================================
 local MainTab = Window:Tab({Title = "Principal", Icon = "house"})
 MainTab:Button({Title = "Resetar", Desc = "Reseta seu personagem", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
 MainTab:Section({Title = "Auto JJ Polichinelos"})
@@ -664,7 +844,9 @@ MainTab:Toggle({Title = "Ativar Auto JJ", Desc = "Auto JJ Polichinelos", Default
 MainTab:Section({Title = "Blocos Parkour"})
 MainTab:Toggle({Title = "Ativar Blocos", Desc = "Cria blocos de parkour", Default = false, Callback = function(v) BlocosAtivado = v; if v then CreateHitboxes() else RemoveHitboxes() end end})
 
+-- ==========================================
 -- COMBATE
+-- ==========================================
 local CombatTab = Window:Tab({Title = "Combate", Icon = "swords"})
 CombatTab:Section({Title = "Aimbot"})
 CombatTab:Toggle({Title = "Ativar Aimbot", Desc = "Mira automaticamente", Default = false, Callback = function(v) Aimbot_Ativado = v end})
@@ -702,7 +884,9 @@ CombatTab:Button({Title = "Adicionar a Lista", Desc = "Adiciona jogador selecion
 CombatTab:Button({Title = "Remover da Lista", Desc = "Remove jogador selecionado", Callback = function() if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then JogadoresIgnorados[DropdownSelecionado] = nil; WindUI:Notify({Title = "Whitelist", Content = DropdownSelecionado .. " removido!"}) end end})
 CombatTab:Button({Title = "Limpar Lista", Desc = "Remove todos da lista", Callback = function() JogadoresIgnorados = {}; WindUI:Notify({Title = "Whitelist", Content = "Lista limpa!"}) end})
 
+-- ==========================================
 -- VISUAIS
+-- ==========================================
 local VisualTab = Window:Tab({Title = "Visuais", Icon = "eye"})
 VisualTab:Section({Title = "ESP por Times"})
 VisualTab:Toggle({Title = "Ativar ESP por Times", Desc = "Filtra ESP por times", Default = false, Callback = function(v) ESP_TimesAtivado = v; AtualizarESP() end})
@@ -725,7 +909,9 @@ end})
 VisualTab:Section({Title = "Luz"})
 VisualTab:Button({Title = "Fullbright", Desc = "Ilumina o mapa", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
 
+-- ==========================================
 -- OUTROS
+-- ==========================================
 local OutrosTab = Window:Tab({Title = "Outros", Icon = "cog"})
 OutrosTab:Section({Title = "Dash"})
 OutrosTab:Toggle({Title = "Botao de Dash", Desc = "Ativa botão de dash flutuante", Default = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
@@ -813,26 +999,29 @@ OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleporta
     end
 end})
 
+-- ==========================================
 -- ADMIN
+-- ==========================================
 local AdminTab = Window:Tab({Title = "Admin", Icon = "crown"})
 AdminTab:Section({Title = "Controle de Admin"})
-AdminTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v) Admin_Ativado = v; WindUI:Notify({Title = "Admin", Content = v and "🟢 Admin ATIVADO! Use !help no chat" or "🔴 Admin DESATIVADO!"}) end})
+AdminTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v) Admin_Ativado = v; WindUI:Notify({Title = "Admin", Content = v and "🟢 Admin ATIVADO!" or "🔴 Admin DESATIVADO!"}) end})
 AdminTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t) if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo: " .. t}) end end})
 AdminTab:Section({Title = "Lista de Comandos"})
 AdminTab:Button({Title = "━━━━━━━━━━━━━━━━━━━━━━━━", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!to / !t (nome) → Teleporta até jogador", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!bring / !br (nome) → Traz jogador", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!res (nome/all) → Respawn na base", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!re (nome/all) → Reset no lugar", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!explode / !ex (nome) → Explode", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!noclip / !nc → Atravessar paredes", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!fly / !f → Modo voo", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!view / !vw (nome) → Observar", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!unview / !uv → Parar de ver", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!sit / !s (nome) → Força sentar", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!jump / !j (nome) → Força pular", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!chatlogs / !clogs → Chat logs", Desc = "", Callback = function() end})
-AdminTab:Button({Title = "!help / !h → Lista de comandos", Desc = "", Callback = function() end})
+AdminTab:Button({Title = "!to / !t (nome)", Desc = "Teleporta até o jogador", Callback = function() end})
+AdminTab:Button({Title = "!bring / !br (nome)", Desc = "Traz o jogador até você", Callback = function() end})
+AdminTab:Button({Title = "!res (nome ou all)", Desc = "Respawna na base", Callback = function() end})
+AdminTab:Button({Title = "!re (nome ou all)", Desc = "Respawna no mesmo lugar", Callback = function() end})
+AdminTab:Button({Title = "!explode / !ex (nome)", Desc = "Explode o jogador", Callback = function() end})
+AdminTab:Button({Title = "!noclip / !nc", Desc = "Atravessa paredes", Callback = function() end})
+AdminTab:Button({Title = "!fly / !f", Desc = "Ativa/Desativa voo", Callback = function() end})
+AdminTab:Button({Title = "!view / !vw (nome)", Desc = "Observa o jogador", Callback = function() end})
+AdminTab:Button({Title = "!unview / !uv", Desc = "Para de observar", Callback = function() end})
+AdminTab:Button({Title = "!sit / !s (nome)", Desc = "Força o jogador a sentar", Callback = function() end})
+AdminTab:Button({Title = "!jump / !j (nome)", Desc = "Força o jogador a pular", Callback = function() end})
+AdminTab:Button({Title = "!chatlogs / !clogs", Desc = "Abre o histórico do chat", Callback = function() end})
+AdminTab:Button({Title = "!cmdbar / !cmd", Desc = "Barra de comandos rápida", Callback = function() end})
+AdminTab:Button({Title = "!help / !h", Desc = "Mostra os comandos no chat", Callback = function() end})
 AdminTab:Section({Title = "Comandos Rápidos"})
 AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback = function()
     if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") and localPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -842,28 +1031,42 @@ AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback 
     end
 end})
 AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes", Callback = function()
-    if localPlayer.Character then local humanoid = localPlayer.Character:FindFirstChild("Humanoid")
-        if humanoid then humanoid.HipHeight = humanoid.HipHeight == 0 and 2 or 0; humanoid.PlatformStand = humanoid.HipHeight == 0; WindUI:Notify({Title = "Admin", Content = humanoid.HipHeight == 0 and "👻 NoClip ON" or "👻 NoClip OFF"}) end
+    if localPlayer.Character then
+        local pode = false
+        for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") and part.CanCollide == false then pode = true; break end end
+        if pode then for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end; WindUI:Notify({Title = "Admin", Content = "👻 NoClip OFF"})
+        else for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end; WindUI:Notify({Title = "Admin", Content = "👻 NoClip ON"}) end
     end
 end})
-AdminTab:Button({Title = "🔄 Respawn All", Desc = "Respawnar todos na base", Callback = function() for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end end; WindUI:Notify({Title = "Admin", Content = "🔄 Todos respawnados!"}) end})
+AdminTab:Button({Title = "🔄 Respawn All", Desc = "Respawnar todos na base", Callback = function()
+    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() if p.Character and p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end) end end
+    task.wait(0.1)
+    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end end
+    WindUI:Notify({Title = "Admin", Content = "🔄 Todos respawnados!"})
+end})
 AdminTab:Button({Title = "🔄 Reset All", Desc = "Resetar todos no mesmo lugar", Callback = function()
     for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-        local pos = p.Character.HumanoidRootPart.CFrame; pcall(function() p:LoadCharacter() end); task.wait(0.1)
-        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.CFrame = pos end
-    end end; WindUI:Notify({Title = "Admin", Content = "🔄 Todos resetados no lugar!"})
+        local pos = p.Character.HumanoidRootPart.CFrame
+        pcall(function() if p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end)
+        task.wait(0.1); pcall(function() p:LoadCharacter() end); task.wait(0.3)
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then pcall(function() p.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0) end) end
+    end end
+    WindUI:Notify({Title = "Admin", Content = "🔄 Todos resetados no lugar!"})
 end})
 AdminTab:Button({Title = "📜 Chat Logs", Desc = "Abrir histórico do chat", Callback = function() CriarPainelChatLogs() end})
+AdminTab:Button({Title = "💻 CmdBar", Desc = "Abrir barra de comandos", Callback = function() CriarCmdBar() end})
 
+-- ==========================================
 -- CONFIGS
+-- ==========================================
 local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 ConfigTab:Section({Title = "Servidor"})
 ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function() WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."}); task.wait(3); TrocarServidor("rejoin") end})
 ConfigTab:Button({Title = "👥 Servidor Cheio", Desc = "Tenta entrar em servidor cheio", Callback = function() WindUI:Notify({Title = "Servidor", Content = "Procurando servidor cheio..."}); task.wait(1); TrocarServidor("cheio") end})
 ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servidor vazio", Callback = function() WindUI:Notify({Title = "Servidor", Content = "Procurando servidor vazio..."}); task.wait(1); TrocarServidor("vazio") end})
 ConfigTab:Section({Title = "Informações"})
-ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function() WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ Chat Logs Corrigido!"}) end})
-ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function() WindUI:Notify({Title = "Versão", Content = "v3.3 - Chat Logs Funcional"}) end})
+ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function() WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ CmdBar + ChatLogs!"}) end})
+ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function() WindUI:Notify({Title = "Versão", Content = "v3.4 - CmdBar Funcional"}) end})
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function() WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"}) end})
 ConfigTab:Section({Title = "Ações"})
 ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
@@ -874,8 +1077,10 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
-    Admin_Ativado = false; if ChatLogs_Painel then ChatLogs_Painel:Destroy(); ChatLogs_Painel = nil end
-    ChatLogs_Ativado = false; ChatHistorico = {}
+    Admin_Ativado = false
+    if ChatLogs_Painel then ChatLogs_Painel:Destroy(); ChatLogs_Painel = nil end
+    if CmdBar_Painel then CmdBar_Painel:Destroy(); CmdBar_Painel = nil end
+    ChatLogs_Ativado = false; CmdBar_Aberto = false; ChatHistorico = {}
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
@@ -885,4 +1090,4 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
 end})
 
 Window:SelectTab(1)
-print("✅ Noxys Hub - Chat Logs Corrigido!")
+print("✅ Noxys Hub - CmdBar + ChatLogs + Noclip Corrigido!")
