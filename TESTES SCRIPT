@@ -13,7 +13,6 @@ local TeleportService = game:GetService("TeleportService")
 if CoreGui:FindFirstChild("WindUI") then CoreGui.WindUI:Destroy() end
 if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
 if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
-if CoreGui:FindFirstChild("FakeAdminGUI") then CoreGui.FakeAdminGUI:Destroy() end
 
 local dashStuds = 30
 local dashButtonScreen = nil
@@ -226,7 +225,7 @@ FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
 -- ==========================================
--- FUNÇÕES ESP
+-- FUNÇÕES ESP (CORRIGIDO COM PCALL)
 -- ==========================================
 local function GetPlayerTime(player)
     if player.Team then
@@ -604,7 +603,7 @@ end
 -- ==========================================
 -- FAKE ADMIN - SISTEMA DE COMANDOS
 -- ==========================================
-local function EncontrarJogador(nome)
+local function EncontrarJogadorAdmin(nome)
     nome = nome:lower()
     for _, p in pairs(Players:GetPlayers()) do
         if p.Name:lower():find(nome, 1, true) or (p.DisplayName and p.DisplayName:lower():find(nome, 1, true)) then
@@ -624,83 +623,61 @@ local function ExecutarComandoAdmin(mensagem)
     table.remove(args, 1)
     local resto = table.concat(args, " ")
     
-    -- HELP
-    if cmd == "help" or cmd == "cmds" then
-        local lista = "📋 COMANDOS: to, bring, kill, respawn, freeze, unfreeze, explode, fling, spin, noclip, fly, speed, god, ungod, invis, vis, view, unview, sit, jump"
-        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage(lista) end)
-        
-    -- TO (Teleporte)
+    if cmd == "help" then
+        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 COMANDOS: to, bring, kill, respawn, freeze, unfreeze, explode, fling, spin, noclip, fly, speed, god, ungod, invis, vis, view, unview, sit, jump") end)
     elseif cmd == "to" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
             localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
         end
-        
-    -- BRING
     elseif cmd == "bring" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
             alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
         end
-        
-    -- KILL
     elseif cmd == "kill" then
         if resto == "all" then
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= localPlayer and p.Character then pcall(function() p.Character:BreakJoints() end) end
             end
         else
-            local alvo = EncontrarJogador(resto)
+            local alvo = EncontrarJogadorAdmin(resto)
             if alvo and alvo.Character then pcall(function() alvo.Character:BreakJoints() end) end
         end
-        
-    -- RESPAWN
     elseif cmd == "respawn" then
         if resto == "all" then
             for _, p in pairs(Players:GetPlayers()) do
                 if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end
             end
         else
-            local alvo = EncontrarJogador(resto)
+            local alvo = EncontrarJogadorAdmin(resto)
             if alvo then pcall(function() alvo:LoadCharacter() end) end
         end
-        
-    -- FREEZE
     elseif cmd == "freeze" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
             alvo.Character.HumanoidRootPart.Anchored = true
         end
-        
-    -- UNFREEZE
     elseif cmd == "unfreeze" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
             alvo.Character.HumanoidRootPart.Anchored = false
         end
-        
-    -- EXPLODE
     elseif cmd == "explode" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
             alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
         end
-        
-    -- FLING
     elseif cmd == "fling" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
             alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-200,200), 500, math.random(-200,200))
         end
-        
-    -- SPIN
     elseif cmd == "spin" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
             alvo.Character.HumanoidRootPart.RotVelocity = Vector3.new(0, 100, 0)
         end
-        
-    -- NOCLIP
     elseif cmd == "noclip" then
         if localPlayer.Character then
             local pode = not localPlayer.Character.HumanoidRootPart.CanCollide
@@ -708,29 +685,19 @@ local function ExecutarComandoAdmin(mensagem)
                 if part:IsA("BasePart") then part.CanCollide = pode end
             end
         end
-        
-    -- FLY
     elseif cmd == "fly" then
         if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
             localPlayer.Character.Humanoid.PlatformStand = not localPlayer.Character.Humanoid.PlatformStand
         end
-        
-    -- SPEED
     elseif cmd == "speed" then
         local valor = tonumber(resto) or 50
         if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
             localPlayer.Character.Humanoid.WalkSpeed = valor
         end
-        
-    -- GOD
     elseif cmd == "god" then
         Admin_GodMode = true
-        
-    -- UNGOD
     elseif cmd == "ungod" then
         Admin_GodMode = false
-        
-    -- INVIS
     elseif cmd == "invis" then
         if localPlayer.Character then
             for _, part in pairs(localPlayer.Character:GetDescendants()) do
@@ -738,8 +705,6 @@ local function ExecutarComandoAdmin(mensagem)
             end
             Admin_Invisivel = true
         end
-        
-    -- VIS
     elseif cmd == "vis" then
         if localPlayer.Character then
             for _, part in pairs(localPlayer.Character:GetDescendants()) do
@@ -747,28 +712,20 @@ local function ExecutarComandoAdmin(mensagem)
             end
             Admin_Invisivel = false
         end
-        
-    -- VIEW
     elseif cmd == "view" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character then
             Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character
         end
-        
-    -- UNVIEW
     elseif cmd == "unview" then
         Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
-        
-    -- SIT
     elseif cmd == "sit" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
             alvo.Character.Humanoid.Sit = true
         end
-        
-    -- JUMP
     elseif cmd == "jump" then
-        local alvo = EncontrarJogador(resto)
+        local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
             alvo.Character.Humanoid.Jump = true
         end
@@ -784,7 +741,6 @@ task.spawn(function()
             end
         end)
     end)
-    
     pcall(function()
         localPlayer.Chatted:Connect(function(mensagem)
             ExecutarComandoAdmin(mensagem)
@@ -799,32 +755,10 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Cria ScreenGui para o indicador
-local AdminGui = Instance.new("ScreenGui")
-AdminGui.Name = "FakeAdminGUI"
-AdminGui.Parent = CoreGui
-
-local AdminIndicador = Instance.new("TextLabel")
-AdminIndicador.Size = UDim2.new(0, 100, 0, 20)
-AdminIndicador.Position = UDim2.new(0.01, 0, 0.05, 0)
-AdminIndicador.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-AdminIndicador.BackgroundTransparency = 0.5
-AdminIndicador.Text = "ADMIN: OFF"
-AdminIndicador.TextColor3 = Color3.fromRGB(255, 100, 100)
-AdminIndicador.Font = Enum.Font.SourceSansBold
-AdminIndicador.TextSize = 12
-AdminIndicador.BorderSizePixel = 0
-AdminIndicador.Parent = AdminGui
-pcall(function()
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 4)
-    corner.Parent = AdminIndicador
-end)
-
 -- ==========================================
 -- WIND UI
 -- ==========================================
-local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/WindUI_Library.lua"))()
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 local Window = WindUI:CreateWindow({
     Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
@@ -1087,48 +1021,14 @@ local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 ConfigTab:Section({Title = "Admin"})
 ConfigTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v)
     Admin_Ativado = v
-    if v then
-        AdminIndicador.Text = "ADMIN: ON"
-        AdminIndicador.TextColor3 = Color3.fromRGB(100, 255, 100)
-        WindUI:Notify({Title = "Admin", Content = "🟢 Modo Admin ATIVADO! Use !help no chat"})
-    else
-        AdminIndicador.Text = "ADMIN: OFF"
-        AdminIndicador.TextColor3 = Color3.fromRGB(255, 100, 100)
-        Admin_GodMode = false
-        WindUI:Notify({Title = "Admin", Content = "🔴 Modo Admin DESATIVADO!"})
-    end
+    WindUI:Notify({Title = "Admin", Content = v and "🟢 Admin ATIVADO! Use !help no chat" or "🔴 Admin DESATIVADO!"})
+    if not v then Admin_GodMode = false end
 end})
-
 ConfigTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t)
-    if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo alterado para: " .. t}) end
+    if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo: " .. t}) end
 end})
-
 ConfigTab:Button({Title = "📋 Lista de Comandos", Desc = "Ver todos os comandos FE", Callback = function()
-    WindUI:Notify({Title = "Comandos Admin (" .. Admin_Prefixo .. ")", Content = [[
-!to (nome) - Teleporta até jogador
-!bring (nome) - Traz jogador
-!kill (nome) - Mata jogador
-!kill all - Mata todos
-!respawn (nome) - Respawna
-!respawn all - Respawna todos
-!freeze (nome) - Congela
-!unfreeze (nome) - Descongela
-!explode (nome) - Explode
-!fling (nome) - Arremessa
-!spin (nome) - Gira jogador
-!noclip - Atravessar paredes
-!fly - Modo voo
-!speed (num) - Velocidade
-!god - Modo Deus
-!ungod - Desativa Deus
-!invis - Invisível
-!vis - Visível
-!view (nome) - Observar
-!unview - Parar de ver
-!sit (nome) - Força sentar
-!jump (nome) - Força pular
-!help - Lista de comandos
-    }})
+    WindUI:Notify({Title = "Comandos (" .. Admin_Prefixo .. ")", Content = "!to, !bring, !kill, !respawn, !freeze, !unfreeze, !explode, !fling, !spin, !noclip, !fly, !speed, !god, !ungod, !invis, !vis, !view, !unview, !sit, !jump, !help"})
 end})
 
 ConfigTab:Section({Title = "Servidor"})
@@ -1165,7 +1065,6 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
     Admin_Ativado = false; Admin_GodMode = false
-    if AdminGui then AdminGui:Destroy() end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
