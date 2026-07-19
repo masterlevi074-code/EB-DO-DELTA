@@ -86,6 +86,12 @@ local PasseLivre_Centro = Vector3.new(-13, 3.0, -494.5)
 local PasseLivre_Raio = 3
 local PasseLivre_NoClipAtivo = false
 
+-- FAKE ADMIN
+local Admin_Ativado = false
+local Admin_Prefixo = "!"
+local Admin_GodMode = false
+local Admin_Invisivel = false
+
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -467,7 +473,7 @@ local function RemoveHitboxes()
 end
 
 -- ==========================================
--- LOOP PRINCIPAL
+-- LOOP PRINCIPAL (CORRIGIDO COM PCALL)
 -- ==========================================
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
@@ -497,7 +503,9 @@ RunService.RenderStepped:Connect(function()
             if hum and root and hum.Health > 0 and Hitbox_Ativado then
                 root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
                 root.Transparency = Hitbox_Transparencia
-                root.Material = Hitbox_Material; root.Color = Hitbox_Cor; root.CanCollide = false
+                pcall(function() root.Material = Hitbox_Material end)
+                pcall(function() root.Color = Hitbox_Cor end)
+                root.CanCollide = false
             end
         end
     end
@@ -595,6 +603,161 @@ local function TrocarServidor(tipo)
 end
 
 -- ==========================================
+-- FAKE ADMIN - SISTEMA DE COMANDOS
+-- ==========================================
+local function EncontrarJogadorAdmin(nome)
+    nome = nome:lower()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Name:lower():find(nome, 1, true) or (p.DisplayName and p.DisplayName:lower():find(nome, 1, true)) then
+            return p
+        end
+    end
+    return nil
+end
+
+local function ExecutarComandoAdmin(mensagem)
+    if not Admin_Ativado then return end
+    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
+    
+    local comando = mensagem:sub(#Admin_Prefixo + 1)
+    local args = comando:split(" ")
+    local cmd = args[1]:lower()
+    table.remove(args, 1)
+    local resto = table.concat(args, " ")
+    
+    if cmd == "help" then
+        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 COMANDOS: to, bring, kill, respawn, freeze, unfreeze, explode, fling, spin, noclip, fly, speed, god, ungod, invis, vis, view, unview, sit, jump") end)
+    elseif cmd == "to" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
+            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    elseif cmd == "bring" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
+            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    elseif cmd == "kill" then
+        if resto == "all" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer and p.Character then pcall(function() p.Character:BreakJoints() end) end
+            end
+        else
+            local alvo = EncontrarJogadorAdmin(resto)
+            if alvo and alvo.Character then pcall(function() alvo.Character:BreakJoints() end) end
+        end
+    elseif cmd == "respawn" then
+        if resto == "all" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end
+            end
+        else
+            local alvo = EncontrarJogadorAdmin(resto)
+            if alvo then pcall(function() alvo:LoadCharacter() end) end
+        end
+    elseif cmd == "freeze" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Anchored = true
+        end
+    elseif cmd == "unfreeze" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Anchored = false
+        end
+    elseif cmd == "explode" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
+        end
+    elseif cmd == "fling" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-200,200), 500, math.random(-200,200))
+        end
+    elseif cmd == "spin" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.RotVelocity = Vector3.new(0, 100, 0)
+        end
+    elseif cmd == "noclip" then
+        if localPlayer.Character then
+            local pode = not localPlayer.Character.HumanoidRootPart.CanCollide
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = pode end
+            end
+        end
+    elseif cmd == "fly" then
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+            localPlayer.Character.Humanoid.PlatformStand = not localPlayer.Character.Humanoid.PlatformStand
+        end
+    elseif cmd == "speed" then
+        local valor = tonumber(resto) or 50
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+            localPlayer.Character.Humanoid.WalkSpeed = valor
+        end
+    elseif cmd == "god" then
+        Admin_GodMode = true
+    elseif cmd == "ungod" then
+        Admin_GodMode = false
+    elseif cmd == "invis" then
+        if localPlayer.Character then
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.Transparency = 0.9 end
+            end
+            Admin_Invisivel = true
+        end
+    elseif cmd == "vis" then
+        if localPlayer.Character then
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.Transparency = 0 end
+            end
+            Admin_Invisivel = false
+        end
+    elseif cmd == "view" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character then
+            Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character
+        end
+    elseif cmd == "unview" then
+        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
+    elseif cmd == "sit" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+            alvo.Character.Humanoid.Sit = true
+        end
+    elseif cmd == "jump" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+            alvo.Character.Humanoid.Jump = true
+        end
+    end
+end
+
+-- Conecta ao chat
+task.spawn(function()
+    pcall(function()
+        game:GetService("TextChatService").MessageReceived:Connect(function(message)
+            if message.TextSource == localPlayer then
+                ExecutarComandoAdmin(message.Text)
+            end
+        end)
+    end)
+    pcall(function()
+        localPlayer.Chatted:Connect(function(mensagem)
+            ExecutarComandoAdmin(mensagem)
+        end)
+    end)
+end)
+
+-- God Mode loop
+RunService.Heartbeat:Connect(function()
+    if Admin_GodMode and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        localPlayer.Character.Humanoid.Health = localPlayer.Character.Humanoid.MaxHealth
+    end
+end)
+
+-- ==========================================
 -- WIND UI
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
@@ -659,7 +822,7 @@ end})
 CombatTab:Section({Title = "Hitbox Expander"})
 CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadores", Default = false, Callback = function(v)
     Hitbox_Ativado = v
-    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
+    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
     end
 end})
 CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
@@ -668,7 +831,8 @@ CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox
 CombatTab:Section({Title = "Cores Hitbox"})
 CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {["Vermelho"] = Color3.fromRGB(255,30,30), ["Azul"] = Color3.fromRGB(30,100,255), ["Verde"] = Color3.fromRGB(50,255,50), ["Amarelo"] = Color3.fromRGB(255,220,0), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
-    Hitbox_Cor = cores[Value]; WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
+    if cores[Value] then Hitbox_Cor = cores[Value] end
+    WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
 end})
 
 CombatTab:Section({Title = "Lista de Exclusao"})
@@ -857,6 +1021,19 @@ end})
 -- ==========================================
 local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
 
+ConfigTab:Section({Title = "Admin"})
+ConfigTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v)
+    Admin_Ativado = v
+    WindUI:Notify({Title = "Admin", Content = v and "🟢 Admin ATIVADO! Use !help no chat" or "🔴 Admin DESATIVADO!"})
+    if not v then Admin_GodMode = false end
+end})
+ConfigTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t)
+    if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo: " .. t}) end
+end})
+ConfigTab:Button({Title = "📋 Lista de Comandos", Desc = "Ver todos os comandos FE", Callback = function()
+    WindUI:Notify({Title = "Comandos (" .. Admin_Prefixo .. ")", Content = "!to, !bring, !kill, !respawn, !freeze, !unfreeze, !explode, !fling, !spin, !noclip, !fly, !speed, !god, !ungod, !invis, !vis, !view, !unview, !sit, !jump, !help"})
+end})
+
 ConfigTab:Section({Title = "Servidor"})
 ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function()
     WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."}); task.wait(3); TrocarServidor("rejoin")
@@ -870,10 +1047,10 @@ end})
 
 ConfigTab:Section({Title = "Informações"})
 ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function()
-    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro"})
+    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ Fake Admin FE incluso!"})
 end})
 ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v2.0 - Stable"})
+    WindUI:Notify({Title = "Versão", Content = "v3.0 - Fake Admin FE + Hitbox Corrigida"})
 end})
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -890,9 +1067,10 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     PasseLivre_Ativado = false
     if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
+    Admin_Ativado = false; Admin_GodMode = false
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
-    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255); p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end end
+    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
     Window:Destroy()
@@ -900,4 +1078,4 @@ end})
 
 Window:SelectTab(1)
 
-print("✅ Noxys Hub - Exército Brasileiro 🇧🇷")
+print("✅ Noxys Hub - Fake Admin FE + Hitbox Corrigida!")
