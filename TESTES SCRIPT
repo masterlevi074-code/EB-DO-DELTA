@@ -636,7 +636,7 @@ local function EncontrarJogadorAdmin(nome)
 end
 
 -- ==========================================
--- CMD BAR
+-- CMD BAR CORRIGIDO
 -- ==========================================
 local CmdBar_Painel = nil
 
@@ -652,8 +652,8 @@ local function CriarCmdBar()
     painel.Parent = CoreGui
     
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 300, 0, 100)
-    frame.Position = UDim2.new(0.5, -150, 0.3, -50)
+    frame.Size = UDim2.new(0, 350, 0, 120)
+    frame.Position = UDim2.new(0.5, -175, 0.3, -60)
     frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     frame.BorderSizePixel = 0
     frame.Active = true
@@ -664,9 +664,9 @@ local function CriarCmdBar()
     Instance.new("UIStroke", frame).Thickness = 1.5
     
     local titulo = Instance.new("TextLabel")
-    titulo.Size = UDim2.new(1, 0, 0, 25)
+    titulo.Size = UDim2.new(1, 0, 0, 30)
     titulo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo
+    titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: " .. (Admin_Ativado and "✅" or "❌")
     titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
     titulo.Font = Enum.Font.SourceSansBold
     titulo.TextSize = 12
@@ -675,13 +675,13 @@ local function CriarCmdBar()
     Instance.new("UICorner", titulo).CornerRadius = UDim.new(0, 10)
     
     local fechar = Instance.new("TextButton")
-    fechar.Size = UDim2.new(0, 20, 0, 20)
-    fechar.Position = UDim2.new(1, -25, 0, 3)
+    fechar.Size = UDim2.new(0, 25, 0, 25)
+    fechar.Position = UDim2.new(1, -30, 0, 3)
     fechar.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    fechar.Text = "X"
+    fechar.Text = "✕"
     fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
     fechar.Font = Enum.Font.SourceSansBold
-    fechar.TextSize = 10
+    fechar.TextSize = 14
     fechar.Parent = frame
     
     Instance.new("UICorner", fechar).CornerRadius = UDim.new(1, 0)
@@ -692,43 +692,82 @@ local function CriarCmdBar()
     
     local input = Instance.new("TextBox")
     input.Size = UDim2.new(1, -20, 0, 35)
-    input.Position = UDim2.new(0, 10, 0, 35)
+    input.Position = UDim2.new(0, 10, 0, 40)
     input.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
     input.TextColor3 = Color3.fromRGB(255, 255, 255)
-    input.PlaceholderText = "Digite o comando..."
+    input.PlaceholderText = "Digite o comando (ex: noclip, fly, to Nome)..."
     input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
     input.Font = Enum.Font.Code
-    input.TextSize = 11
+    input.TextSize = 12
     input.Parent = frame
     
     Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
     
+    local botoesFrame = Instance.new("Frame")
+    botoesFrame.Size = UDim2.new(1, -20, 0, 35)
+    botoesFrame.Position = UDim2.new(0, 10, 0, 78)
+    botoesFrame.BackgroundTransparency = 1
+    botoesFrame.Parent = frame
+    
     local executar = Instance.new("TextButton")
-    executar.Size = UDim2.new(1, -20, 0, 25)
-    executar.Position = UDim2.new(0, 10, 0, 72)
+    executar.Size = UDim2.new(0.7, -5, 1, 0)
     executar.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
     executar.Text = "▶ EXECUTAR"
     executar.TextColor3 = Color3.fromRGB(255, 255, 255)
     executar.Font = Enum.Font.SourceSansBold
     executar.TextSize = 11
-    executar.Parent = frame
+    executar.Parent = botoesFrame
     
     Instance.new("UICorner", executar).CornerRadius = UDim.new(0, 6)
+    
+    local ativarAdmin = Instance.new("TextButton")
+    ativarAdmin.Size = UDim2.new(0.3, -5, 1, 0)
+    ativarAdmin.Position = UDim2.new(0.7, 10, 0, 0)
+    ativarAdmin.BackgroundColor3 = Admin_Ativado and Color3.fromRGB(200, 50, 50) or Color3.fromRGB(0, 120, 255)
+    ativarAdmin.Text = Admin_Ativado and "DESATIVAR" or "ATIVAR ADMIN"
+    ativarAdmin.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ativarAdmin.Font = Enum.Font.SourceSansBold
+    ativarAdmin.TextSize = 10
+    ativarAdmin.Parent = botoesFrame
+    
+    Instance.new("UICorner", ativarAdmin).CornerRadius = UDim.new(0, 6)
     
     local function ExecutarComandoCmdBar()
         local texto = input.Text
         if texto ~= "" then
+            if not Admin_Ativado then
+                Admin_Ativado = true
+                ativarAdmin.Text = "DESATIVAR"
+                ativarAdmin.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+                titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: ✅"
+            end
+            
             if not texto:sub(1, #Admin_Prefixo) == Admin_Prefixo then
                 texto = Admin_Prefixo .. texto
             end
+            
             ExecutarComandoAdmin(texto)
+            
+            input.PlaceholderText = "✅ Comando executado! Digite outro..."
             input.Text = ""
+            task.wait(1)
+            input.PlaceholderText = "Digite o comando (ex: noclip, fly, to Nome)..."
         end
     end
     
     executar.MouseButton1Click:Connect(ExecutarComandoCmdBar)
+    
+    ativarAdmin.MouseButton1Click:Connect(function()
+        Admin_Ativado = not Admin_Ativado
+        ativarAdmin.Text = Admin_Ativado and "DESATIVAR" or "ATIVAR ADMIN"
+        ativarAdmin.BackgroundColor3 = Admin_Ativado and Color3.fromRGB(200, 50, 50) or Color3.fromRGB(0, 120, 255)
+        titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: " .. (Admin_Ativado and "✅" or "❌")
+    end)
+    
     input.FocusLost:Connect(function(enterPressed)
-        if enterPressed then ExecutarComandoCmdBar() end
+        if enterPressed then 
+            ExecutarComandoCmdBar() 
+        end
     end)
     
     task.wait(0.1)
@@ -837,23 +876,48 @@ local function ExecutarComandoAdmin(mensagem)
             alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
         end
     elseif cmd == "noclip" or cmd == "nc" then
-        -- ✅ NOCLIP CORRIGIDO
+        -- ✅ NOCLIP CORRIGIDO (mesmo sistema do Passe Livre)
         if localPlayer.Character then
-            local root = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+            local char = localPlayer.Character
+            local root = char:FindFirstChild("HumanoidRootPart")
+            
             if root then
-                local estaAtivo = (root.CanCollide == false)
-                for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = estaAtivo
+                local estaAtivo = false
+                
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide == false then
+                        estaAtivo = true
+                        break
                     end
                 end
-                pcall(function()
-                    game:GetService("StarterGui"):SetCore("SendNotification", {
-                        Title = "NoClip",
-                        Text = estaAtivo and "✅ Ativado" or "❌ Desativado",
-                        Duration = 2
-                    })
-                end)
+                
+                if estaAtivo then
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                    pcall(function()
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "NoClip",
+                            Text = "❌ Desativado - Colisão restaurada",
+                            Duration = 2
+                        })
+                    end)
+                else
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                    pcall(function()
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "NoClip",
+                            Text = "✅ Ativado - Atravessando paredes",
+                            Duration = 2
+                        })
+                    end)
+                end
             end
         end
     elseif cmd == "fly" or cmd == "f" then
@@ -921,12 +985,14 @@ task.spawn(function()
 end)
 
 -- ==========================================
--- CHATWINDOW
+-- CHATWINDOW CORRIGIDO
 -- ==========================================
 local function AtivarChatWindow()
     if ChatWindow_Conexoes then DesativarChatWindow() end
+    
     local StarterGui = game:GetService("StarterGui")
     local TextChatService = game:GetService("TextChatService")
+    
     ChatWindow_Conexoes = {}
     ChatWindow_Conexoes.ChatWindow = {}
     
@@ -942,45 +1008,67 @@ local function AtivarChatWindow()
     visibilityChangedEvent.Name = "VisibilityStateChanged"
     ChatWindow_Conexoes.ChatWindow.VisibilityStateChanged = visibilityChangedEvent
     
-    pcall(function() StarterGui:SetCore("CoreGuiChatConnections", ChatWindow_Conexoes) end)
+    pcall(function() 
+        StarterGui:SetCore("CoreGuiChatConnections", ChatWindow_Conexoes) 
+    end)
     
     local function ToggleChat()
         local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
         if windowConfig then
             windowConfig.Enabled = not windowConfig.Enabled
-            pcall(function() visibilityChangedEvent:Fire(windowConfig.Enabled) end)
+            pcall(function() 
+                visibilityChangedEvent:Fire(windowConfig.Enabled) 
+            end)
         end
     end
     
-    toggleEvent.Event:Connect(function() ToggleChat() end)
+    toggleEvent.Event:Connect(function() 
+        ToggleChat() 
+    end)
+    
     setVisibleEvent.Event:Connect(function(visible)
         local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
         if windowConfig then
             windowConfig.Enabled = visible
-            pcall(function() visibilityChangedEvent:Fire(visible) end)
+            pcall(function() 
+                visibilityChangedEvent:Fire(visible) 
+            end)
         end
     end)
+    
+    print("✅ ChatWindow ATIVADO - Use o botão do Roblox para abrir/fechar")
 end
 
 local function DesativarChatWindow()
     if ChatWindow_Conexoes then
         pcall(function()
-            ChatWindow_Conexoes.ChatWindow.ToggleVisibility:Destroy()
-            ChatWindow_Conexoes.ChatWindow.SetVisible:Destroy()
-            ChatWindow_Conexoes.ChatWindow.VisibilityStateChanged:Destroy()
+            if ChatWindow_Conexoes.ChatWindow.ToggleVisibility then
+                ChatWindow_Conexoes.ChatWindow.ToggleVisibility:Destroy()
+            end
+            if ChatWindow_Conexoes.ChatWindow.SetVisible then
+                ChatWindow_Conexoes.ChatWindow.SetVisible:Destroy()
+            end
+            if ChatWindow_Conexoes.ChatWindow.VisibilityStateChanged then
+                ChatWindow_Conexoes.ChatWindow.VisibilityStateChanged:Destroy()
+            end
         end)
         ChatWindow_Conexoes = nil
     end
+    
     pcall(function()
         local StarterGui = game:GetService("StarterGui")
-        StarterGui:SetCore("CoreGuiChatConnections", {
-            ChatWindow = {
-                ToggleVisibility = Instance.new("BindableEvent"),
-                SetVisible = Instance.new("BindableEvent"),
-                VisibilityStateChanged = Instance.new("BindableEvent")
-            }
-        })
+        StarterGui:SetCore("CoreGuiChatConnections", nil)
     end)
+    
+    pcall(function()
+        local TextChatService = game:GetService("TextChatService")
+        local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
+        if windowConfig then
+            windowConfig.Enabled = true
+        end
+    end)
+    
+    print("❌ ChatWindow DESATIVADO - Chat do Roblox restaurado")
 end
 
 -- ==========================================
@@ -993,9 +1081,9 @@ pcall(function()
 end)
 
 if not WindUI then
-    warn("❌ Não foi possível carregar a WindUI. Verifique sua internet ou o link.")
+    warn("❌ Não foi possível carregar a WindUI. Verifique sua internet.")
     print("⚠️ Apenas comandos do chat (!noclip, !fly) funcionarão.")
-    print("✅ Pressione F9 para ver o console e digite !noclip para testar.")
+    print("✅ Digite !admin para ativar e depois !noclip para testar.")
     return
 end
 
@@ -1013,25 +1101,29 @@ local Window = WindUI:CreateWindow({
     SideBarWidth = 200
 })
 
--- PRINCIPAL
-local MainTab = Window:Tab({Title = "Principal", Icon = "house"})
+-- ==========================================
+-- UI - PRINCIPAL
+-- ==========================================
+local MainTab = Window:Tab({Title = "Principal", Icon = "home"})
 MainTab:Button({Title = "Resetar", Desc = "Reseta seu personagem", Callback = function()
     if localPlayer.Character then localPlayer.Character:BreakJoints() end
 end})
-MainTab:Section({Title = "Auto JJ Polichinelos"})
+MainTab:Section({Title = "💪 Auto JJ Polichinelos"})
 MainTab:Toggle({Title = "Ativar Auto JJ", Desc = "Auto JJ Polichinelos", Default = false, Callback = function(v)
     AutoJJ_Ativado = v
     if v then IniciarAutoJJ() else DestruirPainelJJ() end
 end})
-MainTab:Section({Title = "Blocos Parkour"})
+MainTab:Section({Title = "🧱 Blocos Parkour"})
 MainTab:Toggle({Title = "Ativar Blocos", Desc = "Cria blocos de parkour", Default = false, Callback = function(v)
     BlocosAtivado = v
     if v then CreateHitboxes() else RemoveHitboxes() end
 end})
 
--- COMBATE
-local CombatTab = Window:Tab({Title = "Combate", Icon = "swords"})
-CombatTab:Section({Title = "Aimbot"})
+-- ==========================================
+-- UI - COMBATE
+-- ==========================================
+local CombatTab = Window:Tab({Title = "Combate", Icon = "crosshair"})
+CombatTab:Section({Title = "🎯 Aimbot"})
 CombatTab:Toggle({Title = "Ativar Aimbot", Desc = "Mira automaticamente", Default = false, Callback = function(v) Aimbot_Ativado = v end})
 CombatTab:Toggle({Title = "Mostrar FOV", Desc = "Mostra o círculo do FOV", Default = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
 CombatTab:Toggle({Title = "Team Check", Desc = "Não mira em aliados", Default = false, Callback = function(v) Aimbot_TeamCheck = v end})
@@ -1053,12 +1145,12 @@ CombatTab:Dropdown({Title = "Cor do FOV", Values = {"Branco", "Vermelho", "Azul"
     FOVCircle.Color = cores[Value]
     WindUI:Notify({Title = "FOV", Content = "Cor: " .. Value})
 end})
-CombatTab:Section({Title = "Alvo"})
+CombatTab:Section({Title = "👤 Alvo"})
 CombatTab:Dropdown({Title = "Parte do Corpo", Values = {"Head", "Torso", "Perna"}, Callback = function(Value)
     Aimbot_ParteAlvo = Value
     WindUI:Notify({Title = "Alvo", Content = "Mirando na: " .. Value})
 end})
-CombatTab:Section({Title = "Hitbox Expander"})
+CombatTab:Section({Title = "📦 Hitbox Expander"})
 CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadores", Default = false, Callback = function(v)
     Hitbox_Ativado = v
     if not v then
@@ -1074,7 +1166,7 @@ CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadore
 end})
 CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
 CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox", Placeholder = "0.7", Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
-CombatTab:Section({Title = "Cores Hitbox"})
+CombatTab:Section({Title = "🎨 Cores Hitbox"})
 CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {
         ["Vermelho"] = Color3.fromRGB(255,30,30), ["Azul"] = Color3.fromRGB(30,100,255),
@@ -1085,7 +1177,7 @@ CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verd
     if cores[Value] then Hitbox_Cor = cores[Value] end
     WindUI:Notify({Title = "Hitbox", Content = "Cor: " .. Value})
 end})
-CombatTab:Section({Title = "Lista de Exclusao"})
+CombatTab:Section({Title = "🚫 Lista de Exclusao"})
 CombatTab:Dropdown({Title = "Jogador", Values = ObterListaJogadores(), Callback = function(Value) DropdownSelecionado = Value end})
 CombatTab:Button({Title = "Adicionar a Lista", Desc = "Adiciona jogador selecionado", Callback = function()
     if DropdownSelecionado ~= "" and DropdownSelecionado ~= "Nenhum jogador online" then
@@ -1104,7 +1196,9 @@ CombatTab:Button({Title = "Limpar Lista", Desc = "Remove todos da lista", Callba
     WindUI:Notify({Title = "Whitelist", Content = "Lista limpa!"})
 end})
 
--- VISUAIS
+-- ==========================================
+-- UI - VISUAIS
+-- ==========================================
 local VisualTab = Window:Tab({Title = "Visuais", Icon = "eye"})
 VisualTab:Section({Title = "ESP por Times"})
 VisualTab:Toggle({Title = "Ativar ESP por Times", Desc = "Filtra ESP por times", Default = false, Callback = function(v) ESP_TimesAtivado = v; AtualizarESP() end})
@@ -1132,7 +1226,7 @@ VisualTab:Toggle({Title = "ESP Names", Desc = "Nome do jogador", Default = false
 VisualTab:Toggle({Title = "ESP Chams", Desc = "Destaca o jogador", Default = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
 VisualTab:Toggle({Title = "ESP Tracers", Desc = "Linhas até os jogadores", Default = false, Callback = function(v) ESP_Tracers=v; AtualizarESP() end})
 VisualTab:Toggle({Title = "ESP Vida", Desc = "Mostra a vida do jogador", Default = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
-VisualTab:Section({Title = "Cores ESP"})
+VisualTab:Section({Title = "🎨 Cores ESP"})
 VisualTab:Dropdown({Title = "Cor do ESP", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {
         ["Vermelho"] = Color3.fromRGB(255,50,50), ["Azul"] = Color3.fromRGB(50,150,255),
@@ -1143,20 +1237,22 @@ VisualTab:Dropdown({Title = "Cor do ESP", Values = {"Vermelho", "Azul", "Verde",
     AplicarCorESP(cores[Value])
     WindUI:Notify({Title = "ESP", Content = "Cor: " .. Value})
 end})
-VisualTab:Section({Title = "Luz"})
+VisualTab:Section({Title = "💡 Luz"})
 VisualTab:Button({Title = "Fullbright", Desc = "Ilumina o mapa", Callback = function()
     Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false
     Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128)
 end})
 
--- OUTROS
-local OutrosTab = Window:Tab({Title = "Outros", Icon = "cog"})
-OutrosTab:Section({Title = "Dash"})
+-- ==========================================
+-- UI - OUTROS
+-- ==========================================
+local OutrosTab = Window:Tab({Title = "Outros", Icon = "cpu"})
+OutrosTab:Section({Title = "💨 Dash"})
 OutrosTab:Toggle({Title = "Botao de Dash", Desc = "Ativa botão de dash flutuante", Default = false, Callback = function(v)
     if v then CriarBotaoDash() else RemoverBotaoDash() end
 end})
 OutrosTab:Input({Title = "Distancia Dash", Desc = "Distância do dash em studs", Placeholder = "30", Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
-OutrosTab:Section({Title = "Speed Hack"})
+OutrosTab:Section({Title = "⚡ Speed Hack"})
 OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", Default = false, Callback = function(v)
     SpeedHack_Ativado = v
     if v then
@@ -1179,7 +1275,7 @@ OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", De
     end
 end})
 OutrosTab:Slider({Title = "Velocidade Speed", Desc = "Ajuste a velocidade", Value = {Min = 1, Max = 500, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
-OutrosTab:Section({Title = "Underground"})
+OutrosTab:Section({Title = "🌍 Underground"})
 OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa", Default = false, Callback = function(v)
     Underground_Ativado = v
     local char = localPlayer.Character
@@ -1229,8 +1325,8 @@ OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa",
         Underground_Voltando = false
     end
 end})
-OutrosTab:Section({Title = "Passe Livre"})
-OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 3 studs)", Default = false, Callback = function(v)
+OutrosTab:Section({Title = "🎫 Passe Livre"})
+OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área", Default = false, Callback = function(v)
     PasseLivre_Ativado = v
     if v then
         if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
@@ -1279,16 +1375,21 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
     end
 end})
 OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t) local n = tonumber(t) if n and n > 0 then PasseLivre_Raio = n; WindUI:Notify({Title = "Passe Livre", Content = "Raio: " .. n .. " studs"}) end end})
-OutrosTab:Section({Title = "ChatWindow"})
+OutrosTab:Section({Title = "💬 ChatWindow"})
 OutrosTab:Toggle({Title = "Ativar ChatWindow", Desc = "Mostra histórico global do chat", Default = false, Callback = function(v)
     ChatWindow_Ativado = v
-    if v then AtivarChatWindow(); WindUI:Notify({Title = "ChatWindow", Content = "💬 ChatWindow ATIVADO!"})
-    else DesativarChatWindow(); WindUI:Notify({Title = "ChatWindow", Content = "💬 ChatWindow DESATIVADO!"}) end
+    if v then 
+        AtivarChatWindow()
+        WindUI:Notify({Title = "ChatWindow", Content = "💬 ChatWindow ATIVADO! Use o botão 💬 do Roblox"}) 
+    else 
+        DesativarChatWindow()
+        WindUI:Notify({Title = "ChatWindow", Content = "💬 Chat DESATIVADO! Botão do Roblox restaurado"}) 
+    end
 end})
-OutrosTab:Section({Title = "FOV da Camera"})
+OutrosTab:Section({Title = "📷 FOV da Camera"})
 OutrosTab:Slider({Title = "FOV da Camera", Desc = "Ajuste o FOV (30-120)", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
 OutrosTab:Button({Title = "Resetar FOV", Desc = "Volta ao FOV padrão (70)", Callback = function() Workspace.CurrentCamera.FieldOfView = 70 end})
-OutrosTab:Section({Title = "Teleporte para Jogador"})
+OutrosTab:Section({Title = "🎯 Teleporte para Jogador"})
 OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleportar", Placeholder = "Digite o nome...", Callback = function(t)
     if t ~= "" then
         local encontrado = false
@@ -1311,22 +1412,24 @@ OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleporta
     end
 end})
 
--- ADMIN
-local AdminTab = Window:Tab({Title = "Admin", Icon = "crown"})
-AdminTab:Section({Title = "Controle de Admin"})
+-- ==========================================
+-- UI - ADMIN
+-- ==========================================
+local AdminTab = Window:Tab({Title = "Admin", Icon = "star"})
+AdminTab:Section({Title = "⚡ Controle de Admin"})
 AdminTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v)
     Admin_Ativado = v
     WindUI:Notify({Title = "Admin", Content = v and "🟢 Admin ATIVADO!" or "🔴 Admin DESATIVADO!"})
 end})
 AdminTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t) if t ~= "" then Admin_Prefixo = t; WindUI:Notify({Title = "Admin", Content = "Prefixo: " .. t}) end end})
-AdminTab:Section({Title = "Lista de Comandos"})
+AdminTab:Section({Title = "📜 Lista de Comandos"})
 AdminTab:Button({Title = "━━━━━━━━━━━━━━━━━━━━━━━━", Desc = "", Callback = function() end})
 AdminTab:Button({Title = "!to / !t (nome)", Desc = "Teleporta até o jogador", Callback = function() end})
 AdminTab:Button({Title = "!bring / !br (nome)", Desc = "Traz o jogador até você", Callback = function() end})
 AdminTab:Button({Title = "!res (nome ou all)", Desc = "Respawna na base", Callback = function() end})
 AdminTab:Button({Title = "!re (nome ou all)", Desc = "Respawna no mesmo lugar", Callback = function() end})
 AdminTab:Button({Title = "!explode / !ex (nome)", Desc = "Explode o jogador", Callback = function() end})
-AdminTab:Button({Title = "!noclip / !nc", Desc = "Atravessa paredes (CanCollide)", Callback = function() end})
+AdminTab:Button({Title = "!noclip / !nc", Desc = "Atravessa paredes", Callback = function() end})
 AdminTab:Button({Title = "!fly / !f", Desc = "Ativa/Desativa voo", Callback = function() end})
 AdminTab:Button({Title = "!view / !vw (nome)", Desc = "Observa o jogador", Callback = function() end})
 AdminTab:Button({Title = "!unview / !uv", Desc = "Para de observar", Callback = function() end})
@@ -1334,7 +1437,7 @@ AdminTab:Button({Title = "!sit / !s (nome)", Desc = "Força o jogador a sentar",
 AdminTab:Button({Title = "!jump / !j (nome)", Desc = "Força o jogador a pular", Callback = function() end})
 AdminTab:Button({Title = "!cmdbar / !cmd", Desc = "Barra de comandos rápida", Callback = function() end})
 AdminTab:Button({Title = "!help / !h", Desc = "Mostra os comandos no chat", Callback = function() end})
-AdminTab:Section({Title = "Comandos Rápidos"})
+AdminTab:Section({Title = "🎮 Comandos Rápidos"})
 AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback = function()
     if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character:FindFirstChild("Humanoid") then
         local humanoid = localPlayer.Character.Humanoid
@@ -1365,17 +1468,36 @@ AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback 
         end
     end
 end})
-AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes (sem flutuar)", Callback = function()
+AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes", Callback = function()
     if localPlayer.Character then
-        local root = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local char = localPlayer.Character
+        local root = char:FindFirstChild("HumanoidRootPart")
+        
         if root then
-            local estaAtivo = (root.CanCollide == false)
-            for _, part in pairs(localPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = estaAtivo
+            local estaAtivo = false
+            
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide == false then
+                    estaAtivo = true
+                    break
                 end
             end
-            WindUI:Notify({Title = "Admin", Content = estaAtivo and "👻 NoClip ATIVADO" or "👻 NoClip DESATIVADO"})
+            
+            if estaAtivo then
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = true
+                    end
+                end
+                WindUI:Notify({Title = "Admin", Content = "👻 NoClip DESATIVADO"})
+            else
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+                WindUI:Notify({Title = "Admin", Content = "👻 NoClip ATIVADO"})
+            end
         end
     end
 end})
@@ -1408,9 +1530,11 @@ AdminTab:Button({Title = "🔄 Reset All", Desc = "Resetar todos no mesmo lugar"
 end})
 AdminTab:Button({Title = "💻 CmdBar", Desc = "Abrir barra de comandos", Callback = function() CriarCmdBar() end})
 
--- CONFIGS
-local ConfigTab = Window:Tab({Title = "Configs", Icon = "trash"})
-ConfigTab:Section({Title = "Servidor"})
+-- ==========================================
+-- UI - CONFIGS
+-- ==========================================
+local ConfigTab = Window:Tab({Title = "Configs", Icon = "settings"})
+ConfigTab:Section({Title = "🌐 Servidor"})
 ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamente", Callback = function()
     WindUI:Notify({Title = "Servidor", Content = "Rejoin em 3 segundos..."})
     task.wait(3)
@@ -1426,15 +1550,18 @@ ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servido
     task.wait(1)
     TrocarServidor("vazio")
 end})
-ConfigTab:Section({Title = "Informações"})
-ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function()
-    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ NoClip Corrigido!"})
+ConfigTab:Section({Title = "ℹ️ Informações"})
+ConfigTab:Button({Title = "👤 Créditos", Desc = "Quem fez o script", Callback = function()
+    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ v5.0 Final Corrigida!"})
 end})
-ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v4.4 - Sintaxe Corrigida"})
+ConfigTab:Button({Title = "📌 Versão", Desc = "Versão atual do script", Callback = function()
+    WindUI:Notify({Title = "Versão", Content = "v5.0 - Todas correções aplicadas"})
 end})
-ConfigTab:Section({Title = "Ações"})
-ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
+ConfigTab:Button({Title = "📱 Dispositivos", Desc = "Aparelhos suportados", Callback = function()
+    WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
+end})
+ConfigTab:Section({Title = "⚠️ Ações"})
+ConfigTab:Button({Title = "💀 Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
     AutoJJ_Ativado = false
     BlocosAtivado = false
     SpeedHack_Ativado = false
@@ -1481,6 +1608,8 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
 end})
 
 Window:SelectTab(1)
-print("✅ Noxys Hub v4.4 - Sintaxe Corrigida!")
-print("👻 NoClip: !noclip ou botão na aba Admin")
-print("🕊️ Fly: !fly ou botão na aba Admin")
+print("✅ Noxys Hub v5.0 - Versão Final Corrigida!")
+print("👻 NoClip: !noclip - Sistema do Passe Livre")
+print("💻 CmdBar: !cmd - Ativa Admin automaticamente")
+print("💬 ChatWindow: Restaura corretamente ao desativar")
+print("🎨 Ícones: Todos atualizados!")
