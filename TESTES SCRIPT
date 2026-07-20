@@ -636,222 +636,7 @@ local function EncontrarJogadorAdmin(nome)
 end
 
 -- ==========================================
--- EXECUTAR COMANDO ADMIN (DEFINIDO ANTES DA CMDBAR)
--- ==========================================
-local function ExecutarComandoAdmin(mensagem)
-    if not Admin_Ativado then return end
-    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
-    
-    local comando = mensagem:sub(#Admin_Prefixo + 1)
-    local args = comando:split(" ")
-    local cmd = args[1]:lower()
-    table.remove(args, 1)
-    local resto = table.concat(args, " ")
-    
-    if cmd == "help" or cmd == "h" then
-        pcall(function()
-            game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 " .. Admin_Prefixo .. "to/t, bring/br, res, re, explode/ex, noclip/nc, noclipoff/ncoff, fly/f, view/vw, unview/uv, sit/s, jump/j, cmdbar/cmd, help/h")
-        end)
-    elseif cmd == "to" or cmd == "t" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
-            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-        end
-    elseif cmd == "bring" or cmd == "br" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
-            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-        end
-    elseif cmd == "respawn" or cmd == "res" then
-        if resto == "all" or resto == "a" then
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= localPlayer then
-                    pcall(function()
-                        if p.Character and p.Character:FindFirstChild("Humanoid") then
-                            p.Character.Humanoid.Health = 0
-                        end
-                    end)
-                end
-            end
-            task.wait(0.1)
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= localPlayer then
-                    pcall(function() p:LoadCharacter() end)
-                end
-            end
-        else
-            local alvo = EncontrarJogadorAdmin(resto)
-            if alvo then
-                pcall(function()
-                    if alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
-                        alvo.Character.Humanoid.Health = 0
-                    end
-                end)
-                task.wait(0.1)
-                pcall(function() alvo:LoadCharacter() end)
-            end
-        end
-    elseif cmd == "reset" or cmd == "re" then
-        if resto == "all" or resto == "a" then
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    local pos = p.Character.HumanoidRootPart.CFrame
-                    pcall(function()
-                        if p.Character:FindFirstChild("Humanoid") then
-                            p.Character.Humanoid.Health = 0
-                        end
-                    end)
-                    task.wait(0.1)
-                    pcall(function() p:LoadCharacter() end)
-                    task.wait(0.3)
-                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                        pcall(function()
-                            p.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0)
-                        end)
-                    end
-                end
-            end
-        else
-            local alvo = EncontrarJogadorAdmin(resto)
-            if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
-                local pos = alvo.Character.HumanoidRootPart.CFrame
-                pcall(function()
-                    if alvo.Character:FindFirstChild("Humanoid") then
-                        alvo.Character.Humanoid.Health = 0
-                    end
-                end)
-                task.wait(0.1)
-                pcall(function() alvo:LoadCharacter() end)
-                task.wait(0.3)
-                if alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
-                    pcall(function()
-                        alvo.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0)
-                    end)
-                end
-            end
-        end
-    elseif cmd == "explode" or cmd == "ex" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
-            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
-        end
-    elseif cmd == "noclip" or cmd == "nc" then
-        -- NOCLIP (Toggle)
-        if localPlayer.Character then
-            local char = localPlayer.Character
-            local root = char:FindFirstChild("HumanoidRootPart")
-            
-            if root then
-                local estaAtivo = false
-                
-                for _, part in pairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") and part.CanCollide == false then
-                        estaAtivo = true
-                        break
-                    end
-                end
-                
-                if estaAtivo then
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = true
-                        end
-                    end
-                    pcall(function()
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "NoClip",
-                            Text = "❌ Desativado - Colisão restaurada",
-                            Duration = 2
-                        })
-                    end)
-                else
-                    for _, part in pairs(char:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.CanCollide = false
-                        end
-                    end
-                    pcall(function()
-                        game:GetService("StarterGui"):SetCore("SendNotification", {
-                            Title = "NoClip",
-                            Text = "✅ Ativado - Atravessando paredes",
-                            Duration = 2
-                        })
-                    end)
-                end
-            end
-        end
-    elseif cmd == "noclipoff" or cmd == "ncoff" or cmd == "ncdesativar" then
-        -- DESATIVAR NOCLIP FORÇADO
-        if localPlayer.Character then
-            local char = localPlayer.Character
-            
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = true
-                end
-            end
-            
-            pcall(function()
-                game:GetService("StarterGui"):SetCore("SendNotification", {
-                    Title = "NoClip",
-                    Text = "❌ NoClip DESATIVADO!",
-                    Duration = 2
-                })
-            end)
-            
-            print("❌ NoClip forçadamente desativado")
-        end
-    elseif cmd == "fly" or cmd == "f" then
-        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character:FindFirstChild("Humanoid") then
-            local humanoid = localPlayer.Character.Humanoid
-            local root = localPlayer.Character.HumanoidRootPart
-            if humanoid.PlatformStand then
-                humanoid.PlatformStand = false
-                humanoid.HipHeight = 2
-                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-            else
-                humanoid.PlatformStand = true
-                humanoid.HipHeight = 0
-                task.spawn(function()
-                    while humanoid and humanoid.PlatformStand and humanoid.Parent do
-                        task.wait()
-                        local moveDir = humanoid.MoveDirection
-                        if moveDir.Magnitude > 0 then
-                            root.CFrame = root.CFrame + (moveDir * 0.5)
-                        end
-                        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                            root.CFrame = root.CFrame + Vector3.new(0, 0.5, 0)
-                        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-                            root.CFrame = root.CFrame - Vector3.new(0, 0.5, 0)
-                        end
-                    end
-                end)
-            end
-        end
-    elseif cmd == "view" or cmd == "vw" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character then
-            Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character
-        end
-    elseif cmd == "unview" or cmd == "uv" then
-        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
-    elseif cmd == "sit" or cmd == "s" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
-            alvo.Character.Humanoid.Sit = true
-        end
-    elseif cmd == "jump" or cmd == "j" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
-            alvo.Character.Humanoid.Jump = true
-        end
-    elseif cmd == "cmdbar" or cmd == "cmdbar2" or cmd == "cmd" then
-        pcall(function() CriarCmdBar() end)
-    end
-end
-
--- ==========================================
--- CMD BAR (AGORA DEPOIS DA ExecutarComandoAdmin)
+-- CMD BAR (DEFINIDA PRIMEIRO)
 -- ==========================================
 local CmdBar_Painel = nil
 
@@ -991,10 +776,220 @@ local function CriarCmdBar()
     input:CaptureFocus()
     CmdBar_Painel = painel
     
-    print("💻 CmdBar aberta! Digite comandos como: noclip, fly, to Nome")
+    print("💻 CmdBar aberta!")
 end
 
--- Conectar chat aos comandos
+-- ==========================================
+-- EXECUTAR COMANDO ADMIN
+-- ==========================================
+local function ExecutarComandoAdmin(mensagem)
+    if not Admin_Ativado then return end
+    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
+    
+    local comando = mensagem:sub(#Admin_Prefixo + 1)
+    local args = comando:split(" ")
+    local cmd = args[1]:lower()
+    table.remove(args, 1)
+    local resto = table.concat(args, " ")
+    
+    if cmd == "help" or cmd == "h" then
+        pcall(function()
+            game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 " .. Admin_Prefixo .. "to/t, bring/br, res, re, explode/ex, noclip/nc, noclipoff/ncoff, fly/f, view/vw, unview/uv, sit/s, jump/j, cmdbar/cmd, help/h")
+        end)
+    elseif cmd == "to" or cmd == "t" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
+            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    elseif cmd == "bring" or cmd == "br" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
+            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        end
+    elseif cmd == "respawn" or cmd == "res" then
+        if resto == "all" or resto == "a" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer then
+                    pcall(function()
+                        if p.Character and p.Character:FindFirstChild("Humanoid") then
+                            p.Character.Humanoid.Health = 0
+                        end
+                    end)
+                end
+            end
+            task.wait(0.1)
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer then
+                    pcall(function() p:LoadCharacter() end)
+                end
+            end
+        else
+            local alvo = EncontrarJogadorAdmin(resto)
+            if alvo then
+                pcall(function()
+                    if alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+                        alvo.Character.Humanoid.Health = 0
+                    end
+                end)
+                task.wait(0.1)
+                pcall(function() alvo:LoadCharacter() end)
+            end
+        end
+    elseif cmd == "reset" or cmd == "re" then
+        if resto == "all" or resto == "a" then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    local pos = p.Character.HumanoidRootPart.CFrame
+                    pcall(function()
+                        if p.Character:FindFirstChild("Humanoid") then
+                            p.Character.Humanoid.Health = 0
+                        end
+                    end)
+                    task.wait(0.1)
+                    pcall(function() p:LoadCharacter() end)
+                    task.wait(0.3)
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        pcall(function()
+                            p.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0)
+                        end)
+                    end
+                end
+            end
+        else
+            local alvo = EncontrarJogadorAdmin(resto)
+            if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+                local pos = alvo.Character.HumanoidRootPart.CFrame
+                pcall(function()
+                    if alvo.Character:FindFirstChild("Humanoid") then
+                        alvo.Character.Humanoid.Health = 0
+                    end
+                end)
+                task.wait(0.1)
+                pcall(function() alvo:LoadCharacter() end)
+                task.wait(0.3)
+                if alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+                    pcall(function()
+                        alvo.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0)
+                    end)
+                end
+            end
+        end
+    elseif cmd == "explode" or cmd == "ex" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then
+            alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100))
+        end
+    elseif cmd == "noclip" or cmd == "nc" then
+        if localPlayer.Character then
+            local char = localPlayer.Character
+            local root = char:FindFirstChild("HumanoidRootPart")
+            
+            if root then
+                local estaAtivo = false
+                
+                for _, part in pairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide == false then
+                        estaAtivo = true
+                        break
+                    end
+                end
+                
+                if estaAtivo then
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                    pcall(function()
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "NoClip",
+                            Text = "❌ Desativado",
+                            Duration = 2
+                        })
+                    end)
+                else
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                    pcall(function()
+                        game:GetService("StarterGui"):SetCore("SendNotification", {
+                            Title = "NoClip",
+                            Text = "✅ Ativado",
+                            Duration = 2
+                        })
+                    end)
+                end
+            end
+        end
+    elseif cmd == "noclipoff" or cmd == "ncoff" then
+        if localPlayer.Character then
+            local char = localPlayer.Character
+            
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+            
+            pcall(function()
+                game:GetService("StarterGui"):SetCore("SendNotification", {
+                    Title = "NoClip",
+                    Text = "❌ DESATIVADO!",
+                    Duration = 2
+                })
+            end)
+        end
+    elseif cmd == "fly" or cmd == "f" then
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character:FindFirstChild("Humanoid") then
+            local humanoid = localPlayer.Character.Humanoid
+            local root = localPlayer.Character.HumanoidRootPart
+            if humanoid.PlatformStand then
+                humanoid.PlatformStand = false
+                humanoid.HipHeight = 2
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
+            else
+                humanoid.PlatformStand = true
+                humanoid.HipHeight = 0
+                task.spawn(function()
+                    while humanoid and humanoid.PlatformStand and humanoid.Parent do
+                        task.wait()
+                        local moveDir = humanoid.MoveDirection
+                        if moveDir.Magnitude > 0 then
+                            root.CFrame = root.CFrame + (moveDir * 0.5)
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                            root.CFrame = root.CFrame + Vector3.new(0, 0.5, 0)
+                        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                            root.CFrame = root.CFrame - Vector3.new(0, 0.5, 0)
+                        end
+                    end
+                end)
+            end
+        end
+    elseif cmd == "view" or cmd == "vw" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character then
+            Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character
+        end
+    elseif cmd == "unview" or cmd == "uv" then
+        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
+    elseif cmd == "sit" or cmd == "s" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+            alvo.Character.Humanoid.Sit = true
+        end
+    elseif cmd == "jump" or cmd == "j" then
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then
+            alvo.Character.Humanoid.Jump = true
+        end
+    elseif cmd == "cmdbar" or cmd == "cmd" then
+        pcall(function() CriarCmdBar() end)
+    end
+end
+
 task.spawn(function()
     pcall(function()
         game:GetService("TextChatService").MessageReceived:Connect(function(message)
@@ -1061,8 +1056,6 @@ local function AtivarChatWindow()
             end)
         end
     end)
-    
-    print("✅ ChatWindow ATIVADO")
 end
 
 local function DesativarChatWindow()
@@ -1123,8 +1116,6 @@ local function DesativarChatWindow()
             windowConfig.Enabled = true
         end
     end)
-    
-    print("✅ ChatWindow DESATIVADO - Chat nativo restaurado")
 end
 
 -- ==========================================
@@ -1138,7 +1129,7 @@ end)
 
 if not WindUI then
     warn("❌ Não foi possível carregar a WindUI.")
-    print("⚠️ Comandos do chat: !admin + !noclip / !fly / !cmd")
+    print("⚠️ Comandos do chat disponíveis: !admin + !noclip / !fly / !cmd")
     return
 end
 
@@ -1435,10 +1426,10 @@ OutrosTab:Toggle({Title = "Ativar ChatWindow", Desc = "Mostra histórico global 
     ChatWindow_Ativado = v
     if v then 
         AtivarChatWindow()
-        WindUI:Notify({Title = "ChatWindow", Content = "💬 ATIVADO! Clique no botão 💬 do Roblox"}) 
+        WindUI:Notify({Title = "ChatWindow", Content = "💬 ATIVADO!"}) 
     else 
         DesativarChatWindow()
-        WindUI:Notify({Title = "ChatWindow", Content = "💬 DESATIVADO! Chat nativo restaurado!"}) 
+        WindUI:Notify({Title = "ChatWindow", Content = "💬 DESATIVADO!"}) 
     end
 end})
 OutrosTab:Section({Title = "📷 FOV da Camera"})
@@ -1485,7 +1476,7 @@ AdminTab:Button({Title = "!res (nome ou all)", Desc = "Respawna na base", Callba
 AdminTab:Button({Title = "!re (nome ou all)", Desc = "Respawna no mesmo lugar", Callback = function() end})
 AdminTab:Button({Title = "!explode / !ex (nome)", Desc = "Explode o jogador", Callback = function() end})
 AdminTab:Button({Title = "!noclip / !nc", Desc = "Ativa/Desativa NoClip", Callback = function() end})
-AdminTab:Button({Title = "!noclipoff / !ncoff", Desc = "Desativa o NoClip forçadamente", Callback = function() end})
+AdminTab:Button({Title = "!noclipoff / !ncoff", Desc = "Desativa o NoClip", Callback = function() end})
 AdminTab:Button({Title = "!fly / !f", Desc = "Ativa/Desativa voo", Callback = function() end})
 AdminTab:Button({Title = "!view / !vw (nome)", Desc = "Observa o jogador", Callback = function() end})
 AdminTab:Button({Title = "!unview / !uv", Desc = "Para de observar", Callback = function() end})
@@ -1665,7 +1656,4 @@ end})
 
 Window:SelectTab(1)
 print("✅ Noxys Hub v5.0 FINAL - 100% Funcional!")
-print("👻 NoClip: !noclip / !nc | Desativar: !noclipoff / !ncoff")
-print("💻 CmdBar: !cmd | 💬 ChatWindow: Restaura nativo")
-print("🕊️ Fly: !fly | ⭐ Admin: !admin")
-print("=":rep(50))
+print("👻 !noclip | ❌ !noclipoff | 🕊️ !fly | 💻 !cmd | ⭐ !admin")
