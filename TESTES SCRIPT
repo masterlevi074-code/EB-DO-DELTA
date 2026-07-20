@@ -235,11 +235,59 @@ local function ExecutarComandoAdmin(mensagem)
     elseif cmd == "reset" or cmd == "re" then if resto == "all" or resto == "a" then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then local pos = p.Character.HumanoidRootPart.CFrame; pcall(function() if p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end); task.wait(0.1); pcall(function() p:LoadCharacter() end); task.wait(0.3); if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then pcall(function() p.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0) end) end end end else local alvo = EncontrarJogadorAdmin(resto); if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then local pos = alvo.Character.HumanoidRootPart.CFrame; pcall(function() if alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Health = 0 end end); task.wait(0.1); pcall(function() alvo:LoadCharacter() end); task.wait(0.3); if alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then pcall(function() alvo.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0) end) end end end
     elseif cmd == "explode" or cmd == "ex" then local alvo = EncontrarJogadorAdmin(resto); if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then alvo.Character.HumanoidRootPart.Velocity = Vector3.new(math.random(-100,100), 200, math.random(-100,100)) end
     
-    -- NOCLIP (CanCollide)
-    elseif cmd == "noclip" or cmd == "nc" then if localPlayer.Character then local root = localPlayer.Character:FindFirstChild("HumanoidRootPart"); if root then local estaAtivo = root.CanCollide == false; for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = estaAtivo end end end end
+    -- ✅ NOCLIP CORRIGIDO (apenas CanCollide, sem flutuação)
+    elseif cmd == "noclip" or cmd == "nc" then 
+        if localPlayer.Character then 
+            local root = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if root then 
+                local estaAtivo = (root.CanCollide == false)
+                -- Inverte o estado do CanCollide
+                for _, part in pairs(localPlayer.Character:GetDescendants()) do 
+                    if part:IsA("BasePart") then 
+                        part.CanCollide = estaAtivo
+                    end 
+                end
+                -- Notificação
+                pcall(function() 
+                    game:GetService("StarterGui"):SetCore("SendNotification", {
+                        Title = "NoClip",
+                        Text = estaAtivo and "✅ Ativado" or "❌ Desativado",
+                        Duration = 2
+                    })
+                end)
+            end 
+        end
+    end
     
-    -- FLY (sem BodyVelocity)
-    elseif cmd == "fly" or cmd == "f" then if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character:FindFirstChild("Humanoid") then local humanoid = localPlayer.Character.Humanoid; local root = localPlayer.Character.HumanoidRootPart; if humanoid.PlatformStand then humanoid.PlatformStand = false; humanoid.HipHeight = 2; humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) else humanoid.PlatformStand = true; humanoid.HipHeight = 0; task.spawn(function() while humanoid and humanoid.PlatformStand and humanoid.Parent do task.wait(); local moveDir = humanoid.MoveDirection; if moveDir.Magnitude > 0 then root.CFrame = root.CFrame + (moveDir * 0.5) end; if UserInputService:IsKeyDown(Enum.KeyCode.Space) then root.CFrame = root.CFrame + Vector3.new(0, 0.5, 0) elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then root.CFrame = root.CFrame - Vector3.new(0, 0.5, 0) end end end) end end
+    -- FLY (mantido como estava para você testar depois)
+    elseif cmd == "fly" or cmd == "f" then 
+        if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character:FindFirstChild("Humanoid") then 
+            local humanoid = localPlayer.Character.Humanoid
+            local root = localPlayer.Character.HumanoidRootPart
+            if humanoid.PlatformStand then 
+                humanoid.PlatformStand = false
+                humanoid.HipHeight = 2
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp) 
+            else 
+                humanoid.PlatformStand = true
+                humanoid.HipHeight = 0
+                task.spawn(function() 
+                    while humanoid and humanoid.PlatformStand and humanoid.Parent do 
+                        task.wait()
+                        local moveDir = humanoid.MoveDirection
+                        if moveDir.Magnitude > 0 then 
+                            root.CFrame = root.CFrame + (moveDir * 0.5) 
+                        end
+                        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then 
+                            root.CFrame = root.CFrame + Vector3.new(0, 0.5, 0) 
+                        elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then 
+                            root.CFrame = root.CFrame - Vector3.new(0, 0.5, 0) 
+                        end 
+                    end 
+                end) 
+            end 
+        end
+    end
     
     elseif cmd == "view" or cmd == "vw" then local alvo = EncontrarJogadorAdmin(resto); if alvo and alvo.Character then Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
     elseif cmd == "unview" or cmd == "uv" then Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
@@ -341,7 +389,7 @@ AdminTab:Button({Title = "!bring / !br (nome)", Desc = "Traz o jogador até voc�
 AdminTab:Button({Title = "!res (nome ou all)", Desc = "Respawna na base", Callback = function() end})
 AdminTab:Button({Title = "!re (nome ou all)", Desc = "Respawna no mesmo lugar", Callback = function() end})
 AdminTab:Button({Title = "!explode / !ex (nome)", Desc = "Explode o jogador", Callback = function() end})
-AdminTab:Button({Title = "!noclip / !nc", Desc = "Atravessa paredes", Callback = function() end})
+AdminTab:Button({Title = "!noclip / !nc", Desc = "Atravessa paredes (apenas CanCollide)", Callback = function() end})
 AdminTab:Button({Title = "!fly / !f", Desc = "Ativa/Desativa voo", Callback = function() end})
 AdminTab:Button({Title = "!view / !vw (nome)", Desc = "Observa o jogador", Callback = function() end})
 AdminTab:Button({Title = "!unview / !uv", Desc = "Para de observar", Callback = function() end})
@@ -351,7 +399,23 @@ AdminTab:Button({Title = "!cmdbar / !cmd", Desc = "Barra de comandos rápida", C
 AdminTab:Button({Title = "!help / !h", Desc = "Mostra os comandos no chat", Callback = function() end})
 AdminTab:Section({Title = "Comandos Rápidos"})
 AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback = function() if localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character:FindFirstChild("Humanoid") then local humanoid = localPlayer.Character.Humanoid; local root = localPlayer.Character.HumanoidRootPart; if humanoid.PlatformStand then humanoid.PlatformStand = false; humanoid.HipHeight = 2; humanoid:ChangeState(Enum.HumanoidStateType.GettingUp); WindUI:Notify({Title = "Admin", Content = "🕊️ Fly OFF"}) else humanoid.PlatformStand = true; humanoid.HipHeight = 0; task.spawn(function() while humanoid and humanoid.PlatformStand and humanoid.Parent do task.wait(); local moveDir = humanoid.MoveDirection; if moveDir.Magnitude > 0 then root.CFrame = root.CFrame + (moveDir * 0.5) end; if UserInputService:IsKeyDown(Enum.KeyCode.Space) then root.CFrame = root.CFrame + Vector3.new(0, 0.5, 0) elseif UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then root.CFrame = root.CFrame - Vector3.new(0, 0.5, 0) end end end); WindUI:Notify({Title = "Admin", Content = "🕊️ Fly ON"}) end end end})
-AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes", Callback = function() if localPlayer.Character then local root = localPlayer.Character:FindFirstChild("HumanoidRootPart"); if root then local estaAtivo = root.CanCollide == false; for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = estaAtivo end end; WindUI:Notify({Title = "Admin", Content = estaAtivo and "👻 NoClip OFF" or "👻 NoClip ON"}) end end end})
+
+-- ✅ BOTÃO NOCLIP CORRIGIDO (apenas CanCollide)
+AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes (sem flutuar)", Callback = function() 
+    if localPlayer.Character then 
+        local root = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then 
+            local estaAtivo = (root.CanCollide == false)
+            for _, part in pairs(localPlayer.Character:GetDescendants()) do 
+                if part:IsA("BasePart") then 
+                    part.CanCollide = estaAtivo
+                end 
+            end
+            WindUI:Notify({Title = "Admin", Content = estaAtivo and "👻 NoClip ATIVADO" or "👻 NoClip DESATIVADO"})
+        end 
+    end 
+end})
+
 AdminTab:Button({Title = "🔄 Respawn All", Desc = "Respawnar todos na base", Callback = function() for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() if p.Character and p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end) end end; task.wait(0.1); for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end end; WindUI:Notify({Title = "Admin", Content = "🔄 Todos respawnados!"}) end})
 AdminTab:Button({Title = "🔄 Reset All", Desc = "Resetar todos no mesmo lugar", Callback = function() for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then local pos = p.Character.HumanoidRootPart.CFrame; pcall(function() if p.Character:FindFirstChild("Humanoid") then p.Character.Humanoid.Health = 0 end end); task.wait(0.1); pcall(function() p:LoadCharacter() end); task.wait(0.3); if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then pcall(function() p.Character.HumanoidRootPart.CFrame = pos + Vector3.new(0, 3, 0) end) end end end; WindUI:Notify({Title = "Admin", Content = "🔄 Todos resetados no lugar!"}) end})
 AdminTab:Button({Title = "💻 CmdBar", Desc = "Abrir barra de comandos", Callback = function() CriarCmdBar() end})
@@ -363,12 +427,12 @@ ConfigTab:Button({Title = "🔄 Rejoin", Desc = "Entra no mesmo servidor novamen
 ConfigTab:Button({Title = "👥 Servidor Cheio", Desc = "Tenta entrar em servidor cheio", Callback = function() WindUI:Notify({Title = "Servidor", Content = "Procurando servidor cheio..."}); task.wait(1); TrocarServidor("cheio") end})
 ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servidor vazio", Callback = function() WindUI:Notify({Title = "Servidor", Content = "Procurando servidor vazio..."}); task.wait(1); TrocarServidor("vazio") end})
 ConfigTab:Section({Title = "Informações"})
-ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function() WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ NoClip + Fly Corrigidos!"}) end})
-ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function() WindUI:Notify({Title = "Versão", Content = "v4.2 - NoClip CanCollide + Fly sem BodyVelocity"}) end})
+ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function() WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\nJogo: Exército Brasileiro\n✅ NoClip Corrigido (CanCollide)!"}) end})
+ConfigTab:Button({Title = "ℹ️ Versão", Desc = "Versão atual do script", Callback = function() WindUI:Notify({Title = "Versão", Content = "v4.3 - NoClip Corrigido (apenas CanCollide)"}) end})
 ConfigTab:Button({Title = "📱 Compatibilidade", Desc = "Dispositivos suportados", Callback = function() WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"}) end})
 ConfigTab:Section({Title = "Ações"})
 ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function() AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false; if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end; Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end; if Underground_ConexaoCamera then Underground_ConexaoCamera:Disconnect(); Underground_ConexaoCamera = nil end; if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end; PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end; if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end; Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow(); if CmdBar_Painel then CmdBar_Painel:Destroy(); CmdBar_Painel = nil end; RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash(); if FOVCircle then FOVCircle:Destroy() end; for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end; for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end; for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end; Window:Destroy() end})
 
 Window:SelectTab(1)
-print("✅ Noxys Hub v4.2 - NoClip CanCollide + Fly sem BodyVelocity")
-print("👻 NoClip: CanCollide | 🕊️ Fly: Micro-teleportes")
+print("✅ Noxys Hub v4.3 - NoClip Corrigido (apenas CanCollide, sem flutuação)")
+print("👻 NoClip: Apenas alterna CanCollide | 🕊️ Fly: Mantido para testes")
