@@ -94,10 +94,6 @@ local Admin_Prefixo = "!"
 local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
 
--- STREAMER MODE
-local StreamerMode_Ativado = false
-local TelasEscondidas = {}
-
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -1082,13 +1078,15 @@ local function DesativarChatWindow()
         local StarterGui = game:GetService("StarterGui")
         local TextChatService = game:GetService("TextChatService")
         
-        -- Fecha o chat primeiro
+        -- FECHA o chat
         local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
         if windowConfig then
             windowConfig.Enabled = false
         end
         
-        -- Cria novas conexões nativas
+        task.wait(0.1)
+        
+        -- Restaura conexões nativas
         local novasConexoes = {}
         novasConexoes.ChatWindow = {}
         
@@ -1135,7 +1133,7 @@ end)
 
 if not WindUI then
     warn("❌ Não foi possível carregar a WindUI.")
-    print("⚠️ Comandos do chat disponíveis: !admin + !noclip / !fly / !cmd")
+    print("⚠️ Comandos do chat: !admin + !noclip / !fly / !cmd")
     return
 end
 
@@ -1378,7 +1376,7 @@ OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa",
     end
 end})
 OutrosTab:Section({Title = "🎫 Passe Livre"})
-OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área", Default = false, Callback = function(v)
+OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na área (Raio: 3 studs)", Default = false, Callback = function(v)
     PasseLivre_Ativado = v
     if v then
         if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
@@ -1428,14 +1426,14 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
 end})
 OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t) local n = tonumber(t) if n and n > 0 then PasseLivre_Raio = n; WindUI:Notify({Title = "Passe Livre", Content = "Raio: " .. n .. " studs"}) end end})
 OutrosTab:Section({Title = "💬 ChatWindow"})
-OutrosTab:Toggle({Title = "Ativar ChatWindow", Desc = "Mostra histórico global do chat", Default = false, Callback = function(v)
+OutrosTab:Toggle({Title = "Ativar ChatWindow", Desc = "Mostra histórico global do chat (estilo Infinite Yield)", Default = false, Callback = function(v)
     ChatWindow_Ativado = v
     if v then 
         AtivarChatWindow()
-        WindUI:Notify({Title = "ChatWindow", Content = "💬 ATIVADO!"}) 
+        WindUI:Notify({Title = "ChatWindow", Content = "💬 ChatWindow ATIVADO!"}) 
     else 
         DesativarChatWindow()
-        WindUI:Notify({Title = "ChatWindow", Content = "💬 DESATIVADO!"}) 
+        WindUI:Notify({Title = "ChatWindow", Content = "💬 ChatWindow DESATIVADO!"}) 
     end
 end})
 OutrosTab:Section({Title = "📷 FOV da Camera"})
@@ -1481,8 +1479,8 @@ AdminTab:Button({Title = "!bring / !br (nome)", Desc = "Traz o jogador até voc�
 AdminTab:Button({Title = "!res (nome ou all)", Desc = "Respawna na base", Callback = function() end})
 AdminTab:Button({Title = "!re (nome ou all)", Desc = "Respawna no mesmo lugar", Callback = function() end})
 AdminTab:Button({Title = "!explode / !ex (nome)", Desc = "Explode o jogador", Callback = function() end})
-AdminTab:Button({Title = "!noclip / !nc", Desc = "Ativa/Desativa NoClip", Callback = function() end})
-AdminTab:Button({Title = "!noclipoff / !ncoff", Desc = "Desativa o NoClip", Callback = function() end})
+AdminTab:Button({Title = "!noclip / !nc", Desc = "Atravessa paredes", Callback = function() end})
+AdminTab:Button({Title = "!noclipoff / !ncoff", Desc = "Desativa o NoClip forçadamente", Callback = function() end})
 AdminTab:Button({Title = "!fly / !f", Desc = "Ativa/Desativa voo", Callback = function() end})
 AdminTab:Button({Title = "!view / !vw (nome)", Desc = "Observa o jogador", Callback = function() end})
 AdminTab:Button({Title = "!unview / !uv", Desc = "Para de observar", Callback = function() end})
@@ -1521,7 +1519,7 @@ AdminTab:Button({Title = "🕊️ Fly", Desc = "Ativar/Desativar voo", Callback 
         end
     end
 end})
-AdminTab:Button({Title = "👻 NoClip", Desc = "Ativar/Desativar NoClip", Callback = function()
+AdminTab:Button({Title = "👻 NoClip", Desc = "Atravessar paredes", Callback = function()
     if localPlayer.Character then
         local char = localPlayer.Character
         local root = char:FindFirstChild("HumanoidRootPart")
@@ -1605,10 +1603,10 @@ ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servido
 end})
 ConfigTab:Section({Title = "ℹ️ Informações"})
 ConfigTab:Button({Title = "👤 Créditos", Desc = "Quem fez o script", Callback = function()
-    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ v5.0 Final!"})
+    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ NoClip + Fly Corrigidos!"})
 end})
 ConfigTab:Button({Title = "📌 Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v5.0 - Completa e Corrigida"})
+    WindUI:Notify({Title = "Versão", Content = "v4.2 - NoClip CanCollide + Fly sem BodyVelocity"})
 end})
 ConfigTab:Button({Title = "📱 Dispositivos", Desc = "Aparelhos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -1663,3 +1661,4 @@ end})
 Window:SelectTab(1)
 print("✅ Noxys Hub v5.0 FINAL - 100% Funcional!")
 print("👻 !noclip | ❌ !noclipoff | 🕊️ !fly | 💻 !cmd | ⭐ !admin")
+print("=":rep(50))
