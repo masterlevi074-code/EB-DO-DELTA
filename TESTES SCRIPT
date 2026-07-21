@@ -636,7 +636,112 @@ local function EncontrarJogadorAdmin(nome)
 end
 
 -- ==========================================
--- EXECUTAR COMANDO ADMIN (DEFINIDA PRIMEIRO)
+-- FUNÇÃO PARA ABRIR A COMMAND BAR (Única definição)
+-- ==========================================
+local function AbrirCmdBar()
+    if CoreGui:FindFirstChild("CmdBarGUI") then
+        CoreGui.CmdBarGUI:Destroy()
+        return
+    end
+    
+    local painel = Instance.new("ScreenGui")
+    painel.Name = "CmdBarGUI"
+    painel.Parent = CoreGui
+    
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 350, 0, 120)
+    frame.Position = UDim2.new(0.5, -175, 0.3, -60)
+    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    frame.BorderSizePixel = 0
+    frame.Active = true
+    frame.Draggable = true
+    frame.Parent = painel
+    
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    Instance.new("UIStroke", frame).Thickness = 1.5
+    
+    local titulo = Instance.new("TextLabel")
+    titulo.Size = UDim2.new(1, 0, 0, 30)
+    titulo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+    titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: " .. (Admin_Ativado and "✅" or "❌")
+    titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titulo.Font = Enum.Font.SourceSansBold
+    titulo.TextSize = 12
+    titulo.Parent = frame
+    
+    Instance.new("UICorner", titulo).CornerRadius = UDim.new(0, 10)
+    
+    local fechar = Instance.new("TextButton")
+    fechar.Size = UDim2.new(0, 25, 0, 25)
+    fechar.Position = UDim2.new(1, -30, 0, 3)
+    fechar.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    fechar.Text = "✕"
+    fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    fechar.Font = Enum.Font.SourceSansBold
+    fechar.TextSize = 14
+    fechar.Parent = frame
+    
+    Instance.new("UICorner", fechar).CornerRadius = UDim.new(1, 0)
+    fechar.MouseButton1Click:Connect(function()
+        painel:Destroy()
+    end)
+    
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(1, -20, 0, 35)
+    input.Position = UDim2.new(0, 10, 0, 40)
+    input.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    input.TextColor3 = Color3.fromRGB(255, 255, 255)
+    input.PlaceholderText = "Digite o comando (ex: noclip, fly, to Nome)..."
+    input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+    input.Font = Enum.Font.Code
+    input.TextSize = 12
+    input.Parent = frame
+    
+    Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
+    
+    local executar = Instance.new("TextButton")
+    executar.Size = UDim2.new(1, -20, 0, 30)
+    executar.Position = UDim2.new(0, 10, 0, 80)
+    executar.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    executar.Text = "▶ EXECUTAR"
+    executar.TextColor3 = Color3.fromRGB(255, 255, 255)
+    executar.Font = Enum.Font.SourceSansBold
+    executar.TextSize = 11
+    executar.Parent = frame
+    
+    Instance.new("UICorner", executar).CornerRadius = UDim.new(0, 6)
+    
+    local function executarCmd()
+        local texto = input.Text
+        if texto ~= "" then
+            if not Admin_Ativado then
+                Admin_Ativado = true
+                titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: ✅"
+            end
+            if not texto:sub(1, #Admin_Prefixo) == Admin_Prefixo then
+                texto = Admin_Prefixo .. texto
+            end
+            pcall(function()
+                ExecutarComandoAdmin(texto)
+            end)
+            input.Text = ""
+            input.PlaceholderText = "✅ Comando executado! Digite outro..."
+            task.wait(1)
+            input.PlaceholderText = "Digite o comando (ex: noclip, fly, to Nome)..."
+        end
+    end
+    
+    executar.MouseButton1Click:Connect(executarCmd)
+    input.FocusLost:Connect(function(enterPressed)
+        if enterPressed then executarCmd() end
+    end)
+    
+    task.wait(0.1)
+    input:CaptureFocus()
+end
+
+-- ==========================================
+-- EXECUTAR COMANDO ADMIN
 -- ==========================================
 local function ExecutarComandoAdmin(mensagem)
     if not Admin_Ativado then return end
@@ -842,148 +947,8 @@ local function ExecutarComandoAdmin(mensagem)
             alvo.Character.Humanoid.Jump = true
         end
     elseif cmd == "cmdbar" or cmd == "cmd" then
-        CriarCmdBar()
+        AbrirCmdBar()
     end
-end
-
--- ==========================================
--- CMD BAR (DEFINIDA DEPOIS)
--- ==========================================
-local CmdBar_Painel = nil
-
-function CriarCmdBar()
-    if CmdBar_Painel then
-        CmdBar_Painel:Destroy()
-        CmdBar_Painel = nil
-        return
-    end
-    
-    local painel = Instance.new("ScreenGui")
-    painel.Name = "CmdBarGUI"
-    painel.Parent = CoreGui
-    
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, 350, 0, 120)
-    frame.Position = UDim2.new(0.5, -175, 0.3, -60)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    frame.BorderSizePixel = 0
-    frame.Active = true
-    frame.Draggable = true
-    frame.Parent = painel
-    
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
-    Instance.new("UIStroke", frame).Thickness = 1.5
-    
-    local titulo = Instance.new("TextLabel")
-    titulo.Size = UDim2.new(1, 0, 0, 30)
-    titulo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: " .. (Admin_Ativado and "✅" or "❌")
-    titulo.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titulo.Font = Enum.Font.SourceSansBold
-    titulo.TextSize = 12
-    titulo.Parent = frame
-    
-    Instance.new("UICorner", titulo).CornerRadius = UDim.new(0, 10)
-    
-    local fechar = Instance.new("TextButton")
-    fechar.Size = UDim2.new(0, 25, 0, 25)
-    fechar.Position = UDim2.new(1, -30, 0, 3)
-    fechar.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    fechar.Text = "✕"
-    fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    fechar.Font = Enum.Font.SourceSansBold
-    fechar.TextSize = 14
-    fechar.Parent = frame
-    
-    Instance.new("UICorner", fechar).CornerRadius = UDim.new(1, 0)
-    fechar.MouseButton1Click:Connect(function()
-        painel:Destroy()
-        CmdBar_Painel = nil
-    end)
-    
-    local input = Instance.new("TextBox")
-    input.Size = UDim2.new(1, -20, 0, 35)
-    input.Position = UDim2.new(0, 10, 0, 40)
-    input.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-    input.TextColor3 = Color3.fromRGB(255, 255, 255)
-    input.PlaceholderText = "Digite o comando (ex: noclip, fly, to Nome)..."
-    input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-    input.Font = Enum.Font.Code
-    input.TextSize = 12
-    input.Parent = frame
-    
-    Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
-    
-    local botoesFrame = Instance.new("Frame")
-    botoesFrame.Size = UDim2.new(1, -20, 0, 35)
-    botoesFrame.Position = UDim2.new(0, 10, 0, 78)
-    botoesFrame.BackgroundTransparency = 1
-    botoesFrame.Parent = frame
-    
-    local executar = Instance.new("TextButton")
-    executar.Size = UDim2.new(0.7, -5, 1, 0)
-    executar.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-    executar.Text = "▶ EXECUTAR"
-    executar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    executar.Font = Enum.Font.SourceSansBold
-    executar.TextSize = 11
-    executar.Parent = botoesFrame
-    
-    Instance.new("UICorner", executar).CornerRadius = UDim.new(0, 6)
-    
-    local ativarAdmin = Instance.new("TextButton")
-    ativarAdmin.Size = UDim2.new(0.3, -5, 1, 0)
-    ativarAdmin.Position = UDim2.new(0.7, 10, 0, 0)
-    ativarAdmin.BackgroundColor3 = Admin_Ativado and Color3.fromRGB(200, 50, 50) or Color3.fromRGB(0, 120, 255)
-    ativarAdmin.Text = Admin_Ativado and "DESATIVAR" or "ATIVAR ADMIN"
-    ativarAdmin.TextColor3 = Color3.fromRGB(255, 255, 255)
-    ativarAdmin.Font = Enum.Font.SourceSansBold
-    ativarAdmin.TextSize = 10
-    ativarAdmin.Parent = botoesFrame
-    
-    Instance.new("UICorner", ativarAdmin).CornerRadius = UDim.new(0, 6)
-    
-    local function ExecutarComandoCmdBar()
-        local texto = input.Text
-        if texto ~= "" then
-            if not Admin_Ativado then
-                Admin_Ativado = true
-                ativarAdmin.Text = "DESATIVAR"
-                ativarAdmin.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-                titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: ✅"
-            end
-            
-            if not texto:sub(1, #Admin_Prefixo) == Admin_Prefixo then
-                texto = Admin_Prefixo .. texto
-            end
-            
-            ExecutarComandoAdmin(texto)
-            
-            input.PlaceholderText = "✅ Comando executado! Digite outro..."
-            input.Text = ""
-            task.wait(1)
-            input.PlaceholderText = "Digite o comando (ex: noclip, fly, to Nome)..."
-        end
-    end
-    
-    executar.MouseButton1Click:Connect(ExecutarComandoCmdBar)
-    
-    ativarAdmin.MouseButton1Click:Connect(function()
-        Admin_Ativado = not Admin_Ativado
-        ativarAdmin.Text = Admin_Ativado and "DESATIVAR" or "ATIVAR ADMIN"
-        ativarAdmin.BackgroundColor3 = Admin_Ativado and Color3.fromRGB(200, 50, 50) or Color3.fromRGB(0, 120, 255)
-        titulo.Text = "💻 COMMAND BAR | Prefixo: " .. Admin_Prefixo .. " | Admin: " .. (Admin_Ativado and "✅" or "❌")
-    end)
-    
-    input.FocusLost:Connect(function(enterPressed)
-        if enterPressed then 
-            ExecutarComandoCmdBar() 
-        end
-    end)
-    
-    task.wait(0.1)
-    input:CaptureFocus()
-    CmdBar_Painel = painel
 end
 
 task.spawn(function()
@@ -1572,7 +1537,7 @@ AdminTab:Button({Title = "🔄 Reset All", Desc = "Resetar todos no mesmo lugar"
     end
     WindUI:Notify({Title = "Admin", Content = "🔄 Todos resetados no lugar!"})
 end})
-AdminTab:Button({Title = "💻 CmdBar", Desc = "Abrir barra de comandos", Callback = function() CriarCmdBar() end})
+AdminTab:Button({Title = "💻 CmdBar", Desc = "Abrir barra de comandos", Callback = function() AbrirCmdBar() end})
 
 -- ==========================================
 -- UI - CONFIGS
@@ -1596,10 +1561,10 @@ ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servido
 end})
 ConfigTab:Section({Title = "ℹ️ Informações"})
 ConfigTab:Button({Title = "👤 Créditos", Desc = "Quem fez o script", Callback = function()
-    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ NoClip + Fly Corrigidos!"})
+    WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ v5.1 Final Corrigida!"})
 end})
 ConfigTab:Button({Title = "📌 Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v5.0 - Final Corrigida"})
+    WindUI:Notify({Title = "Versão", Content = "v5.1 - CmdBar Corrigida"})
 end})
 ConfigTab:Button({Title = "📱 Dispositivos", Desc = "Aparelhos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -1627,7 +1592,7 @@ ConfigTab:Button({Title = "💀 Destruir Tudo", Desc = "Remove tudo e fecha o pa
     Admin_Ativado = false
     ChatWindow_Ativado = false
     DesativarChatWindow()
-    if CmdBar_Painel then CmdBar_Painel:Destroy(); CmdBar_Painel = nil end
+    if CoreGui:FindFirstChild("CmdBarGUI") then CoreGui.CmdBarGUI:Destroy() end
     RemoveHitboxes()
     DestruirPainelJJ()
     RemoverBotaoDash()
@@ -1652,6 +1617,6 @@ ConfigTab:Button({Title = "💀 Destruir Tudo", Desc = "Remove tudo e fecha o pa
 end})
 
 Window:SelectTab(1)
-print("✅ Noxys Hub v5.0 - PRONTO!")
+print("✅ Noxys Hub v5.1 - PRONTO!")
 print("👻 !noclip | ❌ !noclipoff | 🕊️ !fly | 💻 !cmd | ⭐ !admin")
 print("=":rep(50))
