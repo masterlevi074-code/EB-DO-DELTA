@@ -94,6 +94,10 @@ local Admin_Prefixo = "!"
 local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
 
+-- STREAMER MODE
+local StreamerMode_Ativado = false
+local TelasEscondidas = {}
+
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -1078,6 +1082,13 @@ local function DesativarChatWindow()
         local StarterGui = game:GetService("StarterGui")
         local TextChatService = game:GetService("TextChatService")
         
+        -- Fecha o chat primeiro
+        local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
+        if windowConfig then
+            windowConfig.Enabled = false
+        end
+        
+        -- Cria novas conexões nativas
         local novasConexoes = {}
         novasConexoes.ChatWindow = {}
         
@@ -1094,27 +1105,22 @@ local function DesativarChatWindow()
         novasConexoes.ChatWindow.VisibilityStateChanged = visibilityChangedEvent
         
         toggleEvent.Event:Connect(function()
-            local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
-            if windowConfig then
-                windowConfig.Enabled = not windowConfig.Enabled
-                visibilityChangedEvent:Fire(windowConfig.Enabled)
+            local wc = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
+            if wc then
+                wc.Enabled = not wc.Enabled
+                visibilityChangedEvent:Fire(wc.Enabled)
             end
         end)
         
         setVisibleEvent.Event:Connect(function(visible)
-            local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
-            if windowConfig then
-                windowConfig.Enabled = visible
+            local wc = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
+            if wc then
+                wc.Enabled = visible
                 visibilityChangedEvent:Fire(visible)
             end
         end)
         
         StarterGui:SetCore("CoreGuiChatConnections", novasConexoes)
-        
-        local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
-        if windowConfig then
-            windowConfig.Enabled = true
-        end
     end)
 end
 
