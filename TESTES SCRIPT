@@ -636,7 +636,12 @@ local function EncontrarJogadorAdmin(nome)
 end
 
 -- ==========================================
--- CMD BAR (DEFINIDA PRIMEIRO)
+-- DECLARAÇÃO ANTECIPADA
+-- ==========================================
+local ExecutarComandoAdmin
+
+-- ==========================================
+-- CMD BAR
 -- ==========================================
 local CmdBar_Painel = nil
 
@@ -782,7 +787,7 @@ end
 -- ==========================================
 -- EXECUTAR COMANDO ADMIN
 -- ==========================================
-local function ExecutarComandoAdmin(mensagem)
+ExecutarComandoAdmin = function(mensagem)
     if not Admin_Ativado then return end
     if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
     
@@ -1078,7 +1083,6 @@ local function DesativarChatWindow()
         local StarterGui = game:GetService("StarterGui")
         local TextChatService = game:GetService("TextChatService")
         
-        -- FECHA o chat
         local windowConfig = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration")
         if windowConfig then
             windowConfig.Enabled = false
@@ -1086,7 +1090,6 @@ local function DesativarChatWindow()
         
         task.wait(0.1)
         
-        -- Restaura conexões nativas
         local novasConexoes = {}
         novasConexoes.ChatWindow = {}
         
@@ -1606,7 +1609,7 @@ ConfigTab:Button({Title = "👤 Créditos", Desc = "Quem fez o script", Callback
     WindUI:Notify({Title = "Noxys Hub", Content = "Criado por: Noahzin\nBiblioteca: WindUI\n✅ NoClip + Fly Corrigidos!"})
 end})
 ConfigTab:Button({Title = "📌 Versão", Desc = "Versão atual do script", Callback = function()
-    WindUI:Notify({Title = "Versão", Content = "v4.2 - NoClip CanCollide + Fly sem BodyVelocity"})
+    WindUI:Notify({Title = "Versão", Content = "v5.0 - Final Corrigida"})
 end})
 ConfigTab:Button({Title = "📱 Dispositivos", Desc = "Aparelhos suportados", Callback = function()
     WindUI:Notify({Title = "Compatibilidade", Content = "✅ PC\n✅ Mobile\n✅ Tablet"})
@@ -1659,6 +1662,6 @@ ConfigTab:Button({Title = "💀 Destruir Tudo", Desc = "Remove tudo e fecha o pa
 end})
 
 Window:SelectTab(1)
-print("✅ Noxys Hub v5.0 FINAL - 100% Funcional!")
+print("✅ Noxys Hub v5.0 - PRONTO!")
 print("👻 !noclip | ❌ !noclipoff | 🕊️ !fly | 💻 !cmd | ⭐ !admin")
 print("=":rep(50))
