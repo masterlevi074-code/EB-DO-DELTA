@@ -668,19 +668,6 @@ function NoxysUI:CreateWindow(config)
         Parent = barraTitulo,
     })
     adicionarCanto(botaoMinimizar, 14)
-    botaoMinimizar.MouseButton1Click:Connect(function()
-        local conteudo = janela:FindFirstChild("Conteudo")
-        if conteudo then
-            conteudo.Visible = not conteudo.Visible
-            if conteudo.Visible then
-                botaoMinimizar.Text = "—"
-                sombra.Size = tamanhoJanela
-            else
-                botaoMinimizar.Text = "□"
-                sombra.Size = UDim2.new(tamanhoJanela.X.Scale, tamanhoJanela.X.Offset, 0, barraTitulo.AbsoluteSize.Y + 4)
-            end
-        end
-    end)
 
     -- Botão fechar
     local botaoFechar = criarInstancia("TextButton", {
@@ -695,9 +682,6 @@ function NoxysUI:CreateWindow(config)
         Parent = barraTitulo,
     })
     adicionarCanto(botaoFechar, 14)
-    botaoFechar.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
 
     -- Área de conteúdo
     local areaConteudo = criarInstancia("Frame", {
@@ -883,7 +867,7 @@ function NoxysUI:CreateWindow(config)
         screenGui:Destroy()
     end
 
-    -- Implementação do arrasto manual (funciona para mouse e touch)
+    -- Implementação do arrasto manual (corrigido)
     local arrastando = false
     local offsetDrag = Vector2.new(0, 0)
 
@@ -891,8 +875,13 @@ function NoxysUI:CreateWindow(config)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             arrastando = true
             local posMouse = UserInputService:GetMouseLocation()
+            -- Obter posição do canto superior esquerdo da sombra
             local posJanela = sombra.AbsolutePosition
             offsetDrag = Vector2.new(posMouse.X - posJanela.X, posMouse.Y - posJanela.Y)
+            -- Mudar AnchorPoint para (0,0) e ajustar Position para manter a posição visual
+            local absPos = sombra.AbsolutePosition
+            sombra.AnchorPoint = Vector2.new(0, 0)
+            sombra.Position = UDim2.new(0, absPos.X, 0, absPos.Y)
         end
     end)
 
@@ -908,6 +897,54 @@ function NoxysUI:CreateWindow(config)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             arrastando = false
         end
+    end)
+
+    -- Função para minimizar (esconde janela e fundo, mostra botão flutuante)
+    local botaoMinimizado = nil -- será criado quando minimizar
+    local function Minimizar()
+        sombra.Visible = false
+        fundo.Visible = false
+        
+        -- Criar botão flutuante pequeno
+        if not botaoMinimizado then
+            botaoMinimizado = criarInstancia("TextButton", {
+                Size = UDim2.fromOffset(56, 56),
+                Position = UDim2.new(0.9, 0, 0.8, 0),
+                BackgroundColor3 = Cores.Destaque,
+                Text = "🛡️",
+                TextColor3 = Cores.Branco,
+                Font = FonteTitulo,
+                TextSize = 24,
+                BorderSizePixel = 0,
+                Parent = screenGui,
+                Draggable = true, -- permite arrastar o botão
+            })
+            adicionarCanto(botaoMinimizado, 28)
+            adicionarBorda(botaoMinimizado, Cores.Branco, 2)
+            
+            -- Animação sutil de escala
+            botaoMinimizado.Size = UDim2.fromOffset(0, 0)
+            botaoMinimizado:TweenSize(UDim2.fromOffset(56, 56), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+            
+            botaoMinimizado.MouseButton1Click:Connect(function()
+                -- Maximizar: mostrar janela e fundo, destruir botão
+                sombra.Visible = true
+                fundo.Visible = true
+                -- Restaurar AnchorPoint e posição central? Melhor deixar onde estava
+                if botaoMinimizado then
+                    botaoMinimizado:Destroy()
+                    botaoMinimizado = nil
+                end
+            end)
+        else
+            botaoMinimizado.Visible = true
+        end
+    end
+
+    botaoMinimizar.MouseButton1Click:Connect(Minimizar)
+
+    botaoFechar.MouseButton1Click:Connect(function()
+        screenGui:Destroy()
     end)
 
     return janelaObj
