@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
@@ -16,27 +17,37 @@ if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Dest
 if CoreGui:FindFirstChild("NoxysHubUI") then CoreGui.NoxysHubUI:Destroy() end
 
 -- ==========================================
--- NOX YS UI (Biblioteca de Interface - Corrigida)
+-- NOX YS UI (Biblioteca de Interface - Ultra Moderna)
 -- ==========================================
 local NoxysUI = {}
 
 local Cores = {
-    Fundo = Color3.fromRGB(22, 22, 27),
-    Fundo2 = Color3.fromRGB(32, 32, 38),
-    Fundo3 = Color3.fromRGB(42, 42, 48),
+    Fundo = Color3.fromRGB(18, 18, 24),
+    Fundo2 = Color3.fromRGB(28, 28, 36),
+    Fundo3 = Color3.fromRGB(38, 38, 48),
+    Fundo4 = Color3.fromRGB(48, 48, 60),
     Texto = Color3.fromRGB(255, 255, 255),
-    Texto2 = Color3.fromRGB(170, 170, 180),
+    Texto2 = Color3.fromRGB(160, 160, 175),
+    Texto3 = Color3.fromRGB(120, 120, 135),
     Destaque = Color3.fromRGB(0, 140, 255),
-    Destaque2 = Color3.fromRGB(0, 170, 255),
-    Verde = Color3.fromRGB(0, 200, 100),
-    Vermelho = Color3.fromRGB(255, 65, 65),
+    Destaque2 = Color3.fromRGB(0, 180, 255),
+    DestaqueSuave = Color3.fromRGB(0, 100, 200),
+    Verde = Color3.fromRGB(0, 220, 110),
+    VerdeSuave = Color3.fromRGB(0, 160, 80),
+    Vermelho = Color3.fromRGB(255, 70, 70),
+    VermelhoSuave = Color3.fromRGB(200, 50, 50),
+    Amarelo = Color3.fromRGB(255, 200, 0),
+    Laranja = Color3.fromRGB(255, 140, 0),
+    Roxo = Color3.fromRGB(140, 0, 255),
     Branco = Color3.fromRGB(255, 255, 255),
     Preto = Color3.fromRGB(0, 0, 0),
-    Sombra = Color3.fromRGB(0, 0, 0),
+    Borda = Color3.fromRGB(60, 60, 75),
+    BordaSuave = Color3.fromRGB(45, 45, 55),
 }
 
 local FontePadrao = Enum.Font.SourceSans
 local FonteTitulo = Enum.Font.SourceSansBold
+local FonteMono = Enum.Font.Code
 
 local function isMobile()
     return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
@@ -65,6 +76,19 @@ local function adicionarBorda(instancia, cor, espessura)
     return borda
 end
 
+local function criarGradiente(instancia, cor1, cor2, rotacao)
+    local gradiente = Instance.new("UIGradient")
+    gradiente.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, cor1),
+        ColorSequenceKeypoint.new(1, cor2),
+    })
+    if rotacao then
+        gradiente.Rotation = rotacao
+    end
+    gradiente.Parent = instancia
+    return gradiente
+end
+
 function NoxysUI:Notify(titulo, conteudo, duracao)
     duracao = duracao or 3
     local screenGui = Instance.new("ScreenGui")
@@ -73,16 +97,16 @@ function NoxysUI:Notify(titulo, conteudo, duracao)
     screenGui.Parent = CoreGui
 
     local frame = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(260, 70),
-        Position = UDim2.new(1, -280, 0, -100),
+        Size = UDim2.fromOffset(280, 80),
+        Position = UDim2.new(1, -300, 0, -100),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Active = true,
-        Draggable = false,
         Parent = screenGui,
     })
-    adicionarCanto(frame, 8)
-    adicionarBorda(frame, Cores.Destaque, 1.5)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.Destaque, 2)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 45)
 
     local tituloLabel = criarInstancia("TextLabel", {
         Size = UDim2.new(1, -20, 0, 22),
@@ -91,7 +115,7 @@ function NoxysUI:Notify(titulo, conteudo, duracao)
         Text = titulo,
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = 13,
+        TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
@@ -109,11 +133,11 @@ function NoxysUI:Notify(titulo, conteudo, duracao)
         Parent = frame,
     })
 
-    frame:TweenPosition(UDim2.new(1, -280, 0, 20), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+    frame:TweenPosition(UDim2.new(1, -300, 0, 20), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.4, true)
 
     task.delay(duracao, function()
-        frame:TweenPosition(UDim2.new(1, -280, 0, -100), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
-        task.wait(0.3)
+        frame:TweenPosition(UDim2.new(1, -300, 0, -100), Enum.EasingDirection.In, Enum.EasingStyle.Quart, 0.4, true)
+        task.wait(0.4)
         screenGui:Destroy()
     end)
 end
@@ -124,14 +148,15 @@ end
 
 local function criarToggle(config, parent, layoutOrder)
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 40),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 7)
-    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.BordaSuave, 1)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
 
     local botao = criarInstancia("TextButton", {
         Size = UDim2.new(1, 0, 1, 0),
@@ -142,24 +167,24 @@ local function criarToggle(config, parent, layoutOrder)
     })
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -70, 0, 18),
-        Position = UDim2.new(0, 10, 0, 3),
+        Size = UDim2.new(1, -80, 0, 20),
+        Position = UDim2.new(0, 12, 0, 4),
         BackgroundTransparency = 1,
         Text = config.Title or "Toggle",
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = 12,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
 
     if config.Desc then
         local descLabel = criarInstancia("TextLabel", {
-            Size = UDim2.new(1, -70, 0, 13),
-            Position = UDim2.new(0, 10, 0, 20),
+            Size = UDim2.new(1, -80, 0, 14),
+            Position = UDim2.new(0, 12, 0, 22),
             BackgroundTransparency = 1,
             Text = config.Desc,
-            TextColor3 = Cores.Texto2,
+            TextColor3 = Cores.Texto3,
             Font = FontePadrao,
             TextSize = 9,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -168,34 +193,42 @@ local function criarToggle(config, parent, layoutOrder)
     end
 
     local switch = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(36, 18),
-        Position = UDim2.new(1, -45, 0.5, -9),
-        BackgroundColor3 = Cores.Fundo3,
+        Size = UDim2.fromOffset(42, 22),
+        Position = UDim2.new(1, -52, 0.5, -11),
+        BackgroundColor3 = Cores.Fundo4,
         BorderSizePixel = 0,
         Parent = frame,
     })
-    adicionarCanto(switch, 9)
+    adicionarCanto(switch, 11)
 
     local botaoSwitch = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(14, 14),
-        Position = UDim2.new(0, 2, 0.5, -7),
+        Size = UDim2.fromOffset(18, 18),
+        Position = UDim2.new(0, 2, 0.5, -9),
         BackgroundColor3 = Cores.Branco,
         BorderSizePixel = 0,
         Parent = switch,
     })
-    adicionarCanto(botaoSwitch, 7)
+    adicionarCanto(botaoSwitch, 9)
 
     local estado = config.Default or false
     local function atualizarVisual()
         if estado then
             switch.BackgroundColor3 = Cores.Destaque
-            botaoSwitch.Position = UDim2.new(1, -16, 0.5, -7)
+            botaoSwitch.Position = UDim2.new(1, -20, 0.5, -9)
         else
-            switch.BackgroundColor3 = Cores.Fundo3
-            botaoSwitch.Position = UDim2.new(0, 2, 0.5, -7)
+            switch.BackgroundColor3 = Cores.Fundo4
+            botaoSwitch.Position = UDim2.new(0, 2, 0.5, -9)
         end
     end
     atualizarVisual()
+
+    botao.MouseEnter:Connect(function()
+        frame.BackgroundColor3 = Cores.Fundo4
+    end)
+    botao.MouseLeave:Connect(function()
+        frame.BackgroundColor3 = Cores.Fundo2
+        criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
+    end)
 
     botao.MouseButton1Click:Connect(function()
         estado = not estado
@@ -223,14 +256,15 @@ end
 
 local function criarBotao(config, parent, layoutOrder)
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 38),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 7)
-    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.BordaSuave, 1)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
 
     local botao = criarInstancia("TextButton", {
         Size = UDim2.new(1, 0, 1, 0),
@@ -241,8 +275,8 @@ local function criarBotao(config, parent, layoutOrder)
     })
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 18),
-        Position = UDim2.new(0, 10, 0, 3),
+        Size = UDim2.new(1, -20, 0, 20),
+        Position = UDim2.new(0, 12, 0, 4),
         BackgroundTransparency = 1,
         Text = config.Title or "Botão",
         TextColor3 = Cores.Texto,
@@ -255,16 +289,39 @@ local function criarBotao(config, parent, layoutOrder)
     if config.Desc then
         local descLabel = criarInstancia("TextLabel", {
             Size = UDim2.new(1, -20, 0, 13),
-            Position = UDim2.new(0, 10, 0, 20),
+            Position = UDim2.new(0, 12, 0, 22),
             BackgroundTransparency = 1,
             Text = config.Desc,
-            TextColor3 = Cores.Texto2,
+            TextColor3 = Cores.Texto3,
             Font = FontePadrao,
             TextSize = 9,
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = frame,
         })
     end
+
+    local seta = criarInstancia("TextLabel", {
+        Size = UDim2.fromOffset(20, 20),
+        Position = UDim2.new(1, -25, 0.5, -10),
+        BackgroundTransparency = 1,
+        Text = "→",
+        TextColor3 = Cores.Destaque,
+        Font = FonteTitulo,
+        TextSize = 14,
+        Parent = frame,
+    })
+
+    botao.MouseEnter:Connect(function()
+        frame.BackgroundColor3 = Cores.Fundo4
+        seta.TextColor3 = Cores.Destaque2
+        seta.Position = UDim2.new(1, -28, 0.5, -10)
+    end)
+    botao.MouseLeave:Connect(function()
+        frame.BackgroundColor3 = Cores.Fundo2
+        criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
+        seta.TextColor3 = Cores.Destaque
+        seta.Position = UDim2.new(1, -25, 0.5, -10)
+    end)
 
     botao.MouseButton1Click:Connect(function()
         if config.Callback then
@@ -280,18 +337,19 @@ end
 
 local function criarSlider(config, parent, layoutOrder)
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 46),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 7)
-    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.BordaSuave, 1)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -60, 0, 18),
-        Position = UDim2.new(0, 10, 0, 4),
+        Size = UDim2.new(1, -60, 0, 20),
+        Position = UDim2.new(0, 12, 0, 5),
         BackgroundTransparency = 1,
         Text = config.Title or "Slider",
         TextColor3 = Cores.Texto,
@@ -302,26 +360,26 @@ local function criarSlider(config, parent, layoutOrder)
     })
 
     local valorLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(0, 50, 0, 18),
-        Position = UDim2.new(1, -60, 0, 4),
+        Size = UDim2.new(0, 50, 0, 20),
+        Position = UDim2.new(1, -62, 0, 5),
         BackgroundTransparency = 1,
         Text = tostring(config.Value.Default or 0),
-        TextColor3 = Cores.Destaque,
+        TextColor3 = Cores.Destaque2,
         Font = FonteTitulo,
-        TextSize = 11,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = frame,
     })
 
     local slider = criarInstancia("TextButton", {
-        Size = UDim2.new(1, -20, 0, 8),
-        Position = UDim2.new(0, 10, 0, 26),
-        BackgroundColor3 = Cores.Fundo3,
+        Size = UDim2.new(1, -24, 0, 10),
+        Position = UDim2.new(0, 12, 0, 30),
+        BackgroundColor3 = Cores.Fundo4,
         BorderSizePixel = 0,
         Text = "",
         Parent = frame,
     })
-    adicionarCanto(slider, 4)
+    adicionarCanto(slider, 5)
 
     local preenchimento = criarInstancia("Frame", {
         Size = UDim2.new(0, 0, 1, 0),
@@ -329,7 +387,8 @@ local function criarSlider(config, parent, layoutOrder)
         BorderSizePixel = 0,
         Parent = slider,
     })
-    adicionarCanto(preenchimento, 4)
+    adicionarCanto(preenchimento, 5)
+    criarGradiente(preenchimento, Cores.Destaque, Cores.Destaque2, 0)
 
     local min = config.Value.Min or 0
     local max = config.Value.Max or 100
@@ -396,18 +455,19 @@ end
 
 local function criarInput(config, parent, layoutOrder)
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 40),
+        Size = UDim2.new(1, 0, 0, 44),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 7)
-    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.BordaSuave, 1)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
 
     local tituloLabel = criarInstancia("TextLabel", {
         Size = UDim2.new(1, -20, 0, 18),
-        Position = UDim2.new(0, 10, 0, 3),
+        Position = UDim2.new(0, 12, 0, 4),
         BackgroundTransparency = 1,
         Text = config.Title or "Input",
         TextColor3 = Cores.Texto,
@@ -418,18 +478,19 @@ local function criarInput(config, parent, layoutOrder)
     })
 
     local caixa = criarInstancia("TextBox", {
-        Size = UDim2.new(1, -20, 0, 18),
-        Position = UDim2.new(0, 10, 0, 21),
-        BackgroundColor3 = Cores.Fundo3,
+        Size = UDim2.new(1, -24, 0, 20),
+        Position = UDim2.new(0, 12, 0, 22),
+        BackgroundColor3 = Cores.Fundo4,
         TextColor3 = Cores.Texto,
         PlaceholderText = config.Placeholder or "",
-        PlaceholderColor3 = Cores.Texto2,
+        PlaceholderColor3 = Cores.Texto3,
         Font = FontePadrao,
         TextSize = 11,
         BorderSizePixel = 0,
         Parent = frame,
     })
-    adicionarCanto(caixa, 4)
+    adicionarCanto(caixa, 6)
+    adicionarBorda(caixa, Cores.Borda, 1)
 
     caixa.FocusLost:Connect(function(enterPressed)
         if enterPressed and config.Callback then
@@ -446,18 +507,19 @@ end
 
 local function criarDropdown(config, parent, layoutOrder)
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 40),
+        Size = UDim2.new(1, 0, 0, 44),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 7)
-    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.BordaSuave, 1)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
 
     local tituloLabel = criarInstancia("TextLabel", {
         Size = UDim2.new(1, -20, 0, 18),
-        Position = UDim2.new(0, 10, 0, 3),
+        Position = UDim2.new(0, 12, 0, 4),
         BackgroundTransparency = 1,
         Text = config.Title or "Dropdown",
         TextColor3 = Cores.Texto,
@@ -468,9 +530,9 @@ local function criarDropdown(config, parent, layoutOrder)
     })
 
     local botaoSelecionar = criarInstancia("TextButton", {
-        Size = UDim2.new(1, -20, 0, 18),
-        Position = UDim2.new(0, 10, 0, 21),
-        BackgroundColor3 = Cores.Fundo3,
+        Size = UDim2.new(1, -24, 0, 20),
+        Position = UDim2.new(0, 12, 0, 22),
+        BackgroundColor3 = Cores.Fundo4,
         TextColor3 = Cores.Texto,
         Font = FontePadrao,
         TextSize = 11,
@@ -478,18 +540,20 @@ local function criarDropdown(config, parent, layoutOrder)
         Text = config.Values[1] or "Selecione...",
         Parent = frame,
     })
-    adicionarCanto(botaoSelecionar, 4)
+    adicionarCanto(botaoSelecionar, 6)
+    adicionarBorda(botaoSelecionar, Cores.Borda, 1)
 
     local listaOpcoes = criarInstancia("Frame", {
-        Size = UDim2.new(1, -20, 0, 0),
-        Position = UDim2.new(0, 10, 0, 39),
+        Size = UDim2.new(1, -24, 0, 0),
+        Position = UDim2.new(0, 12, 0, 42),
         BackgroundColor3 = Cores.Fundo3,
         BorderSizePixel = 0,
         Visible = false,
+        ZIndex = 100,
         Parent = frame,
     })
-    adicionarCanto(listaOpcoes, 4)
-    adicionarBorda(listaOpcoes, Color3.fromRGB(80, 80, 90), 1)
+    adicionarCanto(listaOpcoes, 6)
+    adicionarBorda(listaOpcoes, Cores.Destaque, 1.5)
 
     local listaLayout = criarInstancia("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
@@ -498,15 +562,24 @@ local function criarDropdown(config, parent, layoutOrder)
 
     for i, valor in ipairs(config.Values) do
         local botaoOpcao = criarInstancia("TextButton", {
-            Size = UDim2.new(1, 0, 0, 20),
+            Size = UDim2.new(1, 0, 0, 22),
             BackgroundColor3 = Cores.Fundo3,
-            TextColor3 = Cores.Texto,
+            TextColor3 = Cores.Texto2,
             Font = FontePadrao,
             TextSize = 10,
             BorderSizePixel = 0,
             Text = valor,
+            ZIndex = 101,
             Parent = listaOpcoes,
         })
+        
+        botaoOpcao.MouseEnter:Connect(function()
+            botaoOpcao.BackgroundColor3 = Cores.Fundo4
+        end)
+        botaoOpcao.MouseLeave:Connect(function()
+            botaoOpcao.BackgroundColor3 = Cores.Fundo3
+        end)
+        
         botaoOpcao.MouseButton1Click:Connect(function()
             botaoSelecionar.Text = valor
             listaOpcoes.Visible = false
@@ -519,9 +592,9 @@ local function criarDropdown(config, parent, layoutOrder)
     botaoSelecionar.MouseButton1Click:Connect(function()
         listaOpcoes.Visible = not listaOpcoes.Visible
         if listaOpcoes.Visible then
-            listaOpcoes.Size = UDim2.new(1, -20, 0, #config.Values * 20)
+            listaOpcoes.Size = UDim2.new(1, -24, 0, #config.Values * 22)
         else
-            listaOpcoes.Size = UDim2.new(1, -20, 0, 0)
+            listaOpcoes.Size = UDim2.new(1, -24, 0, 0)
         end
     end)
 
@@ -536,21 +609,22 @@ end
 
 local function criarLabel(config, parent, layoutOrder)
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 26),
+        Size = UDim2.new(1, 0, 0, 28),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 7)
-    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
+    adicionarCanto(frame, 10)
+    adicionarBorda(frame, Cores.BordaSuave, 1)
+    criarGradiente(frame, Cores.Fundo2, Cores.Fundo3, 90)
 
     local texto = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
+        Size = UDim2.new(1, -24, 1, 0),
+        Position = UDim2.new(0, 12, 0, 0),
         BackgroundTransparency = 1,
         Text = config.Text or "",
-        TextColor3 = config.Cor or Cores.Texto,
+        TextColor3 = config.Cor or Cores.Texto2,
         Font = config.Fonte or FontePadrao,
         TextSize = config.Tamanho or 11,
         TextXAlignment = Enum.TextXAlignment.Left,
@@ -565,7 +639,7 @@ local function criarLabel(config, parent, layoutOrder)
 end
 
 -- =====================================================
--- CRIAÇÃO DA JANELA (Corrigida e Moderna)
+-- CRIAÇÃO DA JANELA
 -- =====================================================
 
 function NoxysUI:CreateWindow(config)
@@ -578,9 +652,9 @@ function NoxysUI:CreateWindow(config)
         tamanhoJanela = config.Size
     else
         if mobile then
-            tamanhoJanela = UDim2.fromScale(0.92, 0.82)
+            tamanhoJanela = UDim2.fromScale(0.92, 0.85)
         else
-            tamanhoJanela = UDim2.fromOffset(480, 380)
+            tamanhoJanela = UDim2.fromOffset(500, 420)
         end
     end
 
@@ -589,29 +663,27 @@ function NoxysUI:CreateWindow(config)
     screenGui.IgnoreGuiInset = true
     screenGui.Parent = CoreGui
 
-    -- Fundo escurecido
     local fundo = criarInstancia("Frame", {
         Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-        BackgroundTransparency = 0.5,
+        BackgroundTransparency = 0.6,
         BorderSizePixel = 0,
         Parent = screenGui,
     })
 
-    -- Janela principal com sombra
     local sombra = criarInstancia("Frame", {
         Size = tamanhoJanela,
         Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Cores.Sombra,
-        BackgroundTransparency = 0.7,
+        BackgroundColor3 = Cores.Preto,
+        BackgroundTransparency = 0.5,
         BorderSizePixel = 0,
         Parent = screenGui,
     })
-    adicionarCanto(sombra, 12)
+    adicionarCanto(sombra, 14)
 
     local janela = criarInstancia("Frame", {
-        Size = UDim2.new(1, -4, 1, -4),
+        Size = UDim2.new(1, -8, 1, -8),
         Position = UDim2.new(0.5, 0, 0.5, 0),
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = Cores.Fundo,
@@ -619,21 +691,22 @@ function NoxysUI:CreateWindow(config)
         Active = true,
         Parent = sombra,
     })
-    adicionarCanto(janela, 10)
+    adicionarCanto(janela, 12)
     adicionarBorda(janela, Cores.Destaque, 2)
+    criarGradiente(janela, Cores.Fundo, Cores.Fundo2, 135)
 
-    -- Barra de título (arrastável manualmente)
     local barraTitulo = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, mobile and 42 or 38),
+        Size = UDim2.new(1, 0, 0, mobile and 46 or 42),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = janela,
     })
-    adicionarCanto(barraTitulo, 10)
+    adicionarCanto(barraTitulo, 12)
+    criarGradiente(barraTitulo, Cores.Fundo2, Cores.Fundo3, 90)
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -150, 1, 0),
-        Position = UDim2.new(0, 15, 0, 0),
+        Size = UDim2.new(1, -220, 1, 0),
+        Position = UDim2.new(0, 90, 0, 0),
         BackgroundTransparency = 1,
         Text = "🛡️ " .. titulo,
         TextColor3 = Cores.Texto,
@@ -645,21 +718,20 @@ function NoxysUI:CreateWindow(config)
 
     local autorLabel = criarInstancia("TextLabel", {
         Size = UDim2.new(0, 100, 1, 0),
-        Position = UDim2.new(1, -215, 0, 0),
+        Position = UDim2.new(1, -225, 0, 0),
         BackgroundTransparency = 1,
         Text = "por " .. autor,
-        TextColor3 = Cores.Texto2,
+        TextColor3 = Cores.Texto3,
         Font = FontePadrao,
         TextSize = mobile and 9 or 8,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = barraTitulo,
     })
 
-    -- Botão minimizar
     local botaoMinimizar = criarInstancia("TextButton", {
         Size = UDim2.fromOffset(mobile and 30 or 28, mobile and 30 or 28),
-        Position = UDim2.new(1, -(mobile and 74 or 68), 0, 5),
-        BackgroundColor3 = Color3.fromRGB(240, 180, 0),
+        Position = UDim2.new(1, -(mobile and 74 or 68), 0, 8),
+        BackgroundColor3 = Cores.Amarelo,
         Text = "—",
         TextColor3 = Cores.Branco,
         Font = FonteTitulo,
@@ -669,10 +741,9 @@ function NoxysUI:CreateWindow(config)
     })
     adicionarCanto(botaoMinimizar, 14)
 
-    -- Botão fechar
     local botaoFechar = criarInstancia("TextButton", {
         Size = UDim2.fromOffset(mobile and 30 or 28, mobile and 30 or 28),
-        Position = UDim2.new(1, -(mobile and 38 or 34), 0, 5),
+        Position = UDim2.new(1, -(mobile and 38 or 34), 0, 8),
         BackgroundColor3 = Cores.Vermelho,
         Text = "✕",
         TextColor3 = Cores.Branco,
@@ -683,25 +754,24 @@ function NoxysUI:CreateWindow(config)
     })
     adicionarCanto(botaoFechar, 14)
 
-    -- Área de conteúdo
     local areaConteudo = criarInstancia("Frame", {
         Name = "Conteudo",
-        Size = UDim2.new(1, 0, 1, -(mobile and 42 or 38)),
-        Position = UDim2.new(0, 0, 0, mobile and 42 or 38),
+        Size = UDim2.new(1, 0, 1, -(mobile and 46 or 42)),
+        Position = UDim2.new(0, 0, 0, mobile and 46 or 42),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Parent = janela,
     })
 
-    -- Barra lateral de abas
-    local larguraBarra = mobile and 140 or 180
+    local larguraBarra = mobile and 150 or 190
     local barraAbas = criarInstancia("Frame", {
         Size = UDim2.new(0, larguraBarra, 1, 0),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = areaConteudo,
     })
-    adicionarCanto(barraAbas, 8)
+    adicionarCanto(barraAbas, 10)
+    criarGradiente(barraAbas, Cores.Fundo2, Cores.Fundo, 90)
 
     local containerAbas = criarInstancia("ScrollingFrame", {
         Size = UDim2.new(1, -8, 1, -16),
@@ -709,16 +779,16 @@ function NoxysUI:CreateWindow(config)
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ScrollBarThickness = 0,
+        CanvasSize = UDim2.new(0, 0, 0, 0),
         Parent = barraAbas,
     })
 
     local listaAbas = criarInstancia("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 4),
+        Padding = UDim.new(0, 5),
         Parent = containerAbas,
     })
 
-    -- Área das páginas
     local areaPaginas = criarInstancia("Frame", {
         Size = UDim2.new(1, -larguraBarra, 1, 0),
         Position = UDim2.new(0, larguraBarra, 0, 0),
@@ -752,7 +822,7 @@ function NoxysUI:CreateWindow(config)
         local icone = config.Icon or ""
 
         local botaoAba = criarInstancia("TextButton", {
-            Size = UDim2.new(1, -6, 0, mobile and 36 or 32),
+            Size = UDim2.new(1, -6, 0, mobile and 38 or 34),
             BackgroundColor3 = Cores.Fundo3,
             Text = (icone ~= "" and icone .. "  " or "") .. tituloAba,
             TextColor3 = Cores.Texto2,
@@ -761,7 +831,8 @@ function NoxysUI:CreateWindow(config)
             BorderSizePixel = 0,
             Parent = containerAbas,
         })
-        adicionarCanto(botaoAba, 7)
+        adicionarCanto(botaoAba, 8)
+        adicionarBorda(botaoAba, Cores.BordaSuave, 1)
 
         local pagina = criarInstancia("ScrollingFrame", {
             Size = UDim2.new(1, -16, 1, -16),
@@ -769,6 +840,9 @@ function NoxysUI:CreateWindow(config)
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
             ScrollBarThickness = 2,
+            ScrollBarImageColor3 = Cores.Destaque,
+            ScrollBarImageTransparency = 0.5,
+            CanvasSize = UDim2.new(0, 0, 0, 0),
             Visible = false,
             Parent = areaPaginas,
         })
@@ -778,6 +852,10 @@ function NoxysUI:CreateWindow(config)
             Padding = UDim.new(0, 8),
             Parent = pagina,
         })
+
+        listaPagina:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            pagina.CanvasSize = UDim2.new(0, listaPagina.AbsoluteContentSize.X, 0, listaPagina.AbsoluteContentSize.Y + 20)
+        end)
 
         local layoutCounter = 0
 
@@ -804,16 +882,17 @@ function NoxysUI:CreateWindow(config)
             })
 
             local linha = criarInstancia("Frame", {
-                Size = UDim2.new(0, 3, 1, 0),
+                Size = UDim2.new(0, 4, 1, 0),
                 BackgroundColor3 = Cores.Destaque,
                 BorderSizePixel = 0,
                 Parent = secao,
             })
             adicionarCanto(linha, 2)
+            criarGradiente(linha, Cores.Destaque, Cores.Destaque2, 90)
 
             local tituloLabel = criarInstancia("TextLabel", {
                 Size = UDim2.new(1, -20, 1, 0),
-                Position = UDim2.new(0, 10, 0, 0),
+                Position = UDim2.new(0, 12, 0, 0),
                 BackgroundTransparency = 1,
                 Text = tituloSecao,
                 TextColor3 = Cores.Texto,
@@ -867,7 +946,6 @@ function NoxysUI:CreateWindow(config)
         screenGui:Destroy()
     end
 
-    -- Implementação do arrasto manual (corrigido)
     local arrastando = false
     local offsetDrag = Vector2.new(0, 0)
 
@@ -875,13 +953,10 @@ function NoxysUI:CreateWindow(config)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             arrastando = true
             local posMouse = UserInputService:GetMouseLocation()
-            -- Obter posição do canto superior esquerdo da sombra
             local posJanela = sombra.AbsolutePosition
             offsetDrag = Vector2.new(posMouse.X - posJanela.X, posMouse.Y - posJanela.Y)
-            -- Mudar AnchorPoint para (0,0) e ajustar Position para manter a posição visual
-            local absPos = sombra.AbsolutePosition
             sombra.AnchorPoint = Vector2.new(0, 0)
-            sombra.Position = UDim2.new(0, absPos.X, 0, absPos.Y)
+            sombra.Position = UDim2.new(0, posJanela.X, 0, posJanela.Y)
         end
     end)
 
@@ -899,38 +974,34 @@ function NoxysUI:CreateWindow(config)
         end
     end)
 
-    -- Função para minimizar (esconde janela e fundo, mostra botão flutuante)
-    local botaoMinimizado = nil -- será criado quando minimizar
+    local botaoMinimizado = nil
     local function Minimizar()
         sombra.Visible = false
         fundo.Visible = false
         
-        -- Criar botão flutuante pequeno
         if not botaoMinimizado then
             botaoMinimizado = criarInstancia("TextButton", {
-                Size = UDim2.fromOffset(56, 56),
-                Position = UDim2.new(0.9, 0, 0.8, 0),
+                Size = UDim2.fromOffset(50, 50),
+                Position = UDim2.new(0.92, 0, 0.85, 0),
                 BackgroundColor3 = Cores.Destaque,
                 Text = "🛡️",
                 TextColor3 = Cores.Branco,
                 Font = FonteTitulo,
-                TextSize = 24,
+                TextSize = 20,
                 BorderSizePixel = 0,
                 Parent = screenGui,
-                Draggable = true, -- permite arrastar o botão
+                Draggable = true,
             })
-            adicionarCanto(botaoMinimizado, 28)
+            adicionarCanto(botaoMinimizado, 25)
             adicionarBorda(botaoMinimizado, Cores.Branco, 2)
+            criarGradiente(botaoMinimizado, Cores.Destaque, Cores.Destaque2, 45)
             
-            -- Animação sutil de escala
             botaoMinimizado.Size = UDim2.fromOffset(0, 0)
-            botaoMinimizado:TweenSize(UDim2.fromOffset(56, 56), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+            botaoMinimizado:TweenSize(UDim2.fromOffset(50, 50), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
             
             botaoMinimizado.MouseButton1Click:Connect(function()
-                -- Maximizar: mostrar janela e fundo, destruir botão
                 sombra.Visible = true
                 fundo.Visible = true
-                -- Restaurar AnchorPoint e posição central? Melhor deixar onde estava
                 if botaoMinimizado then
                     botaoMinimizado:Destroy()
                     botaoMinimizado = nil
@@ -938,6 +1009,7 @@ function NoxysUI:CreateWindow(config)
             end)
         else
             botaoMinimizado.Visible = true
+            botaoMinimizado:TweenSize(UDim2.fromOffset(50, 50), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
         end
     end
 
@@ -953,7 +1025,6 @@ end
 -- ==========================================
 -- VARIÁVEIS GLOBAIS DO SCRIPT
 -- ==========================================
--- (mantidas exatamente como no script original, sem alterações)
 local dashStuds = 30
 local dashButtonScreen = nil
 
@@ -1033,6 +1104,7 @@ FOVCircle.Thickness = Aimbot_EspessuraFOV
 FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
+-- Array de dados dos blocos de parkour
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -1156,7 +1228,7 @@ local data = {
 }
 
 -- ==========================================
--- FUNÇÕES ESP (mantidas iguais)
+-- FUNÇÕES ESP
 -- ==========================================
 local function GetPlayerTime(player)
     if player.Team then
@@ -1563,7 +1635,7 @@ local function DesativarChatWindow()
 end
 
 -- ==========================================
--- INTERFACE (NOX YS UI - Corrigida)
+-- INTERFACE (NOX YS UI - Ultra Moderna)
 -- ==========================================
 local Window = NoxysUI:CreateWindow({
     Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
@@ -1587,10 +1659,10 @@ CombatTab:Toggle({Title = "Team Check", Desc = "Não mira em aliados", Default =
 CombatTab:Toggle({Title = "Wall Check", Desc = "Não mira através de paredes", Default = false, Callback = function(v) Aimbot_WallCheck = v end})
 CombatTab:Toggle({Title = "Priorizar Perto", Desc = "Mira no mais próximo", Default = false, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
 CombatTab:Toggle({Title = "So mirar com item", Desc = "Só mira com arma na mão", Default = false, Callback = function(v) Aimbot_SoComItem = v end})
-CombatTab:Input({Title = "Raio FOV", Desc = "Tamanho do FOV", Placeholder = "100", Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
-CombatTab:Input({Title = "Suavidade", Desc = "Suavidade da mira", Placeholder = "0.15", Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
-CombatTab:Input({Title = "Offset FOV Tela", Desc = "Ajuste vertical do FOV", Placeholder = "-40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
-CombatTab:Input({Title = "Offset Mira (px)", Desc = "Ajuste fino da mira", Placeholder = "40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
+CombatTab:Input({Title = "Raio FOV", Placeholder = "100", Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
+CombatTab:Input({Title = "Suavidade", Placeholder = "0.15", Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
+CombatTab:Input({Title = "Offset FOV Tela", Placeholder = "-40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetTelaY = n end end})
+CombatTab:Input({Title = "Offset Mira (px)", Placeholder = "40", Callback = function(t) local n = tonumber(t) if n then Aimbot_OffsetPixels = n end end})
 CombatTab:Dropdown({Title = "Cor do FOV", Values = {"Branco", "Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Rosa"}, Callback = function(Value)
     local cores = {["Branco"] = Color3.fromRGB(255,255,255), ["Vermelho"] = Color3.fromRGB(255,50,50), ["Azul"] = Color3.fromRGB(50,150,255), ["Verde"] = Color3.fromRGB(50,255,100), ["Amarelo"] = Color3.fromRGB(255,220,50), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
     Aimbot_CorFOV = cores[Value]; FOVCircle.Color = cores[Value]; NoxysUI:Notify("FOV", "Cor: " .. Value)
@@ -1603,8 +1675,8 @@ CombatTab:Toggle({Title = "Ativar Hitbox", Desc = "Expande a hitbox dos jogadore
     if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
     end
 end})
-CombatTab:Input({Title = "Tamanho", Desc = "Tamanho da hitbox", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
-CombatTab:Input({Title = "Transparencia (0-1)", Desc = "Transparência da hitbox", Placeholder = "0.7", Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
+CombatTab:Input({Title = "Tamanho", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
+CombatTab:Input({Title = "Transparencia (0-1)", Placeholder = "0.7", Callback = function(t) local n = tonumber(t) if n then Hitbox_Transparencia = math.clamp(n, 0, 1) end end})
 CombatTab:Section({Title = "Cores Hitbox"})
 CombatTab:Dropdown({Title = "Cor da Hitbox", Values = {"Vermelho", "Azul", "Verde", "Amarelo", "Roxo", "Ciano", "Branco", "Rosa"}, Callback = function(Value)
     local cores = {["Vermelho"] = Color3.fromRGB(255,30,30), ["Azul"] = Color3.fromRGB(30,100,255), ["Verde"] = Color3.fromRGB(50,255,50), ["Amarelo"] = Color3.fromRGB(255,220,0), ["Roxo"] = Color3.fromRGB(170,0,255), ["Ciano"] = Color3.fromRGB(0,255,255), ["Branco"] = Color3.fromRGB(255,255,255), ["Rosa"] = Color3.fromRGB(255,0,180)}
@@ -1643,7 +1715,7 @@ VisualTab:Button({Title = "Fullbright", Desc = "Ilumina o mapa", Callback = func
 local OutrosTab = Window:Tab({Title = "Outros", Icon = "cpu"})
 OutrosTab:Section({Title = "Dash"})
 OutrosTab:Toggle({Title = "Botao de Dash", Desc = "Ativa botão de dash flutuante", Default = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-OutrosTab:Input({Title = "Distancia Dash", Desc = "Distância do dash em studs", Placeholder = "30", Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
+OutrosTab:Input({Title = "Distancia Dash", Placeholder = "30", Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
 OutrosTab:Section({Title = "Speed Hack"})
 OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", Default = false, Callback = function(v)
     SpeedHack_Ativado = v
@@ -1657,7 +1729,7 @@ OutrosTab:Toggle({Title = "Ativar Speed Hack", Desc = "Velocidade aumentada", De
     else if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     end
 end})
-OutrosTab:Slider({Title = "Velocidade Speed", Desc = "Ajuste a velocidade", Value = {Min = 1, Max = 500, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
+OutrosTab:Slider({Title = "Velocidade Speed", Value = {Min = 1, Max = 500, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
 OutrosTab:Section({Title = "Underground"})
 OutrosTab:Toggle({Title = "Ativar Underground", Desc = "Vai para baixo do mapa", Default = false, Callback = function(v)
     Underground_Ativado = v; local char = localPlayer.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end; local root = char.HumanoidRootPart
@@ -1694,12 +1766,12 @@ OutrosTab:Toggle({Title = "Ativar Passe Livre", Desc = "Noclip automático na á
         NoxysUI:Notify("Passe Livre", "🔴 Sistema desativado!")
     end
 end})
-OutrosTab:Input({Title = "Raio (studs)", Desc = "Tamanho da área do Passe Livre", Placeholder = "3", Callback = function(t) local n = tonumber(t) if n and n > 0 then PasseLivre_Raio = n; NoxysUI:Notify("Passe Livre", "Raio: " .. n .. " studs") end end})
+OutrosTab:Input({Title = "Raio (studs)", Placeholder = "3", Callback = function(t) local n = tonumber(t) if n and n > 0 then PasseLivre_Raio = n; NoxysUI:Notify("Passe Livre", "Raio: " .. n .. " studs") end end})
 OutrosTab:Section({Title = "FOV da Camera"})
-OutrosTab:Slider({Title = "FOV da Camera", Desc = "Ajuste o FOV (30-120)", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
+OutrosTab:Slider({Title = "FOV da Camera", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
 OutrosTab:Button({Title = "Resetar FOV", Desc = "Volta ao FOV padrão (70)", Callback = function() Workspace.CurrentCamera.FieldOfView = 70 end})
 OutrosTab:Section({Title = "Teleporte para Jogador"})
-OutrosTab:Input({Title = "Nome do Jogador", Desc = "Digite o nome para teleportar", Placeholder = "Digite o nome...", Callback = function(t)
+OutrosTab:Input({Title = "Nome do Jogador", Placeholder = "Digite o nome...", Callback = function(t)
     if t ~= "" then local encontrado = false; local texto = t:lower()
         for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then local nome = p.Name:lower(); local display = p.DisplayName:lower()
             if nome:find(texto, 1, true) or display:find(texto, 1, true) then if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0); NoxysUI:Notify("TP", "Teleportado para " .. p.Name); encontrado = true; break end end
@@ -1712,7 +1784,7 @@ end})
 local ConfigTab = Window:Tab({Title = "Configs", Icon = "cog"})
 ConfigTab:Section({Title = "Admin"})
 ConfigTab:Toggle({Title = "Ativar Modo Administrador", Desc = "Use comandos pelo chat (!comando)", Default = false, Callback = function(v) Admin_Ativado = v; NoxysUI:Notify("Admin", v and "🟢 Admin ATIVADO!" or "🔴 Admin DESATIVADO!") end})
-ConfigTab:Input({Title = "Prefixo", Desc = "Prefixo dos comandos", Placeholder = "!", Callback = function(t) if t ~= "" then Admin_Prefixo = t; NoxysUI:Notify("Admin", "Prefixo: " .. t) end end})
+ConfigTab:Input({Title = "Prefixo", Placeholder = "!", Callback = function(t) if t ~= "" then Admin_Prefixo = t; NoxysUI:Notify("Admin", "Prefixo: " .. t) end end})
 ConfigTab:Button({Title = "📋 Comandos", Desc = "!to, !bring, !respawn, !invis, !vis, !view, !unview, !sit, !jump, !hipheight, !char, !cmdbar, !chatwindow", Callback = function() end})
 ConfigTab:Section({Title = "Chat"})
 ConfigTab:Toggle({Title = "Ativar ChatWindow", Desc = "Histórico global do chat", Default = false, Callback = function(v) ChatWindow_Ativado = v; if v then AtivarChatWindow() else DesativarChatWindow() end end})
@@ -1722,7 +1794,7 @@ ConfigTab:Button({Title = "👥 Servidor Cheio", Desc = "Tenta entrar em servido
 ConfigTab:Button({Title = "🏠 Servidor Vazio", Desc = "Tenta entrar em servidor vazio", Callback = function() NoxysUI:Notify("Servidor", "Procurando servidor vazio..."); task.wait(1); TrocarServidor("vazio") end})
 ConfigTab:Section({Title = "Informações"})
 ConfigTab:Button({Title = "📋 Créditos", Desc = "Quem fez o script", Callback = function() NoxysUI:Notify("Noxys Hub", "Criado por: Noahzin\n✅ ChatWindow + CmdBar + Char") end})
-ConfigTab:Button({Title = "ℹ️ Versão", Desc = "v3.1 - Comandos Simples", Callback = function() NoxysUI:Notify("Versão", "v3.1") end})
+ConfigTab:Button({Title = "ℹ️ Versão", Desc = "v3.2 - Ultra Moderna", Callback = function() NoxysUI:Notify("Versão", "v3.2") end})
 ConfigTab:Section({Title = "Ações"})
 ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o painel", Callback = function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
@@ -1741,5 +1813,5 @@ ConfigTab:Button({Title = "🗑️ Destruir Tudo", Desc = "Remove tudo e fecha o
     Window:Destroy()
 end})
 
-print("✅ Noxys Hub v3.1 - Comandos Simples + ChatWindow + CmdBar + Char!")
+print("✅ Noxys Hub v3.2 - Interface Ultra Moderna!")
 print("Comandos: !to, !bring, !respawn, !invis, !vis, !view, !unview, !sit, !jump, !hipheight, !char, !cmdbar, !chatwindow")
