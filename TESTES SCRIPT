@@ -363,7 +363,7 @@ local function criarSlider(config, parent, layoutOrder)
         Size = UDim2.new(0, 50, 0, 20),
         Position = UDim2.new(1, -62, 0, 5),
         BackgroundTransparency = 1,
-        Text = tostring(config.Value.Default or 0),
+        Text = tostring(math.floor(config.Value.Default or 0)),
         TextColor3 = Cores.Destaque2,
         Font = FonteTitulo,
         TextSize = 12,
@@ -395,19 +395,21 @@ local function criarSlider(config, parent, layoutOrder)
     local default = config.Value.Default or min
     local step = config.Step or 1
 
-    local valorAtual = default
+    local valorAtual = math.floor(default)
     local arrastando = false
 
     local function atualizarVisual()
         local fracao = (valorAtual - min) / (max - min)
         preenchimento.Size = UDim2.new(fracao, 0, 1, 0)
-        valorLabel.Text = tostring(valorAtual)
+        valorLabel.Text = tostring(math.floor(valorAtual))
     end
 
     local function definirValor(novoValor)
         novoValor = math.clamp(novoValor, min, max)
         if step ~= 1 then
             novoValor = math.floor(novoValor / step + 0.5) * step
+        else
+            novoValor = math.floor(novoValor)
         end
         valorAtual = novoValor
         atualizarVisual()
@@ -482,10 +484,12 @@ local function criarInput(config, parent, layoutOrder)
         Position = UDim2.new(0, 12, 0, 22),
         BackgroundColor3 = Cores.Fundo4,
         TextColor3 = Cores.Texto,
-        PlaceholderText = config.Placeholder or "",
+        PlaceholderText = config.Placeholder or "Digite aqui...",
         PlaceholderColor3 = Cores.Texto3,
         Font = FontePadrao,
         TextSize = 11,
+        Text = "",
+        ClearTextOnFocus = false,
         BorderSizePixel = 0,
         Parent = frame,
     })
@@ -780,6 +784,7 @@ function NoxysUI:CreateWindow(config)
         BorderSizePixel = 0,
         ScrollBarThickness = 0,
         CanvasSize = UDim2.new(0, 0, 0, 0),
+        ScrollingDirection = Enum.ScrollingDirection.Y,
         Parent = barraAbas,
     })
 
@@ -843,6 +848,7 @@ function NoxysUI:CreateWindow(config)
             ScrollBarImageColor3 = Cores.Destaque,
             ScrollBarImageTransparency = 0.5,
             CanvasSize = UDim2.new(0, 0, 0, 0),
+            ScrollingDirection = Enum.ScrollingDirection.Y,
             Visible = false,
             Parent = areaPaginas,
         })
@@ -854,7 +860,7 @@ function NoxysUI:CreateWindow(config)
         })
 
         listaPagina:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            pagina.CanvasSize = UDim2.new(0, listaPagina.AbsoluteContentSize.X, 0, listaPagina.AbsoluteContentSize.Y + 20)
+            pagina.CanvasSize = UDim2.new(0, 0, 0, listaPagina.AbsoluteContentSize.Y + 20)
         end)
 
         local layoutCounter = 0
@@ -975,6 +981,8 @@ function NoxysUI:CreateWindow(config)
     end)
 
     local botaoMinimizado = nil
+    local posicaoBotaoMinimizado = UDim2.new(0.92, 0, 0.85, 0)
+    
     local function Minimizar()
         sombra.Visible = false
         fundo.Visible = false
@@ -982,7 +990,7 @@ function NoxysUI:CreateWindow(config)
         if not botaoMinimizado then
             botaoMinimizado = criarInstancia("TextButton", {
                 Size = UDim2.fromOffset(50, 50),
-                Position = UDim2.new(0.92, 0, 0.85, 0),
+                Position = posicaoBotaoMinimizado,
                 BackgroundColor3 = Cores.Destaque,
                 Text = "🛡️",
                 TextColor3 = Cores.Branco,
@@ -1003,12 +1011,20 @@ function NoxysUI:CreateWindow(config)
                 sombra.Visible = true
                 fundo.Visible = true
                 if botaoMinimizado then
+                    posicaoBotaoMinimizado = botaoMinimizado.Position
                     botaoMinimizado:Destroy()
                     botaoMinimizado = nil
                 end
             end)
+            
+            botaoMinimizado:GetPropertyChangedSignal("Position"):Connect(function()
+                if botaoMinimizado and botaoMinimizado.Visible then
+                    posicaoBotaoMinimizado = botaoMinimizado.Position
+                end
+            end)
         else
             botaoMinimizado.Visible = true
+            botaoMinimizado.Position = posicaoBotaoMinimizado
             botaoMinimizado:TweenSize(UDim2.fromOffset(50, 50), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.3, true)
         end
     end
@@ -1104,7 +1120,6 @@ FOVCircle.Thickness = Aimbot_EspessuraFOV
 FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
--- Array de dados dos blocos de parkour
 local data = {
     {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
@@ -1521,7 +1536,7 @@ local function AbrirCmdBar()
     local input = Instance.new("TextBox"); input.Size = UDim2.new(1, -20, 0, 35); input.Position = UDim2.new(0, 10, 0, 40)
     input.BackgroundColor3 = Color3.fromRGB(35, 35, 40); input.TextColor3 = Color3.fromRGB(255, 255, 255)
     input.PlaceholderText = "Digite o comando..."; input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-    input.Font = Enum.Font.Code; input.TextSize = 12; input.Parent = frame; Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
+    input.Font = Enum.Font.Code; input.TextSize = 12; input.Text = ""; input.Parent = frame; Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
     local executar = Instance.new("TextButton"); executar.Size = UDim2.new(1, -20, 0, 30); executar.Position = UDim2.new(0, 10, 0, 80)
     executar.BackgroundColor3 = Color3.fromRGB(0, 150, 100); executar.Text = "▶ EXECUTAR"; executar.TextColor3 = Color3.fromRGB(255, 255, 255)
     executar.Font = Enum.Font.SourceSansBold; executar.TextSize = 11; executar.Parent = frame; Instance.new("UICorner", executar).CornerRadius = UDim.new(0, 6)
