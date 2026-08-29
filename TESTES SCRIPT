@@ -16,28 +16,28 @@ if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Dest
 if CoreGui:FindFirstChild("NoxysHubUI") then CoreGui.NoxysHubUI:Destroy() end
 
 -- ==========================================
--- NOX YS UI (Biblioteca de Interface - Mobile Friendly)
+-- NOX YS UI (Biblioteca de Interface - Corrigida)
 -- ==========================================
 local NoxysUI = {}
 
 local Cores = {
-    Fundo = Color3.fromRGB(25, 25, 30),
-    Fundo2 = Color3.fromRGB(35, 35, 40),
-    Fundo3 = Color3.fromRGB(45, 45, 50),
+    Fundo = Color3.fromRGB(22, 22, 27),
+    Fundo2 = Color3.fromRGB(32, 32, 38),
+    Fundo3 = Color3.fromRGB(42, 42, 48),
     Texto = Color3.fromRGB(255, 255, 255),
-    Texto2 = Color3.fromRGB(180, 180, 180),
-    Destaque = Color3.fromRGB(0, 120, 255),
-    Destaque2 = Color3.fromRGB(0, 150, 255),
+    Texto2 = Color3.fromRGB(170, 170, 180),
+    Destaque = Color3.fromRGB(0, 140, 255),
+    Destaque2 = Color3.fromRGB(0, 170, 255),
     Verde = Color3.fromRGB(0, 200, 100),
-    Vermelho = Color3.fromRGB(255, 60, 60),
+    Vermelho = Color3.fromRGB(255, 65, 65),
     Branco = Color3.fromRGB(255, 255, 255),
     Preto = Color3.fromRGB(0, 0, 0),
+    Sombra = Color3.fromRGB(0, 0, 0),
 }
 
 local FontePadrao = Enum.Font.SourceSans
 local FonteTitulo = Enum.Font.SourceSansBold
 
--- Detectar se é dispositivo móvel
 local function isMobile()
     return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 end
@@ -70,7 +70,7 @@ function NoxysUI:Notify(titulo, conteudo, duracao)
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NoxysNotify"
     screenGui.IgnoreGuiInset = true
-    screenGui.Parent = game:GetService("CoreGui")
+    screenGui.Parent = CoreGui
 
     local frame = criarInstancia("Frame", {
         Size = UDim2.fromOffset(260, 70),
@@ -118,17 +118,20 @@ function NoxysUI:Notify(titulo, conteudo, duracao)
     end)
 end
 
--- Funções de criação de elementos (adaptadas para mobile)
+-- =====================================================
+-- FUNÇÕES DE CRIAÇÃO DE ELEMENTOS
+-- =====================================================
+
 local function criarToggle(config, parent, layoutOrder)
-    local altura = isMobile() and 40 or 38
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, altura),
+        Size = UDim2.new(1, 0, 0, 36),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 8)
+    adicionarCanto(frame, 7)
+    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
 
     local botao = criarInstancia("TextButton", {
         Size = UDim2.new(1, 0, 1, 0),
@@ -139,57 +142,57 @@ local function criarToggle(config, parent, layoutOrder)
     })
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -70, 0, 20),
+        Size = UDim2.new(1, -70, 0, 18),
         Position = UDim2.new(0, 10, 0, 3),
         BackgroundTransparency = 1,
         Text = config.Title or "Toggle",
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = isMobile() and 13 or 12,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
 
     if config.Desc then
         local descLabel = criarInstancia("TextLabel", {
-            Size = UDim2.new(1, -70, 0, 15),
-            Position = UDim2.new(0, 10, 0, 22),
+            Size = UDim2.new(1, -70, 0, 13),
+            Position = UDim2.new(0, 10, 0, 20),
             BackgroundTransparency = 1,
             Text = config.Desc,
             TextColor3 = Cores.Texto2,
             Font = FontePadrao,
-            TextSize = isMobile() and 10 or 9,
+            TextSize = 9,
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = frame,
         })
     end
 
     local switch = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(40, 20),
-        Position = UDim2.new(1, -50, 0.5, -10),
+        Size = UDim2.fromOffset(36, 18),
+        Position = UDim2.new(1, -45, 0.5, -9),
         BackgroundColor3 = Cores.Fundo3,
         BorderSizePixel = 0,
         Parent = frame,
     })
-    adicionarCanto(switch, 10)
+    adicionarCanto(switch, 9)
 
     local botaoSwitch = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(16, 16),
-        Position = UDim2.new(0, 2, 0.5, -8),
+        Size = UDim2.fromOffset(14, 14),
+        Position = UDim2.new(0, 2, 0.5, -7),
         BackgroundColor3 = Cores.Branco,
         BorderSizePixel = 0,
         Parent = switch,
     })
-    adicionarCanto(botaoSwitch, 8)
+    adicionarCanto(botaoSwitch, 7)
 
     local estado = config.Default or false
     local function atualizarVisual()
         if estado then
             switch.BackgroundColor3 = Cores.Destaque
-            botaoSwitch.Position = UDim2.new(1, -18, 0.5, -8)
+            botaoSwitch.Position = UDim2.new(1, -16, 0.5, -7)
         else
             switch.BackgroundColor3 = Cores.Fundo3
-            botaoSwitch.Position = UDim2.new(0, 2, 0.5, -8)
+            botaoSwitch.Position = UDim2.new(0, 2, 0.5, -7)
         end
     end
     atualizarVisual()
@@ -219,15 +222,15 @@ local function criarToggle(config, parent, layoutOrder)
 end
 
 local function criarBotao(config, parent, layoutOrder)
-    local altura = isMobile() and 40 or 38
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, altura),
+        Size = UDim2.new(1, 0, 0, 36),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 8)
+    adicionarCanto(frame, 7)
+    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
 
     local botao = criarInstancia("TextButton", {
         Size = UDim2.new(1, 0, 1, 0),
@@ -238,26 +241,26 @@ local function criarBotao(config, parent, layoutOrder)
     })
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 20),
+        Size = UDim2.new(1, -20, 0, 18),
         Position = UDim2.new(0, 10, 0, 3),
         BackgroundTransparency = 1,
         Text = config.Title or "Botão",
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = isMobile() and 13 or 12,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
 
     if config.Desc then
         local descLabel = criarInstancia("TextLabel", {
-            Size = UDim2.new(1, -20, 0, 15),
-            Position = UDim2.new(0, 10, 0, 22),
+            Size = UDim2.new(1, -20, 0, 13),
+            Position = UDim2.new(0, 10, 0, 20),
             BackgroundTransparency = 1,
             Text = config.Desc,
             TextColor3 = Cores.Texto2,
             Font = FontePadrao,
-            TextSize = isMobile() and 10 or 9,
+            TextSize = 9,
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = frame,
         })
@@ -276,49 +279,49 @@ local function criarBotao(config, parent, layoutOrder)
 end
 
 local function criarSlider(config, parent, layoutOrder)
-    local altura = isMobile() and 55 or 50
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, altura),
+        Size = UDim2.new(1, 0, 0, 46),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 8)
+    adicionarCanto(frame, 7)
+    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -60, 0, 20),
-        Position = UDim2.new(0, 10, 0, 5),
+        Size = UDim2.new(1, -60, 0, 18),
+        Position = UDim2.new(0, 10, 0, 4),
         BackgroundTransparency = 1,
         Text = config.Title or "Slider",
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = isMobile() and 13 or 12,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
 
     local valorLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(0, 50, 0, 20),
-        Position = UDim2.new(1, -60, 0, 5),
+        Size = UDim2.new(0, 50, 0, 18),
+        Position = UDim2.new(1, -60, 0, 4),
         BackgroundTransparency = 1,
         Text = tostring(config.Value.Default or 0),
         TextColor3 = Cores.Destaque,
         Font = FonteTitulo,
-        TextSize = isMobile() and 12 or 11,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = frame,
     })
 
     local slider = criarInstancia("TextButton", {
-        Size = UDim2.new(1, -20, 0, 10),
-        Position = UDim2.new(0, 10, 0, 30),
+        Size = UDim2.new(1, -20, 0, 8),
+        Position = UDim2.new(0, 10, 0, 26),
         BackgroundColor3 = Cores.Fundo3,
         BorderSizePixel = 0,
         Text = "",
         Parent = frame,
     })
-    adicionarCanto(slider, 5)
+    adicionarCanto(slider, 4)
 
     local preenchimento = criarInstancia("Frame", {
         Size = UDim2.new(0, 0, 1, 0),
@@ -326,7 +329,7 @@ local function criarSlider(config, parent, layoutOrder)
         BorderSizePixel = 0,
         Parent = slider,
     })
-    adicionarCanto(preenchimento, 5)
+    adicionarCanto(preenchimento, 4)
 
     local min = config.Value.Min or 0
     local max = config.Value.Max or 100
@@ -357,12 +360,12 @@ local function criarSlider(config, parent, layoutOrder)
     slider.MouseButton1Down:Connect(function()
         arrastando = true
         local conexao
-        conexao = game:GetService("RunService").RenderStepped:Connect(function()
+        conexao = RunService.RenderStepped:Connect(function()
             if not arrastando then
                 conexao:Disconnect()
                 return
             end
-            local mousePos = game:GetService("UserInputService"):GetMouseLocation()
+            local mousePos = UserInputService:GetMouseLocation()
             local posX = slider.AbsolutePosition.X
             local tamanhoX = slider.AbsoluteSize.X
             local fracao = (mousePos.X - posX) / tamanhoX
@@ -371,8 +374,8 @@ local function criarSlider(config, parent, layoutOrder)
         end)
     end)
 
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             arrastando = false
         end
     end)
@@ -392,41 +395,41 @@ local function criarSlider(config, parent, layoutOrder)
 end
 
 local function criarInput(config, parent, layoutOrder)
-    local altura = isMobile() and 48 or 45
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, altura),
+        Size = UDim2.new(1, 0, 0, 40),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 8)
+    adicionarCanto(frame, 7)
+    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 20),
+        Size = UDim2.new(1, -20, 0, 18),
         Position = UDim2.new(0, 10, 0, 3),
         BackgroundTransparency = 1,
         Text = config.Title or "Input",
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = isMobile() and 12 or 11,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
 
     local caixa = criarInstancia("TextBox", {
-        Size = UDim2.new(1, -20, 0, 22),
-        Position = UDim2.new(0, 10, 0, 23),
+        Size = UDim2.new(1, -20, 0, 18),
+        Position = UDim2.new(0, 10, 0, 21),
         BackgroundColor3 = Cores.Fundo3,
         TextColor3 = Cores.Texto,
         PlaceholderText = config.Placeholder or "",
         PlaceholderColor3 = Cores.Texto2,
         Font = FontePadrao,
-        TextSize = isMobile() and 12 or 11,
+        TextSize = 11,
         BorderSizePixel = 0,
         Parent = frame,
     })
-    adicionarCanto(caixa, 5)
+    adicionarCanto(caixa, 4)
 
     caixa.FocusLost:Connect(function(enterPressed)
         if enterPressed and config.Callback then
@@ -442,50 +445,51 @@ local function criarInput(config, parent, layoutOrder)
 end
 
 local function criarDropdown(config, parent, layoutOrder)
-    local altura = isMobile() and 48 or 45
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, altura),
+        Size = UDim2.new(1, 0, 0, 40),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 8)
+    adicionarCanto(frame, 7)
+    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 20),
+        Size = UDim2.new(1, -20, 0, 18),
         Position = UDim2.new(0, 10, 0, 3),
         BackgroundTransparency = 1,
         Text = config.Title or "Dropdown",
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = isMobile() and 12 or 11,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
 
     local botaoSelecionar = criarInstancia("TextButton", {
-        Size = UDim2.new(1, -20, 0, 22),
-        Position = UDim2.new(0, 10, 0, 23),
+        Size = UDim2.new(1, -20, 0, 18),
+        Position = UDim2.new(0, 10, 0, 21),
         BackgroundColor3 = Cores.Fundo3,
         TextColor3 = Cores.Texto,
         Font = FontePadrao,
-        TextSize = isMobile() and 12 or 11,
+        TextSize = 11,
         BorderSizePixel = 0,
         Text = config.Values[1] or "Selecione...",
         Parent = frame,
     })
-    adicionarCanto(botaoSelecionar, 5)
+    adicionarCanto(botaoSelecionar, 4)
 
     local listaOpcoes = criarInstancia("Frame", {
         Size = UDim2.new(1, -20, 0, 0),
-        Position = UDim2.new(0, 10, 0, 45),
+        Position = UDim2.new(0, 10, 0, 39),
         BackgroundColor3 = Cores.Fundo3,
         BorderSizePixel = 0,
         Visible = false,
         Parent = frame,
     })
-    adicionarCanto(listaOpcoes, 5)
+    adicionarCanto(listaOpcoes, 4)
+    adicionarBorda(listaOpcoes, Color3.fromRGB(80, 80, 90), 1)
 
     local listaLayout = criarInstancia("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
@@ -494,11 +498,11 @@ local function criarDropdown(config, parent, layoutOrder)
 
     for i, valor in ipairs(config.Values) do
         local botaoOpcao = criarInstancia("TextButton", {
-            Size = UDim2.new(1, 0, 0, 22),
+            Size = UDim2.new(1, 0, 0, 20),
             BackgroundColor3 = Cores.Fundo3,
             TextColor3 = Cores.Texto,
             Font = FontePadrao,
-            TextSize = isMobile() and 11 or 10,
+            TextSize = 10,
             BorderSizePixel = 0,
             Text = valor,
             Parent = listaOpcoes,
@@ -515,7 +519,7 @@ local function criarDropdown(config, parent, layoutOrder)
     botaoSelecionar.MouseButton1Click:Connect(function()
         listaOpcoes.Visible = not listaOpcoes.Visible
         if listaOpcoes.Visible then
-            listaOpcoes.Size = UDim2.new(1, -20, 0, #config.Values * 22)
+            listaOpcoes.Size = UDim2.new(1, -20, 0, #config.Values * 20)
         else
             listaOpcoes.Size = UDim2.new(1, -20, 0, 0)
         end
@@ -531,15 +535,15 @@ local function criarDropdown(config, parent, layoutOrder)
 end
 
 local function criarLabel(config, parent, layoutOrder)
-    local altura = isMobile() and 30 or 28
     local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, altura),
+        Size = UDim2.new(1, 0, 0, 26),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = parent,
         LayoutOrder = layoutOrder,
     })
-    adicionarCanto(frame, 8)
+    adicionarCanto(frame, 7)
+    adicionarBorda(frame, Color3.fromRGB(60, 60, 70), 1)
 
     local texto = criarInstancia("TextLabel", {
         Size = UDim2.new(1, -20, 1, 0),
@@ -548,7 +552,7 @@ local function criarLabel(config, parent, layoutOrder)
         Text = config.Text or "",
         TextColor3 = config.Cor or Cores.Texto,
         Font = config.Fonte or FontePadrao,
-        TextSize = config.Tamanho or (isMobile() and 11 or 10),
+        TextSize = config.Tamanho or 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = frame,
     })
@@ -560,6 +564,10 @@ local function criarLabel(config, parent, layoutOrder)
     return obj
 end
 
+-- =====================================================
+-- CRIAÇÃO DA JANELA (Corrigida e Moderna)
+-- =====================================================
+
 function NoxysUI:CreateWindow(config)
     config = config or {}
     local titulo = config.Title or "Noxys Hub"
@@ -570,17 +578,18 @@ function NoxysUI:CreateWindow(config)
         tamanhoJanela = config.Size
     else
         if mobile then
-            tamanhoJanela = UDim2.fromScale(0.95, 0.85)
+            tamanhoJanela = UDim2.fromScale(0.92, 0.82)
         else
-            tamanhoJanela = UDim2.fromOffset(580, 460)
+            tamanhoJanela = UDim2.fromOffset(480, 380)
         end
     end
 
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "NoxysHubUI"
     screenGui.IgnoreGuiInset = true
-    screenGui.Parent = game:GetService("CoreGui")
+    screenGui.Parent = CoreGui
 
+    -- Fundo escurecido
     local fundo = criarInstancia("Frame", {
         Size = UDim2.fromScale(1, 1),
         BackgroundColor3 = Color3.fromRGB(0, 0, 0),
@@ -589,91 +598,130 @@ function NoxysUI:CreateWindow(config)
         Parent = screenGui,
     })
 
-    local janela = criarInstancia("Frame", {
+    -- Janela principal com sombra
+    local sombra = criarInstancia("Frame", {
         Size = tamanhoJanela,
-        Position = UDim2.new(0.5, -tamanhoJanela.X.Offset/2, 0.5, -tamanhoJanela.Y.Offset/2),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = Cores.Sombra,
+        BackgroundTransparency = 0.7,
+        BorderSizePixel = 0,
+        Parent = screenGui,
+    })
+    adicionarCanto(sombra, 12)
+
+    local janela = criarInstancia("Frame", {
+        Size = UDim2.new(1, -4, 1, -4),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = Cores.Fundo,
         BorderSizePixel = 0,
         Active = true,
-        Draggable = false,
-        Parent = screenGui,
+        Parent = sombra,
     })
     adicionarCanto(janela, 10)
     adicionarBorda(janela, Cores.Destaque, 2)
 
-    -- Barra de título (arrastável)
+    -- Barra de título (arrastável manualmente)
     local barraTitulo = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, mobile and 45 or 40),
+        Size = UDim2.new(1, 0, 0, mobile and 42 or 38),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
-        Active = true,
-        Draggable = true,
         Parent = janela,
     })
     adicionarCanto(barraTitulo, 10)
 
     local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -100, 1, 0),
+        Size = UDim2.new(1, -150, 1, 0),
         Position = UDim2.new(0, 15, 0, 0),
         BackgroundTransparency = 1,
         Text = "🛡️ " .. titulo,
         TextColor3 = Cores.Texto,
         Font = FonteTitulo,
-        TextSize = mobile and 16 or 14,
+        TextSize = mobile and 15 or 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = barraTitulo,
     })
 
     local autorLabel = criarInstancia("TextLabel", {
         Size = UDim2.new(0, 100, 1, 0),
-        Position = UDim2.new(1, -110, 0, 0),
+        Position = UDim2.new(1, -215, 0, 0),
         BackgroundTransparency = 1,
         Text = "por " .. autor,
         TextColor3 = Cores.Texto2,
         Font = FontePadrao,
-        TextSize = mobile and 10 or 9,
+        TextSize = mobile and 9 or 8,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = barraTitulo,
     })
 
+    -- Botão minimizar
+    local botaoMinimizar = criarInstancia("TextButton", {
+        Size = UDim2.fromOffset(mobile and 30 or 28, mobile and 30 or 28),
+        Position = UDim2.new(1, -(mobile and 74 or 68), 0, 5),
+        BackgroundColor3 = Color3.fromRGB(240, 180, 0),
+        Text = "—",
+        TextColor3 = Cores.Branco,
+        Font = FonteTitulo,
+        TextSize = 14,
+        BorderSizePixel = 0,
+        Parent = barraTitulo,
+    })
+    adicionarCanto(botaoMinimizar, 14)
+    botaoMinimizar.MouseButton1Click:Connect(function()
+        local conteudo = janela:FindFirstChild("Conteudo")
+        if conteudo then
+            conteudo.Visible = not conteudo.Visible
+            if conteudo.Visible then
+                botaoMinimizar.Text = "—"
+                sombra.Size = tamanhoJanela
+            else
+                botaoMinimizar.Text = "□"
+                sombra.Size = UDim2.new(tamanhoJanela.X.Scale, tamanhoJanela.X.Offset, 0, barraTitulo.AbsoluteSize.Y + 4)
+            end
+        end
+    end)
+
+    -- Botão fechar
     local botaoFechar = criarInstancia("TextButton", {
-        Size = UDim2.fromOffset(mobile and 32 or 30, mobile and 32 or 30),
-        Position = UDim2.new(1, -37, 0, 5),
+        Size = UDim2.fromOffset(mobile and 30 or 28, mobile and 30 or 28),
+        Position = UDim2.new(1, -(mobile and 38 or 34), 0, 5),
         BackgroundColor3 = Cores.Vermelho,
         Text = "✕",
         TextColor3 = Cores.Branco,
         Font = FonteTitulo,
-        TextSize = mobile and 16 or 14,
+        TextSize = 14,
         BorderSizePixel = 0,
         Parent = barraTitulo,
     })
-    adicionarCanto(botaoFechar, 15)
+    adicionarCanto(botaoFechar, 14)
     botaoFechar.MouseButton1Click:Connect(function()
         screenGui:Destroy()
     end)
 
     -- Área de conteúdo
     local areaConteudo = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 1, -(mobile and 45 or 40)),
-        Position = UDim2.new(0, 0, 0, mobile and 45 or 40),
+        Name = "Conteudo",
+        Size = UDim2.new(1, 0, 1, -(mobile and 42 or 38)),
+        Position = UDim2.new(0, 0, 0, mobile and 42 or 38),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Parent = janela,
     })
 
     -- Barra lateral de abas
-    local larguraBarra = mobile and 150 or 200
+    local larguraBarra = mobile and 140 or 180
     local barraAbas = criarInstancia("Frame", {
         Size = UDim2.new(0, larguraBarra, 1, 0),
         BackgroundColor3 = Cores.Fundo2,
         BorderSizePixel = 0,
         Parent = areaConteudo,
     })
-    adicionarCanto(barraAbas, 10)
+    adicionarCanto(barraAbas, 8)
 
     local containerAbas = criarInstancia("ScrollingFrame", {
-        Size = UDim2.new(1, -10, 1, -20),
-        Position = UDim2.new(0, 5, 0, 10),
+        Size = UDim2.new(1, -8, 1, -16),
+        Position = UDim2.new(0, 4, 0, 8),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ScrollBarThickness = 0,
@@ -682,7 +730,7 @@ function NoxysUI:CreateWindow(config)
 
     local listaAbas = criarInstancia("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 5),
+        Padding = UDim.new(0, 4),
         Parent = containerAbas,
     })
 
@@ -720,20 +768,20 @@ function NoxysUI:CreateWindow(config)
         local icone = config.Icon or ""
 
         local botaoAba = criarInstancia("TextButton", {
-            Size = UDim2.new(1, -10, 0, mobile and 40 or 35),
+            Size = UDim2.new(1, -6, 0, mobile and 36 or 32),
             BackgroundColor3 = Cores.Fundo3,
             Text = (icone ~= "" and icone .. "  " or "") .. tituloAba,
             TextColor3 = Cores.Texto2,
             Font = FonteTitulo,
-            TextSize = mobile and 14 or 13,
+            TextSize = mobile and 13 or 12,
             BorderSizePixel = 0,
             Parent = containerAbas,
         })
-        adicionarCanto(botaoAba, 8)
+        adicionarCanto(botaoAba, 7)
 
         local pagina = criarInstancia("ScrollingFrame", {
-            Size = UDim2.new(1, -20, 1, -20),
-            Position = UDim2.new(0, 10, 0, 10),
+            Size = UDim2.new(1, -16, 1, -16),
+            Position = UDim2.new(0, 8, 0, 8),
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
             ScrollBarThickness = 2,
@@ -743,7 +791,7 @@ function NoxysUI:CreateWindow(config)
 
         local listaPagina = criarInstancia("UIListLayout", {
             SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 10),
+            Padding = UDim.new(0, 8),
             Parent = pagina,
         })
 
@@ -764,7 +812,7 @@ function NoxysUI:CreateWindow(config)
         function abaObj:Section(config)
             local tituloSecao = config.Title or "Seção"
             local secao = criarInstancia("Frame", {
-                Size = UDim2.new(1, 0, 0, mobile and 32 or 30),
+                Size = UDim2.new(1, 0, 0, mobile and 28 or 26),
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 Parent = pagina,
@@ -786,7 +834,7 @@ function NoxysUI:CreateWindow(config)
                 Text = tituloSecao,
                 TextColor3 = Cores.Texto,
                 Font = FonteTitulo,
-                TextSize = mobile and 15 or 14,
+                TextSize = mobile and 14 or 13,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = secao,
             })
@@ -834,6 +882,33 @@ function NoxysUI:CreateWindow(config)
     function janelaObj:Destroy()
         screenGui:Destroy()
     end
+
+    -- Implementação do arrasto manual (funciona para mouse e touch)
+    local arrastando = false
+    local offsetDrag = Vector2.new(0, 0)
+
+    barraTitulo.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            arrastando = true
+            local posMouse = UserInputService:GetMouseLocation()
+            local posJanela = sombra.AbsolutePosition
+            offsetDrag = Vector2.new(posMouse.X - posJanela.X, posMouse.Y - posJanela.Y)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if arrastando and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local posMouse = UserInputService:GetMouseLocation()
+            local novaPos = Vector2.new(posMouse.X - offsetDrag.X, posMouse.Y - offsetDrag.Y)
+            sombra.Position = UDim2.new(0, novaPos.X, 0, novaPos.Y)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            arrastando = false
+        end
+    end)
 
     return janelaObj
 end
@@ -1451,12 +1526,11 @@ local function DesativarChatWindow()
 end
 
 -- ==========================================
--- INTERFACE (NOX YS UI - Mobile Friendly)
+-- INTERFACE (NOX YS UI - Corrigida)
 -- ==========================================
 local Window = NoxysUI:CreateWindow({
     Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
     Author = "Por Noahzin",
-    -- Não especificamos Size; ele detectará mobile e usará Scale
 })
 
 -- PRINCIPAL
