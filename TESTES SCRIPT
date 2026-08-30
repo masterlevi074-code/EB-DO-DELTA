@@ -1,981 +1,33 @@
--- ==========================================
--- 0. AUTO-LIMPEZA (Evita travamentos)
--- ==========================================
-local CoreGui = game:GetService("CoreGui")
+--========================================================--
+--                     NOXYS HUB                         --
+--              TACTICAL MOBILE EDITION                  --
+--========================================================--
+
 local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
 local TeleportService = game:GetService("TeleportService")
 
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+local Workspace = game:GetService("Workspace")
+
+--========================================================--
+-- AUTO-LIMPEZA
+--========================================================--
+
 if CoreGui:FindFirstChild("WindUI") then CoreGui.WindUI:Destroy() end
-if localPlayer:WaitForChild("PlayerGui"):FindFirstChild("WindUI") then localPlayer.PlayerGui.WindUI:Destroy() end
+if PlayerGui:FindFirstChild("WindUI") then PlayerGui.WindUI:Destroy() end
 if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end
-if CoreGui:FindFirstChild("NoxysHubUI") then CoreGui.NoxysHubUI:Destroy() end
+if PlayerGui:FindFirstChild("NoxysTacticalHub") then PlayerGui.NoxysTacticalHub:Destroy() end
 
--- ==========================================
--- NOX YS UI (Interface Compacta e Organizada)
--- ==========================================
-local NoxysUI = {}
+--========================================================--
+-- VARIÁVEIS GLOBAIS
+--========================================================--
 
-local Cores = {
-    Fundo = Color3.fromRGB(20, 20, 26),
-    Fundo2 = Color3.fromRGB(30, 30, 38),
-    Fundo3 = Color3.fromRGB(40, 40, 50),
-    Fundo4 = Color3.fromRGB(50, 50, 62),
-    Texto = Color3.fromRGB(255, 255, 255),
-    Texto2 = Color3.fromRGB(170, 170, 180),
-    Texto3 = Color3.fromRGB(130, 130, 140),
-    Destaque = Color3.fromRGB(0, 140, 255),
-    Destaque2 = Color3.fromRGB(0, 180, 255),
-    Verde = Color3.fromRGB(0, 220, 110),
-    Vermelho = Color3.fromRGB(255, 70, 70),
-    Amarelo = Color3.fromRGB(255, 200, 0),
-    Branco = Color3.fromRGB(255, 255, 255),
-    Preto = Color3.fromRGB(0, 0, 0),
-    Borda = Color3.fromRGB(50, 50, 60),
-    BordaSuave = Color3.fromRGB(40, 40, 48),
-}
-
-local FontePadrao = Enum.Font.SourceSans
-local FonteTitulo = Enum.Font.SourceSansBold
-
-local function isMobile()
-    return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-end
-
-local function criarInstancia(classe, propriedades)
-    local instancia = Instance.new(classe)
-    for prop, valor in pairs(propriedades or {}) do
-        instancia[prop] = valor
-    end
-    return instancia
-end
-
-local function adicionarCanto(instancia, raio)
-    local canto = Instance.new("UICorner")
-    canto.CornerRadius = UDim.new(0, raio)
-    canto.Parent = instancia
-    return canto
-end
-
-local function adicionarBorda(instancia, cor, espessura)
-    local borda = Instance.new("UIStroke")
-    borda.Color = cor or Cores.Destaque
-    borda.Thickness = espessura or 1
-    borda.Parent = instancia
-    return borda
-end
-
-function NoxysUI:Notify(titulo, conteudo, duracao)
-    duracao = duracao or 3
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "NoxysNotify"
-    screenGui.IgnoreGuiInset = true
-    screenGui.Parent = CoreGui
-
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(250, 70),
-        Position = UDim2.new(1, -270, 0, -100),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Active = true,
-        Parent = screenGui,
-    })
-    adicionarCanto(frame, 8)
-    adicionarBorda(frame, Cores.Destaque, 1.5)
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 20),
-        Position = UDim2.new(0, 10, 0, 5),
-        BackgroundTransparency = 1,
-        Text = titulo,
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local conteudoLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 32),
-        Position = UDim2.new(0, 10, 0, 28),
-        BackgroundTransparency = 1,
-        Text = conteudo,
-        TextColor3 = Cores.Texto2,
-        Font = FontePadrao,
-        TextSize = 10,
-        TextWrapped = true,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    frame:TweenPosition(UDim2.new(1, -270, 0, 15), Enum.EasingDirection.Out, Enum.EasingStyle.Quart, 0.3, true)
-
-    task.delay(duracao, function()
-        frame:TweenPosition(UDim2.new(1, -270, 0, -100), Enum.EasingDirection.In, Enum.EasingStyle.Quart, 0.3, true)
-        task.wait(0.3)
-        screenGui:Destroy()
-    end)
-end
-
--- =====================================================
--- ELEMENTOS COMPACTOS
--- =====================================================
-
-local function criarToggle(config, parent, layoutOrder)
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 32),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = parent,
-        LayoutOrder = layoutOrder,
-    })
-    adicionarCanto(frame, 6)
-    adicionarBorda(frame, Cores.BordaSuave, 1)
-
-    local botao = criarInstancia("TextButton", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundTransparency = 1,
-        Text = "",
-        BorderSizePixel = 0,
-        Parent = frame,
-    })
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -70, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = config.Title or "Toggle",
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local switch = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(36, 18),
-        Position = UDim2.new(1, -44, 0.5, -9),
-        BackgroundColor3 = Cores.Fundo4,
-        BorderSizePixel = 0,
-        Parent = frame,
-    })
-    adicionarCanto(switch, 9)
-
-    local botaoSwitch = criarInstancia("Frame", {
-        Size = UDim2.fromOffset(14, 14),
-        Position = UDim2.new(0, 2, 0.5, -7),
-        BackgroundColor3 = Cores.Branco,
-        BorderSizePixel = 0,
-        Parent = switch,
-    })
-    adicionarCanto(botaoSwitch, 7)
-
-    local estado = config.Default or false
-    local function atualizarVisual()
-        if estado then
-            switch.BackgroundColor3 = Cores.Destaque
-            botaoSwitch.Position = UDim2.new(1, -16, 0.5, -7)
-        else
-            switch.BackgroundColor3 = Cores.Fundo4
-            botaoSwitch.Position = UDim2.new(0, 2, 0.5, -7)
-        end
-    end
-    atualizarVisual()
-
-    botao.MouseEnter:Connect(function()
-        frame.BackgroundColor3 = Cores.Fundo3
-    end)
-    botao.MouseLeave:Connect(function()
-        frame.BackgroundColor3 = Cores.Fundo2
-    end)
-
-    botao.MouseButton1Click:Connect(function()
-        estado = not estado
-        atualizarVisual()
-        if config.Callback then
-            config.Callback(estado)
-        end
-    end)
-
-    local obj = {
-        Frame = frame,
-        Set = function(self, valor)
-            estado = valor
-            atualizarVisual()
-            if config.Callback then
-                config.Callback(estado)
-            end
-        end,
-        Get = function(self)
-            return estado
-        end,
-    }
-    return obj
-end
-
-local function criarBotao(config, parent, layoutOrder)
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 30),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = parent,
-        LayoutOrder = layoutOrder,
-    })
-    adicionarCanto(frame, 6)
-    adicionarBorda(frame, Cores.BordaSuave, 1)
-
-    local botao = criarInstancia("TextButton", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundTransparency = 1,
-        Text = "",
-        BorderSizePixel = 0,
-        Parent = frame,
-    })
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -30, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = config.Title or "Botão",
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local seta = criarInstancia("TextLabel", {
-        Size = UDim2.fromOffset(15, 15),
-        Position = UDim2.new(1, -20, 0.5, -7),
-        BackgroundTransparency = 1,
-        Text = "→",
-        TextColor3 = Cores.Destaque,
-        Font = FonteTitulo,
-        TextSize = 12,
-        Parent = frame,
-    })
-
-    botao.MouseEnter:Connect(function()
-        frame.BackgroundColor3 = Cores.Fundo3
-        seta.TextColor3 = Cores.Destaque2
-    end)
-    botao.MouseLeave:Connect(function()
-        frame.BackgroundColor3 = Cores.Fundo2
-        seta.TextColor3 = Cores.Destaque
-    end)
-
-    botao.MouseButton1Click:Connect(function()
-        if config.Callback then
-            config.Callback()
-        end
-    end)
-
-    local obj = {
-        Frame = frame,
-    }
-    return obj
-end
-
-local function criarSlider(config, parent, layoutOrder)
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 40),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = parent,
-        LayoutOrder = layoutOrder,
-    })
-    adicionarCanto(frame, 6)
-    adicionarBorda(frame, Cores.BordaSuave, 1)
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -60, 0, 16),
-        Position = UDim2.new(0, 10, 0, 3),
-        BackgroundTransparency = 1,
-        Text = config.Title or "Slider",
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local valorLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(0, 50, 0, 16),
-        Position = UDim2.new(1, -60, 0, 3),
-        BackgroundTransparency = 1,
-        Text = tostring(math.floor(config.Value.Default or 0)),
-        TextColor3 = Cores.Destaque2,
-        Font = FonteTitulo,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Parent = frame,
-    })
-
-    local slider = criarInstancia("TextButton", {
-        Size = UDim2.new(1, -20, 0, 8),
-        Position = UDim2.new(0, 10, 0, 24),
-        BackgroundColor3 = Cores.Fundo4,
-        BorderSizePixel = 0,
-        Text = "",
-        Parent = frame,
-    })
-    adicionarCanto(slider, 4)
-
-    local preenchimento = criarInstancia("Frame", {
-        Size = UDim2.new(0, 0, 1, 0),
-        BackgroundColor3 = Cores.Destaque,
-        BorderSizePixel = 0,
-        Parent = slider,
-    })
-    adicionarCanto(preenchimento, 4)
-
-    local min = config.Value.Min or 0
-    local max = config.Value.Max or 100
-    local default = config.Value.Default or min
-    local step = config.Step or 1
-
-    local valorAtual = math.floor(default)
-    local arrastando = false
-
-    local function atualizarVisual()
-        local fracao = (valorAtual - min) / (max - min)
-        preenchimento.Size = UDim2.new(fracao, 0, 1, 0)
-        valorLabel.Text = tostring(math.floor(valorAtual))
-    end
-
-    local function definirValor(novoValor)
-        novoValor = math.clamp(novoValor, min, max)
-        if step ~= 1 then
-            novoValor = math.floor(novoValor / step + 0.5) * step
-        else
-            novoValor = math.floor(novoValor)
-        end
-        valorAtual = novoValor
-        atualizarVisual()
-        if config.Callback then
-            config.Callback(valorAtual)
-        end
-    end
-
-    slider.MouseButton1Down:Connect(function()
-        arrastando = true
-        local conexao
-        conexao = RunService.RenderStepped:Connect(function()
-            if not arrastando then
-                conexao:Disconnect()
-                return
-            end
-            local mousePos = UserInputService:GetMouseLocation()
-            local posX = slider.AbsolutePosition.X
-            local tamanhoX = slider.AbsoluteSize.X
-            local fracao = (mousePos.X - posX) / tamanhoX
-            fracao = math.clamp(fracao, 0, 1)
-            definirValor(min + fracao * (max - min))
-        end)
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            arrastando = false
-        end
-    end)
-
-    atualizarVisual()
-
-    local obj = {
-        Frame = frame,
-        Set = function(self, valor)
-            definirValor(valor)
-        end,
-        Get = function(self)
-            return valorAtual
-        end,
-    }
-    return obj
-end
-
-local function criarInput(config, parent, layoutOrder)
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = parent,
-        LayoutOrder = layoutOrder,
-    })
-    adicionarCanto(frame, 6)
-    adicionarBorda(frame, Cores.BordaSuave, 1)
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 14),
-        Position = UDim2.new(0, 10, 0, 2),
-        BackgroundTransparency = 1,
-        Text = config.Title or "Input",
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = 10,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local caixa = criarInstancia("TextBox", {
-        Size = UDim2.new(1, -20, 0, 16),
-        Position = UDim2.new(0, 10, 0, 17),
-        BackgroundColor3 = Cores.Fundo4,
-        TextColor3 = Cores.Texto,
-        PlaceholderText = config.Placeholder or "Digite aqui...",
-        PlaceholderColor3 = Cores.Texto3,
-        Font = FontePadrao,
-        TextSize = 10,
-        Text = "",
-        ClearTextOnFocus = false,
-        BorderSizePixel = 0,
-        Parent = frame,
-    })
-    adicionarCanto(caixa, 4)
-    adicionarBorda(caixa, Cores.Borda, 1)
-
-    caixa.FocusLost:Connect(function(enterPressed)
-        if enterPressed and config.Callback then
-            config.Callback(caixa.Text)
-        end
-    end)
-
-    local obj = {
-        Frame = frame,
-        TextBox = caixa,
-    }
-    return obj
-end
-
-local function criarDropdown(config, parent, layoutOrder)
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = parent,
-        LayoutOrder = layoutOrder,
-    })
-    adicionarCanto(frame, 6)
-    adicionarBorda(frame, Cores.BordaSuave, 1)
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 0, 14),
-        Position = UDim2.new(0, 10, 0, 2),
-        BackgroundTransparency = 1,
-        Text = config.Title or "Dropdown",
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = 10,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local botaoSelecionar = criarInstancia("TextButton", {
-        Size = UDim2.new(1, -20, 0, 16),
-        Position = UDim2.new(0, 10, 0, 17),
-        BackgroundColor3 = Cores.Fundo4,
-        TextColor3 = Cores.Texto,
-        Font = FontePadrao,
-        TextSize = 10,
-        BorderSizePixel = 0,
-        Text = config.Values[1] or "Selecione...",
-        Parent = frame,
-    })
-    adicionarCanto(botaoSelecionar, 4)
-    adicionarBorda(botaoSelecionar, Cores.Borda, 1)
-
-    local listaOpcoes = criarInstancia("Frame", {
-        Size = UDim2.new(1, -20, 0, 0),
-        Position = UDim2.new(0, 10, 0, 33),
-        BackgroundColor3 = Cores.Fundo3,
-        BorderSizePixel = 0,
-        Visible = false,
-        ZIndex = 100,
-        Parent = frame,
-    })
-    adicionarCanto(listaOpcoes, 4)
-    adicionarBorda(listaOpcoes, Cores.Destaque, 1)
-
-    local listaLayout = criarInstancia("UIListLayout", {
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Parent = listaOpcoes,
-    })
-
-    for i, valor in ipairs(config.Values) do
-        local botaoOpcao = criarInstancia("TextButton", {
-            Size = UDim2.new(1, 0, 0, 18),
-            BackgroundColor3 = Cores.Fundo3,
-            TextColor3 = Cores.Texto2,
-            Font = FontePadrao,
-            TextSize = 9,
-            BorderSizePixel = 0,
-            Text = valor,
-            ZIndex = 101,
-            Parent = listaOpcoes,
-        })
-        
-        botaoOpcao.MouseEnter:Connect(function()
-            botaoOpcao.BackgroundColor3 = Cores.Fundo4
-        end)
-        botaoOpcao.MouseLeave:Connect(function()
-            botaoOpcao.BackgroundColor3 = Cores.Fundo3
-        end)
-        
-        botaoOpcao.MouseButton1Click:Connect(function()
-            botaoSelecionar.Text = valor
-            listaOpcoes.Visible = false
-            if config.Callback then
-                config.Callback(valor)
-            end
-        end)
-    end
-
-    botaoSelecionar.MouseButton1Click:Connect(function()
-        listaOpcoes.Visible = not listaOpcoes.Visible
-        if listaOpcoes.Visible then
-            listaOpcoes.Size = UDim2.new(1, -20, 0, #config.Values * 18)
-        else
-            listaOpcoes.Size = UDim2.new(1, -20, 0, 0)
-        end
-    end)
-
-    local obj = {
-        Frame = frame,
-        Set = function(self, valor)
-            botaoSelecionar.Text = valor
-        end,
-    }
-    return obj
-end
-
-local function criarLabel(config, parent, layoutOrder)
-    local frame = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, 24),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = parent,
-        LayoutOrder = layoutOrder,
-    })
-    adicionarCanto(frame, 6)
-    adicionarBorda(frame, Cores.BordaSuave, 1)
-
-    local texto = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -20, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = config.Text or "",
-        TextColor3 = config.Cor or Cores.Texto2,
-        Font = config.Fonte or FontePadrao,
-        TextSize = config.Tamanho or 10,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = frame,
-    })
-
-    local obj = {
-        Frame = frame,
-        Texto = texto,
-    }
-    return obj
-end
-
--- =====================================================
--- CRIAÇÃO DA JANELA COMPACTA
--- =====================================================
-
-function NoxysUI:CreateWindow(config)
-    config = config or {}
-    local titulo = config.Title or "Noxys Hub"
-    local autor = config.Author or "Desconhecido"
-    local mobile = isMobile()
-    local tamanhoJanela
-    if config.Size then
-        tamanhoJanela = config.Size
-    else
-        if mobile then
-            tamanhoJanela = UDim2.fromScale(0.90, 0.80)
-        else
-            tamanhoJanela = UDim2.fromOffset(420, 340)
-        end
-    end
-
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "NoxysHubUI"
-    screenGui.IgnoreGuiInset = true
-    screenGui.Parent = CoreGui
-
-    local fundo = criarInstancia("Frame", {
-        Size = UDim2.fromScale(1, 1),
-        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
-        BackgroundTransparency = 0.5,
-        BorderSizePixel = 0,
-        Parent = screenGui,
-    })
-
-    local sombra = criarInstancia("Frame", {
-        Size = tamanhoJanela,
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Cores.Preto,
-        BackgroundTransparency = 0.5,
-        BorderSizePixel = 0,
-        Parent = screenGui,
-    })
-    adicionarCanto(sombra, 10)
-
-    local janela = criarInstancia("Frame", {
-        Size = UDim2.new(1, -6, 1, -6),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = Cores.Fundo,
-        BorderSizePixel = 0,
-        Active = true,
-        Parent = sombra,
-    })
-    adicionarCanto(janela, 8)
-    adicionarBorda(janela, Cores.Destaque, 1.5)
-
-    local barraTitulo = criarInstancia("Frame", {
-        Size = UDim2.new(1, 0, 0, mobile and 38 or 34),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = janela,
-    })
-    adicionarCanto(barraTitulo, 8)
-
-    local tituloLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(1, -170, 1, 0),
-        Position = UDim2.new(0, 60, 0, 0),
-        BackgroundTransparency = 1,
-        Text = "🛡️ " .. titulo,
-        TextColor3 = Cores.Texto,
-        Font = FonteTitulo,
-        TextSize = mobile and 13 or 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = barraTitulo,
-    })
-
-    local autorLabel = criarInstancia("TextLabel", {
-        Size = UDim2.new(0, 80, 1, 0),
-        Position = UDim2.new(1, -170, 0, 0),
-        BackgroundTransparency = 1,
-        Text = "por " .. autor,
-        TextColor3 = Cores.Texto3,
-        Font = FontePadrao,
-        TextSize = 7,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Parent = barraTitulo,
-    })
-
-    local botaoMinimizar = criarInstancia("TextButton", {
-        Size = UDim2.fromOffset(mobile and 26 or 24, mobile and 26 or 24),
-        Position = UDim2.new(1, -(mobile and 62 or 56), 0, 5),
-        BackgroundColor3 = Cores.Amarelo,
-        Text = "—",
-        TextColor3 = Cores.Branco,
-        Font = FonteTitulo,
-        TextSize = 12,
-        BorderSizePixel = 0,
-        Parent = barraTitulo,
-    })
-    adicionarCanto(botaoMinimizar, 12)
-
-    local botaoFechar = criarInstancia("TextButton", {
-        Size = UDim2.fromOffset(mobile and 26 or 24, mobile and 26 or 24),
-        Position = UDim2.new(1, -(mobile and 32 or 28), 0, 5),
-        BackgroundColor3 = Cores.Vermelho,
-        Text = "✕",
-        TextColor3 = Cores.Branco,
-        Font = FonteTitulo,
-        TextSize = 12,
-        BorderSizePixel = 0,
-        Parent = barraTitulo,
-    })
-    adicionarCanto(botaoFechar, 12)
-
-    local areaConteudo = criarInstancia("Frame", {
-        Name = "Conteudo",
-        Size = UDim2.new(1, 0, 1, -(mobile and 38 or 34)),
-        Position = UDim2.new(0, 0, 0, mobile and 38 or 34),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Parent = janela,
-    })
-
-    local larguraBarra = mobile and 120 or 150
-    local barraAbas = criarInstancia("Frame", {
-        Size = UDim2.new(0, larguraBarra, 1, 0),
-        BackgroundColor3 = Cores.Fundo2,
-        BorderSizePixel = 0,
-        Parent = areaConteudo,
-    })
-    adicionarCanto(barraAbas, 6)
-
-    local containerAbas = criarInstancia("ScrollingFrame", {
-        Size = UDim2.new(1, -6, 1, -12),
-        Position = UDim2.new(0, 3, 0, 6),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        ScrollBarThickness = 0,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        ScrollingDirection = Enum.ScrollingDirection.Y,
-        Parent = barraAbas,
-    })
-
-    local listaAbas = criarInstancia("UIListLayout", {
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 3),
-        Parent = containerAbas,
-    })
-
-    local areaPaginas = criarInstancia("Frame", {
-        Size = UDim2.new(1, -larguraBarra, 1, 0),
-        Position = UDim2.new(0, larguraBarra, 0, 0),
-        BackgroundTransparency = 1,
-        BorderSizePixel = 0,
-        Parent = areaConteudo,
-    })
-
-    local janelaObj = {
-        ScreenGui = screenGui,
-        Janela = janela,
-        AreaPaginas = areaPaginas,
-        Abas = {},
-        AbaAtiva = nil,
-    }
-
-    function janelaObj:SelectTab(aba)
-        if self.AbaAtiva then
-            self.AbaAtiva.Pagina.Visible = false
-            self.AbaAtiva.Botao.BackgroundColor3 = Cores.Fundo3
-            self.AbaAtiva.Botao.TextColor3 = Cores.Texto2
-        end
-        aba.Pagina.Visible = true
-        aba.Botao.BackgroundColor3 = Cores.Destaque
-        aba.Botao.TextColor3 = Cores.Branco
-        self.AbaAtiva = aba
-    end
-
-    function janelaObj:Tab(config)
-        local tituloAba = config.Title or "Aba"
-        local icone = config.Icon or ""
-
-        local botaoAba = criarInstancia("TextButton", {
-            Size = UDim2.new(1, -4, 0, mobile and 30 or 28),
-            BackgroundColor3 = Cores.Fundo3,
-            Text = (icone ~= "" and icone .. " " or "") .. tituloAba,
-            TextColor3 = Cores.Texto2,
-            Font = FonteTitulo,
-            TextSize = mobile and 11 or 10,
-            BorderSizePixel = 0,
-            Parent = containerAbas,
-        })
-        adicionarCanto(botaoAba, 5)
-
-        local pagina = criarInstancia("ScrollingFrame", {
-            Size = UDim2.new(1, -12, 1, -12),
-            Position = UDim2.new(0, 6, 0, 6),
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-            ScrollBarThickness = 2,
-            ScrollBarImageColor3 = Cores.Destaque,
-            ScrollBarImageTransparency = 0.5,
-            CanvasSize = UDim2.new(0, 0, 0, 0),
-            ScrollingDirection = Enum.ScrollingDirection.Y,
-            Visible = false,
-            Parent = areaPaginas,
-        })
-
-        local listaPagina = criarInstancia("UIListLayout", {
-            SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 5),
-            Parent = pagina,
-        })
-
-        listaPagina:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            pagina.CanvasSize = UDim2.new(0, 0, 0, listaPagina.AbsoluteContentSize.Y + 15)
-        end)
-
-        local layoutCounter = 0
-
-        local function novoLayoutOrder()
-            layoutCounter = layoutCounter + 1
-            return layoutCounter
-        end
-
-        local abaObj = {
-            Botao = botaoAba,
-            Pagina = pagina,
-            Lista = listaPagina,
-            _novoLayoutOrder = novoLayoutOrder,
-        }
-
-        function abaObj:Section(config)
-            local tituloSecao = config.Title or "Seção"
-            local secao = criarInstancia("Frame", {
-                Size = UDim2.new(1, 0, 0, mobile and 22 or 20),
-                BackgroundTransparency = 1,
-                BorderSizePixel = 0,
-                Parent = pagina,
-                LayoutOrder = novoLayoutOrder(),
-            })
-
-            local linha = criarInstancia("Frame", {
-                Size = UDim2.new(0, 3, 1, 0),
-                BackgroundColor3 = Cores.Destaque,
-                BorderSizePixel = 0,
-                Parent = secao,
-            })
-            adicionarCanto(linha, 1)
-
-            local tituloLabel = criarInstancia("TextLabel", {
-                Size = UDim2.new(1, -15, 1, 0),
-                Position = UDim2.new(0, 8, 0, 0),
-                BackgroundTransparency = 1,
-                Text = tituloSecao,
-                TextColor3 = Cores.Texto,
-                Font = FonteTitulo,
-                TextSize = mobile and 12 or 11,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = secao,
-            })
-
-            return secao
-        end
-
-        function abaObj:Toggle(config)
-            return criarToggle(config, pagina, novoLayoutOrder())
-        end
-
-        function abaObj:Button(config)
-            return criarBotao(config, pagina, novoLayoutOrder())
-        end
-
-        function abaObj:Slider(config)
-            return criarSlider(config, pagina, novoLayoutOrder())
-        end
-
-        function abaObj:Input(config)
-            return criarInput(config, pagina, novoLayoutOrder())
-        end
-
-        function abaObj:Dropdown(config)
-            return criarDropdown(config, pagina, novoLayoutOrder())
-        end
-
-        function abaObj:Label(config)
-            return criarLabel(config, pagina, novoLayoutOrder())
-        end
-
-        botaoAba.MouseButton1Click:Connect(function()
-            janelaObj:SelectTab(abaObj)
-        end)
-
-        table.insert(janelaObj.Abas, abaObj)
-
-        if #janelaObj.Abas == 1 then
-            janelaObj:SelectTab(abaObj)
-        end
-
-        return abaObj
-    end
-
-    function janelaObj:Destroy()
-        screenGui:Destroy()
-    end
-
-    local arrastando = false
-    local offsetDrag = Vector2.new(0, 0)
-
-    barraTitulo.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            arrastando = true
-            local posMouse = UserInputService:GetMouseLocation()
-            local posJanela = sombra.AbsolutePosition
-            offsetDrag = Vector2.new(posMouse.X - posJanela.X, posMouse.Y - posJanela.Y)
-            sombra.AnchorPoint = Vector2.new(0, 0)
-            sombra.Position = UDim2.new(0, posJanela.X, 0, posJanela.Y)
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if arrastando and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local posMouse = UserInputService:GetMouseLocation()
-            local novaPos = Vector2.new(posMouse.X - offsetDrag.X, posMouse.Y - offsetDrag.Y)
-            sombra.Position = UDim2.new(0, novaPos.X, 0, novaPos.Y)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            arrastando = false
-        end
-    end)
-
-    local botaoMinimizado = nil
-    local posicaoBotaoMinimizado = UDim2.new(0.93, 0, 0.87, 0)
-    
-    local function Minimizar()
-        sombra.Visible = false
-        fundo.Visible = false
-        
-        if not botaoMinimizado then
-            botaoMinimizado = criarInstancia("TextButton", {
-                Size = UDim2.fromOffset(42, 42),
-                Position = posicaoBotaoMinimizado,
-                BackgroundColor3 = Cores.Destaque,
-                Text = "🛡️",
-                TextColor3 = Cores.Branco,
-                Font = FonteTitulo,
-                TextSize = 16,
-                BorderSizePixel = 0,
-                Parent = screenGui,
-                Draggable = true,
-            })
-            adicionarCanto(botaoMinimizado, 21)
-            adicionarBorda(botaoMinimizado, Cores.Branco, 1.5)
-            
-            botaoMinimizado.Size = UDim2.fromOffset(0, 0)
-            botaoMinimizado:TweenSize(UDim2.fromOffset(42, 42), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.25, true)
-            
-            botaoMinimizado.MouseButton1Click:Connect(function()
-                sombra.Visible = true
-                fundo.Visible = true
-                if botaoMinimizado then
-                    posicaoBotaoMinimizado = botaoMinimizado.Position
-                    botaoMinimizado:Destroy()
-                    botaoMinimizado = nil
-                end
-            end)
-            
-            botaoMinimizado:GetPropertyChangedSignal("Position"):Connect(function()
-                if botaoMinimizado and botaoMinimizado.Visible then
-                    posicaoBotaoMinimizado = botaoMinimizado.Position
-                end
-            end)
-        else
-            botaoMinimizado.Visible = true
-            botaoMinimizado.Position = posicaoBotaoMinimizado
-            botaoMinimizado:TweenSize(UDim2.fromOffset(42, 42), Enum.EasingDirection.Out, Enum.EasingStyle.Back, 0.25, true)
-        end
-    end
-
-    botaoMinimizar.MouseButton1Click:Connect(Minimizar)
-
-    botaoFechar.MouseButton1Click:Connect(function()
-        screenGui:Destroy()
-    end)
-
-    return janelaObj
-end
-
--- ==========================================
--- VARIÁVEIS GLOBAIS DO SCRIPT
--- ==========================================
 local dashStuds = 30
 local dashButtonScreen = nil
 
@@ -1055,131 +107,585 @@ FOVCircle.Thickness = Aimbot_EspessuraFOV
 FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
-local data = {
-    {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.11, 21.28, -661.68), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.30, 29.29, -661.72), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(186.08, 37.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(186.08, 45.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(186.25, 53.36, -661.86), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.82, 61.36, -662.00), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.60, 69.40, -661.98), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.71, 77.42, -661.90), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(185.28, 85.44, -662.14), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.42, 93.48, -662.05), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.94, 101.46, -661.80), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(185.94, 109.48, -661.78), size = Vector3.new(4.00, 0.50, 17.00)},
-    {pos = Vector3.new(185.08, 5.26, -618.66), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.36, 13.28, -618.65), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(185.32, 21.29, -618.70), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.65, 29.34, -618.67), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(186.12, 37.36, -618.43), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(186.30, 45.34, -617.87), size = Vector3.new(5.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.41, 53.36, -618.05), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(185.62, 61.40, -617.79), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.58, 69.40, -617.79), size = Vector3.new(4.00, 0.50, 17.00)},
-    {pos = Vector3.new(185.87, 77.42, -618.33), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(185.73, 85.44, -618.62), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.68, 93.48, -618.49), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(185.83, 101.46, -617.76), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(185.57, 109.48, -618.45), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(270.22, 4.24, -661.72), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(277.86, 4.24, -655.56), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(269.80, 4.24, -649.96), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(284.45, 4.24, -660.72), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(284.59, 4.24, -650.23), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(267.14, 5.04, -627.94), size = Vector3.new(4.00, 0.50, 32.00)},
-    {pos = Vector3.new(288.33, 5.04, -627.86), size = Vector3.new(4.00, 0.50, 31.00)},
-    {pos = Vector3.new(277.48, 7.63, -591.97), size = Vector3.new(4.00, 0.50, 27.00)},
-    {pos = Vector3.new(271.76, 7.64, -569.98), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(279.08, 7.64, -567.95), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(265.48, 7.64, -564.93), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(271.34, 7.64, -559.70), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(259.46, 7.64, -561.92), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(260.50, 7.64, -554.72), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(250.93, 7.64, -561.91), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(248.66, 7.64, -554.60), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(243.06, 7.64, -565.74), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(235.96, 7.64, -560.93), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(240.08, 7.64, -592.47), size = Vector3.new(4.00, 0.50, 27.00)},
-    {pos = Vector3.new(394.19, 5.06, -850.78), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(389.19, 7.45, -855.82), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(392.91, 5.06, -861.09), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(384.07, 10.15, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(377.51, 12.94, -855.73), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(370.87, 14.68, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(365.12, 16.20, -856.03), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(358.50, 17.61, -855.96), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(351.76, 19.27, -856.05), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(345.37, 20.53, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(339.00, 21.54, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(334.51, 21.54, -850.11), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(328.83, 21.54, -855.97), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(335.00, 21.54, -861.70), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(324.43, 21.54, -861.35), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(324.69, 21.54, -850.36), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(318.73, 21.54, -855.70), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(313.47, 21.54, -861.90), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(308.27, 21.54, -855.88), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(314.49, 21.54, -850.04), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(303.58, 21.54, -861.59), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(303.61, 21.54, -850.61), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(298.50, 21.54, -856.16), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(393.87, 2.87, -892.93), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(394.65, 2.87, -902.16), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(389.37, 5.04, -892.40), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(389.57, 5.04, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(383.37, 7.79, -892.63), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(383.64, 7.79, -903.27), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(378.64, 9.35, -892.48), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(378.64, 9.35, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(373.27, 11.53, -892.90), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(372.82, 11.53, -903.33), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(368.47, 11.53, -892.69), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(367.91, 11.53, -903.02), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(362.88, 11.53, -894.04), size = Vector3.new(4.00, 0.50, 7.00)},
-    {pos = Vector3.new(358.03, 11.53, -901.74), size = Vector3.new(4.00, 0.50, 6.00)},
-    {pos = Vector3.new(352.36, 11.53, -894.75), size = Vector3.new(4.00, 0.50, 6.00)},
-    {pos = Vector3.new(347.47, 11.53, -899.21), size = Vector3.new(4.00, 0.50, 6.00)},
-    {pos = Vector3.new(333.21, 11.53, -897.81), size = Vector3.new(5.00, 0.50, 12.00)},
-    {pos = Vector3.new(325.73, 11.53, -898.53), size = Vector3.new(5.00, 0.50, 12.00)},
-    {pos = Vector3.new(318.25, 11.53, -897.79), size = Vector3.new(5.00, 0.50, 11.00)},
-    {pos = Vector3.new(310.71, 11.53, -898.95), size = Vector3.new(5.00, 0.50, 12.00)},
-    {pos = Vector3.new(303.10, 11.53, -898.29), size = Vector3.new(5.00, 0.50, 12.00)},
-    {pos = Vector3.new(295.54, 11.53, -898.01), size = Vector3.new(5.00, 0.50, 12.00)},
-    {pos = Vector3.new(288.21, 11.53, -898.79), size = Vector3.new(5.00, 0.50, 12.00)},
-    {pos = Vector3.new(149.54, 1.04, -856.00), size = Vector3.new(3.00, 0.50, 13.00)},
-    {pos = Vector3.new(148.21, 7.50, -855.93), size = Vector3.new(4.00, 0.50, 13.00)},
-    {pos = Vector3.new(148.27, 13.38, -856.27), size = Vector3.new(4.00, 0.50, 13.00)},
-    {pos = Vector3.new(162.71, 13.70, -859.82), size = Vector3.new(8.00, 0.50, 5.00)},
-    {pos = Vector3.new(170.73, 13.70, -852.89), size = Vector3.new(8.00, 0.50, 5.00)},
-    {pos = Vector3.new(181.41, 13.70, -859.17), size = Vector3.new(8.00, 0.50, 5.00)},
-    {pos = Vector3.new(190.97, 13.70, -853.25), size = Vector3.new(8.00, 0.50, 5.00)},
-    {pos = Vector3.new(217.92, 11.53, -848.28), size = Vector3.new(32.00, 0.50, 4.00)},
-    {pos = Vector3.new(217.99, 12.04, -863.62), size = Vector3.new(29.00, 0.50, 4.00)},
-    {pos = Vector3.new(243.52, 12.04, -855.57), size = Vector3.new(14.00, 0.50, 3.00)},
-    {pos = Vector3.new(150.43, 5.27, -897.87), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(150.71, 13.28, -898.27), size = Vector3.new(4.00, 0.50, 17.00)},
-    {pos = Vector3.new(150.28, 21.29, -898.42), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(150.45, 29.30, -898.11), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(150.52, 37.31, -898.44), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(150.56, 45.32, -897.73), size = Vector3.new(4.00, 0.50, 15.00)},
-    {pos = Vector3.new(150.95, 53.33, -898.02), size = Vector3.new(4.00, 0.50, 16.00)},
-    {pos = Vector3.new(167.23, 53.26, -903.84), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(172.90, 53.26, -900.06), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(167.09, 53.26, -890.73), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(181.65, 53.26, -902.00), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(180.48, 53.26, -893.06), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(199.10, 53.33, -897.28), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(210.50, 53.33, -897.85), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(223.52, 53.33, -898.25), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(235.61, 53.33, -897.82), size = Vector3.new(5.00, 0.50, 5.00)},
+--========================================================--
+-- TAMANHO INICIAL
+--========================================================--
+
+local UI_WIDTH = 330
+local UI_HEIGHT = 390
+
+local MIN_WIDTH = 280
+local MAX_WIDTH = 500
+
+local MIN_HEIGHT = 300
+local MAX_HEIGHT = 600
+
+--========================================================--
+-- CORES TÁTICAS
+--========================================================--
+
+local COLORS = {
+	Background = Color3.fromRGB(12, 15, 13),
+	Panel = Color3.fromRGB(20, 24, 21),
+	Panel2 = Color3.fromRGB(27, 32, 28),
+
+	Olive = Color3.fromRGB(76, 96, 60),
+	OliveDark = Color3.fromRGB(49, 62, 41),
+
+	Green = Color3.fromRGB(78, 195, 98),
+	GreenDark = Color3.fromRGB(46, 105, 57),
+
+	Yellow = Color3.fromRGB(190, 171, 77),
+
+	Text = Color3.fromRGB(232, 235, 229),
+	Muted = Color3.fromRGB(143, 151, 141),
+
+	Stroke = Color3.fromRGB(56, 67, 55)
 }
 
--- ==========================================
+local Accent = COLORS.Olive
+
+--========================================================--
+-- CONFIGURAÇÃO
+--========================================================--
+
+local Config = {
+	WalkSpeed = 16,
+	JumpPower = 50,
+	FOV = 70,
+	FOVEnabled = true,
+	Gravity = 196.2,
+	Time = 14,
+	WorldControl = true,
+	AutoApply = true,
+	Notifications = true,
+	Animations = true
+}
+
+--========================================================--
+-- SCREEN GUI
+--========================================================--
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "NoxysTacticalHub"
+Gui.ResetOnSpawn = false
+Gui.IgnoreGuiInset = true
+Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Gui.Parent = PlayerGui
+
+--========================================================--
+-- MAIN
+--========================================================--
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.fromOffset(UI_WIDTH, UI_HEIGHT)
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.Position = UDim2.fromScale(0.5, 0.5)
+Main.BackgroundColor3 = COLORS.Background
+Main.BorderSizePixel = 0
+Main.ClipsDescendants = true
+Main.Parent = Gui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = COLORS.Stroke
+MainStroke.Thickness = 1
+MainStroke.Transparency = 0.1
+MainStroke.Parent = Main
+
+--========================================================--
+-- LINHA SUPERIOR
+--========================================================--
+
+local TopLine = Instance.new("Frame")
+TopLine.Size = UDim2.new(1, 0, 0, 3)
+TopLine.BackgroundColor3 = Accent
+TopLine.BorderSizePixel = 0
+TopLine.Parent = Main
+
+--========================================================--
+-- HEADER
+--========================================================--
+
+local Top = Instance.new("Frame")
+Top.Size = UDim2.new(1, 0, 0, 56)
+Top.Position = UDim2.fromOffset(0, 3)
+Top.BackgroundColor3 = COLORS.Panel
+Top.BorderSizePixel = 0
+Top.Parent = Main
+
+-- BRASÃO NX
+local Badge = Instance.new("Frame")
+Badge.Size = UDim2.fromOffset(38, 38)
+Badge.Position = UDim2.fromOffset(10, 9)
+Badge.BackgroundColor3 = COLORS.OliveDark
+Badge.BorderSizePixel = 0
+Badge.Parent = Top
+
+local BadgeCorner = Instance.new("UICorner")
+BadgeCorner.CornerRadius = UDim.new(0, 8)
+BadgeCorner.Parent = Badge
+
+local BadgeStroke = Instance.new("UIStroke")
+BadgeStroke.Color = Accent
+BadgeStroke.Thickness = 1
+BadgeStroke.Parent = Badge
+
+local BadgeText = Instance.new("TextLabel")
+BadgeText.Size = UDim2.fromScale(1, 1)
+BadgeText.BackgroundTransparency = 1
+BadgeText.Text = "NX"
+BadgeText.TextColor3 = COLORS.Text
+BadgeText.TextSize = 13
+BadgeText.Font = Enum.Font.GothamBlack
+BadgeText.Parent = Badge
+
+-- TÍTULO
+local Title = Instance.new("TextLabel")
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.fromOffset(58, 7)
+Title.Size = UDim2.fromOffset(105, 22)
+Title.Text = "NOXYS HUB"
+Title.TextColor3 = COLORS.Text
+Title.TextSize = 15
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Top
+
+-- STATUS
+local StatusDot = Instance.new("Frame")
+StatusDot.Size = UDim2.fromOffset(8, 8)
+StatusDot.Position = UDim2.fromOffset(166, 14)
+StatusDot.BackgroundColor3 = COLORS.Green
+StatusDot.BorderSizePixel = 0
+StatusDot.Parent = Top
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(1, 0)
+StatusCorner.Parent = StatusDot
+
+local StatusText = Instance.new("TextLabel")
+StatusText.BackgroundTransparency = 1
+StatusText.Position = UDim2.fromOffset(179, 7)
+StatusText.Size = UDim2.fromOffset(60, 22)
+StatusText.Text = "ONLINE"
+StatusText.TextColor3 = COLORS.Green
+StatusText.TextSize = 9
+StatusText.Font = Enum.Font.GothamBold
+StatusText.TextXAlignment = Enum.TextXAlignment.Left
+StatusText.Parent = Top
+
+-- SUBTÍTULO
+local Subtitle = Instance.new("TextLabel")
+Subtitle.BackgroundTransparency = 1
+Subtitle.Position = UDim2.fromOffset(59, 29)
+Subtitle.Size = UDim2.new(1, -110, 0, 17)
+Subtitle.Text = "TACTICAL SYSTEM • MOBILE"
+Subtitle.TextColor3 = COLORS.Muted
+Subtitle.TextSize = 8
+Subtitle.Font = Enum.Font.GothamMedium
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+Subtitle.Parent = Top
+
+-- MINIMIZAR
+local Minimize = Instance.new("TextButton")
+Minimize.Size = UDim2.fromOffset(32, 32)
+Minimize.Position = UDim2.new(1, -42, 0, 11)
+Minimize.BackgroundColor3 = COLORS.Panel2
+Minimize.Text = "—"
+Minimize.TextColor3 = COLORS.Text
+Minimize.TextSize = 16
+Minimize.Font = Enum.Font.GothamBold
+Minimize.AutoButtonColor = false
+Minimize.Parent = Top
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 7)
+MinCorner.Parent = Minimize
+
+--========================================================--
+-- ABAS
+--========================================================--
+
+local Tabs = Instance.new("Frame")
+Tabs.Size = UDim2.new(1, -16, 0, 37)
+Tabs.Position = UDim2.fromOffset(8, 66)
+Tabs.BackgroundColor3 = COLORS.Panel
+Tabs.BorderSizePixel = 0
+Tabs.Parent = Main
+
+local TabsCorner = Instance.new("UICorner")
+TabsCorner.CornerRadius = UDim.new(0, 8)
+TabsCorner.Parent = Tabs
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.FillDirection = Enum.FillDirection.Horizontal
+TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+TabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+TabLayout.Padding = UDim.new(0, 3)
+TabLayout.Parent = Tabs
+
+local Pages = {}
+local TabButtons = {}
+
+--========================================================--
+-- CRIAR PÁGINA
+--========================================================--
+
+local function CreatePage(Name)
+	local Page = Instance.new("ScrollingFrame")
+	Page.Name = Name
+	Page.Size = UDim2.new(1, -16, 1, -114)
+	Page.Position = UDim2.fromOffset(8, 108)
+	Page.BackgroundTransparency = 1
+	Page.BorderSizePixel = 0
+	Page.ScrollBarThickness = 2
+	Page.ScrollBarImageColor3 = Accent
+	Page.ScrollBarImageTransparency = 0.15
+	Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	Page.CanvasSize = UDim2.new()
+	Page.Visible = false
+	Page.Parent = Main
+
+	local Padding = Instance.new("UIPadding")
+	Padding.PaddingBottom = UDim.new(0, 10)
+	Padding.Parent = Page
+
+	local Layout = Instance.new("UIListLayout")
+	Layout.Padding = UDim.new(0, 6)
+	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Layout.Parent = Page
+
+	Pages[Name] = Page
+	return Page
+end
+
+--========================================================--
+-- CRIAR ABA
+--========================================================--
+
+local function CreateTab(Name, Icon)
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.fromOffset(73, 28)
+	Button.BackgroundColor3 = COLORS.Panel2
+	Button.Text = Icon .. "  " .. Name
+	Button.TextColor3 = COLORS.Muted
+	Button.TextSize = 8
+	Button.Font = Enum.Font.GothamBold
+	Button.AutoButtonColor = false
+	Button.Parent = Tabs
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.Parent = Button
+
+	TabButtons[Name] = Button
+
+	Button.MouseButton1Click:Connect(function()
+		for TabName, Page in pairs(Pages) do
+			Page.Visible = TabName == Name
+			local Tab = TabButtons[TabName]
+			if TabName == Name then
+				Tab.BackgroundColor3 = Accent
+				Tab.TextColor3 = COLORS.Text
+			else
+				Tab.BackgroundColor3 = COLORS.Panel2
+				Tab.TextColor3 = COLORS.Muted
+			end
+		end
+	end)
+end
+
+CreatePage("Combat")
+CreatePage("Visual")
+CreatePage("Movement")
+CreatePage("Config")
+
+CreateTab("Combat", "●")
+CreateTab("Visual", "◉")
+CreateTab("Movement", "◆")
+CreateTab("Config", "■")
+
+--========================================================--
+-- SECTION
+--========================================================--
+
+local function Section(Page, Text)
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1, -4, 0, 20)
+	Label.BackgroundTransparency = 1
+	Label.Text = "  " .. Text
+	Label.TextColor3 = COLORS.Muted
+	Label.TextSize = 8
+	Label.Font = Enum.Font.GothamBold
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Page
+end
+
+--========================================================--
+-- TOGGLE
+--========================================================--
+
+local function Toggle(Page, Text, Default, Callback)
+	local State = Default
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(1, -4, 0, 40)
+	Button.BackgroundColor3 = COLORS.Panel
+	Button.BorderSizePixel = 0
+	Button.Text = ""
+	Button.AutoButtonColor = false
+	Button.Parent = Page
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.Parent = Button
+
+	local Label = Instance.new("TextLabel")
+	Label.BackgroundTransparency = 1
+	Label.Position = UDim2.fromOffset(12, 0)
+	Label.Size = UDim2.new(1, -65, 1, 0)
+	Label.Text = Text
+	Label.TextColor3 = COLORS.Text
+	Label.TextSize = 10
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Button
+
+	local Switch = Instance.new("Frame")
+	Switch.Size = UDim2.fromOffset(36, 19)
+	Switch.Position = UDim2.new(1, -48, 0.5, -9)
+	Switch.BackgroundColor3 = COLORS.OliveDark
+	Switch.Parent = Button
+
+	local SwitchCorner = Instance.new("UICorner")
+	SwitchCorner.CornerRadius = UDim.new(1, 0)
+	SwitchCorner.Parent = Switch
+
+	local Circle = Instance.new("Frame")
+	Circle.Size = UDim2.fromOffset(15, 15)
+	Circle.Position = UDim2.fromOffset(2, 2)
+	Circle.BackgroundColor3 = COLORS.Text
+	Circle.BorderSizePixel = 0
+	Circle.Parent = Switch
+
+	local CircleCorner = Instance.new("UICorner")
+	CircleCorner.CornerRadius = UDim.new(1, 0)
+	CircleCorner.Parent = Circle
+
+	local function Update()
+		local SwitchColor = State and Accent or COLORS.OliveDark
+		local CirclePosition = State and UDim2.new(1, -17, 0, 2) or UDim2.fromOffset(2, 2)
+		TweenService:Create(Switch, TweenInfo.new(0.15), {BackgroundColor3 = SwitchColor}):Play()
+		TweenService:Create(Circle, TweenInfo.new(0.15), {Position = CirclePosition}):Play()
+		if Callback then Callback(State) end
+	end
+
+	Button.MouseButton1Click:Connect(function()
+		State = not State
+		Update()
+	end)
+
+	Update()
+	return {Set = function(Value) State = Value; Update() end}
+end
+
+--========================================================--
+-- SLIDER
+--========================================================--
+
+local function Slider(Page, Text, Min, Max, Default, Callback)
+	local Value = Default
+	local Dragging = false
+	local Frame = Instance.new("Frame")
+	Frame.Size = UDim2.new(1, -4, 0, 55)
+	Frame.BackgroundColor3 = COLORS.Panel
+	Frame.BorderSizePixel = 0
+	Frame.Parent = Page
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.Parent = Frame
+
+	local Label = Instance.new("TextLabel")
+	Label.BackgroundTransparency = 1
+	Label.Position = UDim2.fromOffset(12, 4)
+	Label.Size = UDim2.new(1, -70, 0, 18)
+	Label.Text = Text
+	Label.TextColor3 = COLORS.Text
+	Label.TextSize = 10
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Frame
+
+	local ValueLabel = Instance.new("TextLabel")
+	ValueLabel.BackgroundTransparency = 1
+	ValueLabel.Position = UDim2.new(1, -55, 0, 4)
+	ValueLabel.Size = UDim2.fromOffset(43, 18)
+	ValueLabel.Text = tostring(Value)
+	ValueLabel.TextColor3 = Accent
+	ValueLabel.TextSize = 9
+	ValueLabel.Font = Enum.Font.GothamBold
+	ValueLabel.Parent = Frame
+
+	local Bar = Instance.new("Frame")
+	Bar.Size = UDim2.new(1, -24, 0, 5)
+	Bar.Position = UDim2.new(0, 12, 1, -14)
+	Bar.BackgroundColor3 = COLORS.OliveDark
+	Bar.BorderSizePixel = 0
+	Bar.Parent = Frame
+
+	local BarCorner = Instance.new("UICorner")
+	BarCorner.CornerRadius = UDim.new(1, 0)
+	BarCorner.Parent = Bar
+
+	local Percent = math.clamp((Value - Min) / (Max - Min), 0, 1)
+
+	local Fill = Instance.new("Frame")
+	Fill.Size = UDim2.new(Percent, 0, 1, 0)
+	Fill.BackgroundColor3 = Accent
+	Fill.BorderSizePixel = 0
+	Fill.Parent = Bar
+
+	local FillCorner = Instance.new("UICorner")
+	FillCorner.CornerRadius = UDim.new(1, 0)
+	FillCorner.Parent = Fill
+
+	local Knob = Instance.new("Frame")
+	Knob.Size = UDim2.fromOffset(11, 11)
+	Knob.AnchorPoint = Vector2.new(0.5, 0.5)
+	Knob.Position = UDim2.new(Percent, 0, 0.5, 0)
+	Knob.BackgroundColor3 = COLORS.Text
+	Knob.BorderSizePixel = 0
+	Knob.Parent = Bar
+
+	local KnobCorner = Instance.new("UICorner")
+	KnobCorner.CornerRadius = UDim.new(1, 0)
+	KnobCorner.Parent = Knob
+
+	local function SetValue(X)
+		local Width = Bar.AbsoluteSize.X
+		if Width <= 0 then return end
+		local P = math.clamp((X - Bar.AbsolutePosition.X) / Width, 0, 1)
+		Value = math.floor(Min + (Max - Min) * P + 0.5)
+		Fill.Size = UDim2.new(P, 0, 1, 0)
+		Knob.Position = UDim2.new(P, 0, 0.5, 0)
+		ValueLabel.Text = tostring(Value)
+		if Callback then Callback(Value) end
+	end
+
+	Bar.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			Dragging = true
+			SetValue(Input.Position.X)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(Input)
+		if not Dragging then return end
+		if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseMovement then
+			SetValue(Input.Position.X)
+		end
+	end)
+
+	UserInputService.InputEnded:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			Dragging = false
+		end
+	end)
+
+	return Frame
+end
+
+--========================================================--
+-- BOTÃO
+--========================================================--
+
+local function Button(Page, Text, Callback)
+	local B = Instance.new("TextButton")
+	B.Size = UDim2.new(1, -4, 0, 39)
+	B.BackgroundColor3 = COLORS.Panel
+	B.BorderSizePixel = 0
+	B.Text = Text
+	B.TextColor3 = COLORS.Text
+	B.TextSize = 10
+	B.Font = Enum.Font.GothamMedium
+	B.AutoButtonColor = false
+	B.Parent = Page
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.Parent = B
+
+	B.MouseButton1Click:Connect(function()
+		if Callback then Callback() end
+	end)
+
+	return B
+end
+
+--========================================================--
+-- NOTIFICAÇÕES
+--========================================================--
+
+local NotificationHolder = Instance.new("Frame")
+NotificationHolder.Size = UDim2.fromOffset(220, 160)
+NotificationHolder.Position = UDim2.new(1, -230, 1, -170)
+NotificationHolder.BackgroundTransparency = 1
+NotificationHolder.Parent = Gui
+
+local NotifyLayout = Instance.new("UIListLayout")
+NotifyLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+NotifyLayout.Padding = UDim.new(0, 5)
+NotifyLayout.Parent = NotificationHolder
+
+local function Notify(Text)
+	if not Config.Notifications then return end
+	local N = Instance.new("Frame")
+	N.Size = UDim2.new(1, 0, 0, 40)
+	N.BackgroundColor3 = COLORS.Panel
+	N.BorderSizePixel = 0
+	N.Parent = NotificationHolder
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.Parent = N
+
+	local Stroke = Instance.new("UIStroke")
+	Stroke.Color = Accent
+	Stroke.Thickness = 1
+	Stroke.Transparency = 0.25
+	Stroke.Parent = N
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1, -16, 1, 0)
+	Label.Position = UDim2.fromOffset(8, 0)
+	Label.BackgroundTransparency = 1
+	Label.Text = Text
+	Label.TextColor3 = COLORS.Text
+	Label.TextSize = 9
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = N
+
+	N.Position = UDim2.new(1, 10, 0, 0)
+	TweenService:Create(N, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+
+	task.delay(2, function()
+		local Tween = TweenService:Create(N, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {Position = UDim2.new(1, 10, 0, 0)})
+		Tween:Play()
+		Tween.Completed:Wait()
+		N:Destroy()
+	end)
+end
+
+--========================================================--
 -- FUNÇÕES ESP
--- ==========================================
+--========================================================--
+
 local function GetPlayerTime(player)
     if player.Team then
         local teamName = player.Team.Name
@@ -1193,7 +699,7 @@ end
 local function AtualizarESP()
     if not CorESP then CorESP = Color3.fromRGB(255, 50, 50) end
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= localPlayer and p.Character then
+        if p ~= Player and p.Character then
             local mostrarESP = true
             if ESP_TimesAtivado then
                 local timePlayer = GetPlayerTime(p)
@@ -1216,7 +722,7 @@ local function AtualizarESP()
 end
 
 local function CriarESP(p)
-    if p == localPlayer then return end
+    if p == Player then return end
     local function AdicionarUI(c)
         local head = c:WaitForChild("Head", 5)
         if not head then return end
@@ -1248,21 +754,6 @@ for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
 Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end end)
 
-local function AplicarCorESP(novaCor)
-    CorESP = novaCor or Color3.fromRGB(255, 50, 50)
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= localPlayer and plr.Character then
-            local h = plr.Character:FindFirstChild("NoahzinESP"); if h then pcall(function() h.FillColor = CorESP end) end
-            local box = plr.Character:FindFirstChild("NoahzinBox"); if box then pcall(function() box.Color3 = CorESP end) end
-            local head = plr.Character:FindFirstChild("Head")
-            if head then local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui and nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = CorESP end) end
-            end
-        end
-        if LinhasTracers[plr] then pcall(function() LinhasTracers[plr].Color = CorESP end) end
-    end
-end
-
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
     local fovVertical = math.rad(camera.FieldOfView)
@@ -1273,7 +764,7 @@ end
 local function EstaVisivel(alvoParte)
     local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = {localPlayer.Character}; params.IgnoreWater = true
+    params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
     if not resultado then return true end
     local alvo = alvoParte.Parent
@@ -1291,7 +782,7 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
 end
 
 local function TemItemEquipado()
-    if localPlayer.Character then for _, child in pairs(localPlayer.Character:GetChildren()) do if child:IsA("Tool") then return true end end end
+    if Player.Character then for _, child in pairs(Player.Character:GetChildren()) do if child:IsA("Tool") then return true end end end
     return false
 end
 
@@ -1302,9 +793,9 @@ local function ObterJogadorMaisProximoDaMira()
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= localPlayer and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+        if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
             if JogadoresIgnorados[p.Name] then continue end
-            if Aimbot_TeamCheck and SaoDoMesmoTime(localPlayer, p) then continue end
+            if Aimbot_TeamCheck and SaoDoMesmoTime(Player, p) then continue end
             local parteBuscada = nil
             if Aimbot_ParteAlvo == "Head" then parteBuscada = p.Character:FindFirstChild("Head")
             elseif Aimbot_ParteAlvo == "Torso" then parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
@@ -1328,9 +819,10 @@ local function ObterJogadorMaisProximoDaMira()
     return melhorAlvo
 end
 
--- ==========================================
+--========================================================--
 -- AUTO JJ
--- ==========================================
+--========================================================--
+
 local function CarregarScriptJJ()
     if not AutoJJ_Script then pcall(function() AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua")) end) end
 end
@@ -1338,7 +830,7 @@ local function DestruirPainelJJ()
     pcall(function()
         local todosGuis = {}
         for _, gui in pairs(CoreGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
-        for _, gui in pairs(localPlayer.PlayerGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
+        for _, gui in pairs(PlayerGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
         for _, gui in pairs(todosGuis) do
             local nome = gui.Name:lower()
             if nome:find("auto") or nome:find("jj") then gui:Destroy()
@@ -1350,9 +842,33 @@ local function DestruirPainelJJ()
 end
 local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
--- ==========================================
+--========================================================--
 -- BLOCOS PARKOUR
--- ==========================================
+--========================================================--
+
+local data = {
+    {pos = Vector3.new(185.03, 5.04, -661.62), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.39, 13.26, -661.39), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.11, 21.28, -661.68), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.30, 29.29, -661.72), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.08, 37.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.08, 45.36, -661.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.25, 53.36, -661.86), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.82, 61.36, -662.00), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.60, 69.40, -661.98), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.71, 77.42, -661.90), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.28, 85.44, -662.14), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.42, 93.48, -662.05), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.94, 101.46, -661.80), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.94, 109.48, -661.78), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(185.08, 5.26, -618.66), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.36, 13.28, -618.65), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.32, 21.29, -618.70), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.65, 29.34, -618.67), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(186.12, 37.36, -618.43), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(186.30, 45.34, -617.87), size = Vector3.new(5.00, 0.50, 16.00)},
+}
+
 local function CreateHitboxes()
     for _, v in ipairs(data) do
         local p = Instance.new("Part", workspace)
@@ -1364,9 +880,10 @@ local function CreateHitboxes()
 end
 local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destroy() end end; Hitboxes = {} end
 
--- ==========================================
+--========================================================--
 -- LOOP PRINCIPAL
--- ==========================================
+--========================================================--
+
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
@@ -1381,14 +898,14 @@ RunService.RenderStepped:Connect(function()
         end
     end
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= localPlayer and p.Character then
+        if p ~= Player and p.Character then
             local root = p.Character:FindFirstChild("HumanoidRootPart"); local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and root and hum.Health > 0 and Hitbox_Ativado then root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho); root.Transparency = Hitbox_Transparencia; pcall(function() root.Material = Hitbox_Material end); pcall(function() root.Color = Hitbox_Cor end); root.CanCollide = false end
         end
     end
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
-        if ESP_Tracers and p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+        if ESP_Tracers and p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
             local root = p.Character.HumanoidRootPart; local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health > 0 then
                 local mostrar = true
@@ -1400,22 +917,23 @@ RunService.RenderStepped:Connect(function()
         else if tracer then tracer.Visible = false end end
     end
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= localPlayer and p.Character then
+        if p ~= Player and p.Character then
             local head = p.Character:FindFirstChild("Head"); local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if head and hum and ESP_Names then local nameGui = head:FindFirstChild("NoahzinName")
                 if nameGui and nameGui:FindFirstChild("TextLabel") then nameGui.TextLabel.Text = ESP_Vida and string.format("%s [%d/%d]", p.Name, math.floor(hum.Health), math.floor(hum.MaxHealth)) or p.Name end
             end
         end
     end
-    if BlocosAtivado and localPlayer.Character then
-        local hrp = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if BlocosAtivado and Player.Character then
+        local hrp = Player.Character:FindFirstChild("HumanoidRootPart")
         if hrp then local velY = hrp.AssemblyLinearVelocity.Y; for _, part in pairs(Hitboxes) do if part then part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1)) end end end
     end
 end)
 
--- ==========================================
--- BOTÃO FLUTUANTE (DASH)
--- ==========================================
+--========================================================--
+-- BOTÃO DASH
+--========================================================--
+
 local function CriarBotaoDash()
    dashButtonScreen = Instance.new("ScreenGui"); dashButtonScreen.Name = "DashButtonScreen"; dashButtonScreen.Parent = CoreGui
    local mainButton = Instance.new("TextButton"); mainButton.Size = UDim2.new(0, 60, 0, 60); mainButton.Position = UDim2.new(0.85, 0, 0.5, 0)
@@ -1423,64 +941,32 @@ local function CriarBotaoDash()
    mainButton.Font = Enum.Font.SourceSansBold; mainButton.TextSize = 14; mainButton.BorderSizePixel = 0; mainButton.Active = true; mainButton.Draggable = true; mainButton.Parent = dashButtonScreen
    Instance.new("UICorner", mainButton).CornerRadius = UDim.new(0, 12)
    local uiStroke = Instance.new("UIStroke", mainButton); uiStroke.Color = Color3.fromRGB(0, 120, 255); uiStroke.Thickness = 2
-   mainButton.MouseButton1Click:Connect(function() local char = localPlayer.Character; if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -dashStuds) end end)
+   mainButton.MouseButton1Click:Connect(function() local char = Player.Character; if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -dashStuds) end end)
 end
 local function RemoverBotaoDash() if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end end
-local function ObterListaJogadores()
-    local jogadores = {}
-    for _, player in pairs(Players:GetPlayers()) do if player ~= localPlayer then table.insert(jogadores, player.Name) end end
-    if #jogadores == 0 then table.insert(jogadores, "Nenhum jogador online") end
-    return jogadores
-end
 
--- ==========================================
+--========================================================--
 -- TROCA DE SERVIDOR
--- ==========================================
+--========================================================--
+
 local function TrocarServidor(tipo)
     local placeId = game.PlaceId
     if tipo == "cheio" then pcall(function() TeleportService:Teleport(placeId) end)
-    elseif tipo == "vazio" then pcall(function() TeleportService:TeleportToPlaceInstance(placeId, "", localPlayer) end)
+    elseif tipo == "vazio" then pcall(function() TeleportService:TeleportToPlaceInstance(placeId, "", Player) end)
     elseif tipo == "rejoin" then pcall(function() TeleportService:Teleport(placeId) end)
     end
 end
 
--- ==========================================
+--========================================================--
 -- FAKE ADMIN
--- ==========================================
+--========================================================--
+
 local function EncontrarJogadorAdmin(nome)
     nome = nome:lower()
     for _, p in pairs(Players:GetPlayers()) do
         if p.Name:lower():find(nome, 1, true) or (p.DisplayName and p.DisplayName:lower():find(nome, 1, true)) then return p end
     end
     return nil
-end
-
-local function AbrirCmdBar()
-    if CoreGui:FindFirstChild("CmdBarGUI") then CoreGui.CmdBarGUI:Destroy(); return end
-    local painel = Instance.new("ScreenGui"); painel.Name = "CmdBarGUI"; painel.Parent = CoreGui
-    local frame = Instance.new("Frame"); frame.Size = UDim2.new(0, 350, 0, 120); frame.Position = UDim2.new(0.5, -175, 0.3, -60)
-    frame.BackgroundColor3 = Color3.fromRGB(20, 20, 25); frame.BorderSizePixel = 0; frame.Active = true; frame.Draggable = true; frame.Parent = painel
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10); Instance.new("UIStroke", frame).Thickness = 1.5
-    local titulo = Instance.new("TextLabel"); titulo.Size = UDim2.new(1, 0, 0, 30); titulo.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-    titulo.Text = "💻 COMMAND BAR"; titulo.TextColor3 = Color3.fromRGB(255, 255, 255); titulo.Font = Enum.Font.SourceSansBold; titulo.TextSize = 12; titulo.Parent = frame
-    Instance.new("UICorner", titulo).CornerRadius = UDim.new(0, 10)
-    local fechar = Instance.new("TextButton"); fechar.Size = UDim2.new(0, 25, 0, 25); fechar.Position = UDim2.new(1, -30, 0, 3)
-    fechar.BackgroundColor3 = Color3.fromRGB(200, 50, 50); fechar.Text = "✕"; fechar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    fechar.Font = Enum.Font.SourceSansBold; fechar.TextSize = 14; fechar.Parent = frame
-    Instance.new("UICorner", fechar).CornerRadius = UDim.new(1, 0); fechar.MouseButton1Click:Connect(function() painel:Destroy() end)
-    local input = Instance.new("TextBox"); input.Size = UDim2.new(1, -20, 0, 35); input.Position = UDim2.new(0, 10, 0, 40)
-    input.BackgroundColor3 = Color3.fromRGB(35, 35, 40); input.TextColor3 = Color3.fromRGB(255, 255, 255)
-    input.PlaceholderText = "Digite o comando..."; input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-    input.Font = Enum.Font.Code; input.TextSize = 12; input.Text = ""; input.Parent = frame; Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
-    local executar = Instance.new("TextButton"); executar.Size = UDim2.new(1, -20, 0, 30); executar.Position = UDim2.new(0, 10, 0, 80)
-    executar.BackgroundColor3 = Color3.fromRGB(0, 150, 100); executar.Text = "▶ EXECUTAR"; executar.TextColor3 = Color3.fromRGB(255, 255, 255)
-    executar.Font = Enum.Font.SourceSansBold; executar.TextSize = 11; executar.Parent = frame; Instance.new("UICorner", executar).CornerRadius = UDim.new(0, 6)
-    local function executarCmd()
-        local texto = input.Text
-        if texto ~= "" then if not texto:sub(1, #Admin_Prefixo) == Admin_Prefixo then texto = Admin_Prefixo .. texto end; ExecutarComandoAdmin(texto); input.Text = "" end
-    end
-    executar.MouseButton1Click:Connect(executarCmd); input.FocusLost:Connect(function(enterPressed) if enterPressed then executarCmd() end end)
-    task.wait(0.1); input:CaptureFocus()
 end
 
 local function ExecutarComandoAdmin(mensagem)
@@ -1493,69 +979,59 @@ local function ExecutarComandoAdmin(mensagem)
     table.remove(args, 1)
     local resto = table.concat(args, " ")
     
-    if cmd == "help" then
-        pcall(function() game:GetService("TextChatService").TextChannels.RBXGeneral:DisplaySystemMessage("📋 !to, !bring, !respawn, !unfreeze, !invis, !vis, !view, !unview, !sit, !jump, !hipheight, !char, !cmdbar, !chatwindow") end)
-    elseif cmd == "to" or cmd == "tp" then
+    if cmd == "to" or cmd == "tp" then
         local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
-            localPlayer.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and Player.Character then
+            Player.Character.HumanoidRootPart.CFrame = alvo.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
         end
     elseif cmd == "bring" then
         local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character then
-            alvo.Character.HumanoidRootPart.CFrame = localPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") and Player.Character then
+            alvo.Character.HumanoidRootPart.CFrame = Player.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
         end
     elseif cmd == "respawn" then
-        if resto == "all" then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then pcall(function() p:LoadCharacter() end) end end
+        if resto == "all" then for _, p in pairs(Players:GetPlayers()) do if p ~= Player then pcall(function() p:LoadCharacter() end) end end
         else local alvo = EncontrarJogadorAdmin(resto); if alvo then pcall(function() alvo:LoadCharacter() end) end
         end
-    elseif cmd == "unfreeze" then
-        local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and alvo.Character:FindFirstChild("HumanoidRootPart") then alvo.Character.HumanoidRootPart.Anchored = false end
     elseif cmd == "invis" then
-        if localPlayer.Character then for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0.9 end end; Admin_Invisivel = true end
+        if Player.Character then for _, part in pairs(Player.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0.9 end end; Admin_Invisivel = true end
     elseif cmd == "vis" then
-        if localPlayer.Character then for _, part in pairs(localPlayer.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0 end end; Admin_Invisivel = false end
+        if Player.Character then for _, part in pairs(Player.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0 end end; Admin_Invisivel = false end
     elseif cmd == "view" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character then Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
     elseif cmd == "unview" then
-        Workspace.CurrentCamera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") or localPlayer.Character
+        Workspace.CurrentCamera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character
     elseif cmd == "sit" then
-        if resto == "" then if localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then localPlayer.Character.Humanoid.Sit = true end
-        else local alvo = EncontrarJogadorAdmin(resto); if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Sit = true end
-        end
+        local alvo = EncontrarJogadorAdmin(resto)
+        if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Sit = true end
     elseif cmd == "jump" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Jump = true end
     elseif cmd == "hipheight" then
         local valor = tonumber(resto)
-        if valor and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then localPlayer.Character.Humanoid.HipHeight = valor end
+        if valor and Player.Character and Player.Character:FindFirstChild("Humanoid") then Player.Character.Humanoid.HipHeight = valor end
     elseif cmd == "char" or cmd == "skin" then
         local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character and localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid") then
+        if alvo and alvo.Character and Player.Character and Player.Character:FindFirstChild("Humanoid") then
             local alvoHum = alvo.Character:FindFirstChildOfClass("Humanoid")
             if alvoHum then
                 local desc = alvoHum:GetAppliedDescription()
-                localPlayer.Character.Humanoid:ApplyDescription(desc)
+                Player.Character.Humanoid:ApplyDescription(desc)
             end
         end
-    elseif cmd == "cmdbar" or cmd == "cmd" then
-        AbrirCmdBar()
-    elseif cmd == "chatwindow" or cmd == "cw" then
-        ChatWindow_Ativado = not ChatWindow_Ativado
-        if ChatWindow_Ativado then AtivarChatWindow() else DesativarChatWindow() end
     end
 end
 
 task.spawn(function()
-    pcall(function() game:GetService("TextChatService").MessageReceived:Connect(function(message) if message.TextSource == localPlayer then ExecutarComandoAdmin(message.Text) end end) end)
-    pcall(function() localPlayer.Chatted:Connect(function(mensagem) ExecutarComandoAdmin(mensagem) end) end)
+    pcall(function() game:GetService("TextChatService").MessageReceived:Connect(function(message) if message.TextSource == Player then ExecutarComandoAdmin(message.Text) end end) end)
+    pcall(function() Player.Chatted:Connect(function(mensagem) ExecutarComandoAdmin(mensagem) end) end)
 end)
 
--- ==========================================
+--========================================================--
 -- CHATWINDOW
--- ==========================================
+--========================================================--
+
 local function AtivarChatWindow()
     if ChatWindow_Conexoes then DesativarChatWindow() end
     local StarterGui = game:GetService("StarterGui"); local TextChatService = game:GetService("TextChatService")
@@ -1584,149 +1060,439 @@ local function DesativarChatWindow()
     end)
 end
 
--- ==========================================
--- INTERFACE (COMPACTA)
--- ==========================================
-local Window = NoxysUI:CreateWindow({
-    Title = "Exército Brasileiro 🇧🇷 | Noxys Hub",
-    Author = "Por Noahzin",
-})
+--========================================================--
+-- COMBAT PAGE
+--========================================================--
 
--- PRINCIPAL
-local MainTab = Window:Tab({Title = "Principal", Icon = "🏠"})
-MainTab:Button({Title = "Resetar", Callback = function() if localPlayer.Character then localPlayer.Character:BreakJoints() end end})
-MainTab:Section({Title = "Auto JJ"})
-MainTab:Toggle({Title = "Auto JJ Polichinelos", Default = false, Callback = function(v) AutoJJ_Ativado = v; if v then IniciarAutoJJ() else DestruirPainelJJ() end end})
-MainTab:Section({Title = "Blocos"})
-MainTab:Toggle({Title = "Blocos Parkour", Default = false, Callback = function(v) BlocosAtivado = v; if v then CreateHitboxes() else RemoveHitboxes() end end})
+local CombatPage = Pages.Combat
 
--- COMBATE
-local CombatTab = Window:Tab({Title = "Combate", Icon = "⚔️"})
-CombatTab:Section({Title = "Aimbot"})
-CombatTab:Toggle({Title = "Aimbot", Default = false, Callback = function(v) Aimbot_Ativado = v end})
-CombatTab:Toggle({Title = "Mostrar FOV", Default = false, Callback = function(v) Aimbot_UsarFOV = v; FOVCircle.Visible = v end})
-CombatTab:Toggle({Title = "Team Check", Default = false, Callback = function(v) Aimbot_TeamCheck = v end})
-CombatTab:Toggle({Title = "Wall Check", Default = false, Callback = function(v) Aimbot_WallCheck = v end})
-CombatTab:Toggle({Title = "Priorizar Perto", Default = false, Callback = function(v) Aimbot_PrioridadeDistancia = v end})
-CombatTab:Toggle({Title = "Só com item", Default = false, Callback = function(v) Aimbot_SoComItem = v end})
-CombatTab:Input({Title = "Raio FOV", Placeholder = "100", Callback = function(t) local n = tonumber(t) if n then Aimbot_RaioFOV = n; FOVCircle.Radius = n end end})
-CombatTab:Input({Title = "Suavidade", Placeholder = "0.15", Callback = function(t) local n = tonumber(t) if n then Aimbot_Suavidade = math.clamp(n, 0.01, 1) end end})
-CombatTab:Dropdown({Title = "Parte do Corpo", Values = {"Head", "Torso", "Perna"}, Callback = function(Value) Aimbot_ParteAlvo = Value end})
-CombatTab:Section({Title = "Hitbox"})
-CombatTab:Toggle({Title = "Hitbox Expander", Default = false, Callback = function(v)
-    Hitbox_Ativado = v
-    if not v then for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
+Section(CombatPage, "AIMBOT")
+
+Toggle(CombatPage, "AIMBOT ENABLED", false, function(State) Aimbot_Ativado = State end)
+Toggle(CombatPage, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
+Toggle(CombatPage, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
+Toggle(CombatPage, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
+
+Slider(CombatPage, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
+Slider(CombatPage, "SMOOTHNESS", 1, 20, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
+
+Section(CombatPage, "HITBOX")
+
+Toggle(CombatPage, "HITBOX EXPANDER", false, function(State)
+    Hitbox_Ativado = State
+    if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
+end)
+
+Slider(CombatPage, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
+
+--========================================================--
+-- VISUAL PAGE
+--========================================================--
+
+local VisualPage = Pages.Visual
+
+Section(VisualPage, "ESP")
+
+Toggle(VisualPage, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
+Toggle(VisualPage, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
+Toggle(VisualPage, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
+Toggle(VisualPage, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
+Toggle(VisualPage, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
+Toggle(VisualPage, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
+
+Section(VisualPage, "CAMERA")
+
+Slider(VisualPage, "FIELD OF VIEW", 40, 120, Config.FOV, function(Value)
+    Config.FOV = Value
+    if Config.FOVEnabled then
+        local Camera = Workspace.CurrentCamera
+        if Camera then Camera.FieldOfView = Value end
     end
-end})
-CombatTab:Input({Title = "Tamanho", Placeholder = "20", Callback = function(t) local n = tonumber(t) if n then Hitbox_Tamanho = n end end})
+end)
 
--- VISUAIS
-local VisualTab = Window:Tab({Title = "Visuais", Icon = "👁️"})
-VisualTab:Section({Title = "ESP"})
-VisualTab:Toggle({Title = "ESP Completo", Default = false, Callback = function(v) ESP_Chams=v; ESP_Box=v; ESP_Names=v; ESP_Tracers=v; AtualizarESP() end})
-VisualTab:Toggle({Title = "ESP Box", Default = false, Callback = function(v) ESP_Box=v; AtualizarESP() end})
-VisualTab:Toggle({Title = "ESP Names", Default = false, Callback = function(v) ESP_Names=v; AtualizarESP() end})
-VisualTab:Toggle({Title = "ESP Chams", Default = false, Callback = function(v) ESP_Chams=v; AtualizarESP() end})
-VisualTab:Toggle({Title = "ESP Tracers", Default = false, Callback = function(v) ESP_Tracers=v; AtualizarESP() end})
-VisualTab:Toggle({Title = "ESP Vida", Default = false, Callback = function(v) ESP_Vida=v; AtualizarESP() end})
-VisualTab:Section({Title = "Times"})
-VisualTab:Toggle({Title = "ESP por Times", Default = false, Callback = function(v) ESP_TimesAtivado = v; AtualizarESP() end})
-local timesOrdenados = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
-for _, nomeTime in ipairs(timesOrdenados) do VisualTab:Button({Title = nomeTime, Callback = function() TimesMarcados[nomeTime] = not TimesMarcados[nomeTime]; AtualizarESP() end}) end
-VisualTab:Section({Title = "Luz"})
-VisualTab:Button({Title = "Fullbright", Callback = function() Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false; Lighting.OutdoorAmbient=Color3.fromRGB(128,128,128) end})
+Toggle(VisualPage, "FOV ENABLED", Config.FOVEnabled, function(State)
+    Config.FOVEnabled = State
+    local Camera = Workspace.CurrentCamera
+    if Camera then Camera.FieldOfView = State and Config.FOV or 70 end
+end)
 
--- OUTROS
-local OutrosTab = Window:Tab({Title = "Outros", Icon = "⚙️"})
-OutrosTab:Section({Title = "Dash"})
-OutrosTab:Toggle({Title = "Botão Dash", Default = false, Callback = function(v) if v then CriarBotaoDash() else RemoverBotaoDash() end end})
-OutrosTab:Input({Title = "Distância", Placeholder = "30", Callback = function(t) local n = tonumber(t) if n then dashStuds = n end end})
-OutrosTab:Section({Title = "Speed"})
-OutrosTab:Toggle({Title = "Speed Hack", Default = false, Callback = function(v)
-    SpeedHack_Ativado = v
-    if v then if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
+Button(VisualPage, "FULLBRIGHT", function()
+    Lighting.Brightness = 2
+    Lighting.ClockTime = 14
+    Lighting.GlobalShadows = false
+    Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+    Notify("Fullbright ativado")
+end)
+
+--========================================================--
+-- MOVEMENT PAGE
+--========================================================--
+
+local MovementPage = Pages.Movement
+
+Section(MovementPage, "MOVEMENT")
+
+Slider(MovementPage, "WALK SPEED", 8, 100, Config.WalkSpeed, function(Value)
+    Config.WalkSpeed = Value
+    local Character = Player.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    if Humanoid then Humanoid.WalkSpeed = Value end
+end)
+
+Slider(MovementPage, "JUMP POWER", 20, 120, Config.JumpPower, function(Value)
+    Config.JumpPower = Value
+    local Character = Player.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    if Humanoid then Humanoid.UseJumpPower = true; Humanoid.JumpPower = Value end
+end)
+
+Section(MovementPage, "SPEED HACK")
+
+Toggle(MovementPage, "SPEED HACK", false, function(State)
+    SpeedHack_Ativado = State
+    if State then
+        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
         SpeedHack_Conexao = RunService.RenderStepped:Connect(function()
-            if not SpeedHack_Ativado then return end; local char = localPlayer.Character; if not char then return end
-            local root = char:FindFirstChild("HumanoidRootPart"); local humanoid = char:FindFirstChild("Humanoid")
+            if not SpeedHack_Ativado then return end
+            local char = Player.Character
+            if not char then return end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local humanoid = char:FindFirstChild("Humanoid")
             if not root or not humanoid then return end
-            if humanoid.MoveDirection.Magnitude > 0 then local moveDirection = humanoid.MoveDirection; local speed = SpeedHack_Velocidade * 0.5; root.CFrame = root.CFrame + (moveDirection * speed / 60) end
-        end)
-    else if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
-    end
-end})
-OutrosTab:Slider({Title = "Velocidade", Value = {Min = 1, Max = 500, Default = 50}, Step = 1, Callback = function(v) SpeedHack_Velocidade = v end})
-OutrosTab:Section({Title = "Underground"})
-OutrosTab:Toggle({Title = "Underground", Default = false, Callback = function(v)
-    Underground_Ativado = v; local char = localPlayer.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end; local root = char.HumanoidRootPart
-    if v then Underground_Voltando = false
-        if not Underground_CameraPart then Underground_CameraPart = Instance.new("Part"); Underground_CameraPart.Name = "CameraGhost"; Underground_CameraPart.Size = Vector3.new(1, 1, 1); Underground_CameraPart.Anchored = true; Underground_CameraPart.CanCollide = false; Underground_CameraPart.Transparency = 1; Underground_CameraPart.Parent = Workspace end
-        Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z); root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
-        if Underground_Conexao then Underground_Conexao:Disconnect() end
-        Underground_Conexao = RunService.Heartbeat:Connect(function()
-            if not Underground_Ativado or Underground_Voltando then return end; local charAtual = localPlayer.Character; if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
-            local rootAtual = charAtual.HumanoidRootPart; if rootAtual.Position.Y < -22 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z) end
-            if Underground_CameraPart then Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z) end
-        end)
-        local camera = Workspace.CurrentCamera; camera.CameraSubject = Underground_CameraPart; camera.CameraType = Enum.CameraType.Follow
-    else Underground_Voltando = true; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
-        local camera = Workspace.CurrentCamera; if camera then camera.CameraSubject = localPlayer.Character and localPlayer.Character:FindFirstChild("Humanoid"); camera.CameraType = Enum.CameraType.Follow end
-        if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end; root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z); task.wait(0.5); Underground_Voltando = false
-    end
-end})
-OutrosTab:Section({Title = "Passe Livre"})
-OutrosTab:Toggle({Title = "Passe Livre", Default = false, Callback = function(v)
-    PasseLivre_Ativado = v
-    if v then if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
-        PasseLivre_Conexao = RunService.Heartbeat:Connect(function()
-            if not PasseLivre_Ativado then return end; local char = localPlayer.Character; if not char or not char:FindFirstChild("HumanoidRootPart") then return end
-            local root = char.HumanoidRootPart; local posHorizontal = Vector3.new(root.Position.X, 0, root.Position.Z); local centroHorizontal = Vector3.new(PasseLivre_Centro.X, 0, PasseLivre_Centro.Z)
-            local distancia = (posHorizontal - centroHorizontal).Magnitude
-            if distancia <= PasseLivre_Raio then if not PasseLivre_NoClipAtivo then PasseLivre_NoClipAtivo = true; for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end end; root.CanCollide = false; NoxysUI:Notify("Passe Livre", "✅ Noclip ATIVADO!") end
-            else if PasseLivre_NoClipAtivo then PasseLivre_NoClipAtivo = false; for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end; NoxysUI:Notify("Passe Livre", "❌ Noclip DESATIVADO!") end
+            if humanoid.MoveDirection.Magnitude > 0 then
+                local moveDirection = humanoid.MoveDirection
+                local speed = SpeedHack_Velocidade * 0.5
+                root.CFrame = root.CFrame + (moveDirection * speed / 60)
             end
         end)
-    else if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
-        if PasseLivre_NoClipAtivo then PasseLivre_NoClipAtivo = false; local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
+    else
+        if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     end
-end})
-OutrosTab:Section({Title = "FOV"})
-OutrosTab:Slider({Title = "FOV Camera", Value = {Min = 30, Max = 120, Default = 70}, Step = 1, Callback = function(v) Workspace.CurrentCamera.FieldOfView = v end})
-OutrosTab:Section({Title = "Teleporte"})
-OutrosTab:Input({Title = "Nome do Jogador", Placeholder = "Nome...", Callback = function(t)
-    if t ~= "" then local encontrado = false; local texto = t:lower()
-        for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer then local nome = p.Name:lower(); local display = p.DisplayName:lower()
-            if nome:find(texto, 1, true) or display:find(texto, 1, true) then if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart") then localPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0); NoxysUI:Notify("TP", "Teleportado para " .. p.Name); encontrado = true; break end end
-        end end
-        if not encontrado then NoxysUI:Notify("TP", "Jogador não encontrado!") end
-    end
-end})
+end)
 
--- CONFIGS
-local ConfigTab = Window:Tab({Title = "Configs", Icon = "🔧"})
-ConfigTab:Section({Title = "Admin"})
-ConfigTab:Toggle({Title = "Modo Admin", Default = false, Callback = function(v) Admin_Ativado = v; NoxysUI:Notify("Admin", v and "🟢 ATIVADO!" or "🔴 DESATIVADO!") end})
-ConfigTab:Input({Title = "Prefixo", Placeholder = "!", Callback = function(t) if t ~= "" then Admin_Prefixo = t end end})
-ConfigTab:Section({Title = "Servidor"})
-ConfigTab:Button({Title = "🔄 Rejoin", Callback = function() task.wait(3); TrocarServidor("rejoin") end})
-ConfigTab:Button({Title = "👥 Servidor Cheio", Callback = function() task.wait(1); TrocarServidor("cheio") end})
-ConfigTab:Button({Title = "🏠 Servidor Vazio", Callback = function() task.wait(1); TrocarServidor("vazio") end})
-ConfigTab:Section({Title = "Ações"})
-ConfigTab:Button({Title = "🗑️ Destruir Tudo", Callback = function()
+Slider(MovementPage, "SPEED VALUE", 1, 500, 50, function(Value) SpeedHack_Velocidade = Value end)
+
+Section(MovementPage, "DASH")
+
+Toggle(MovementPage, "DASH BUTTON", false, function(State)
+    if State then CriarBotaoDash() else RemoverBotaoDash() end
+end)
+
+Slider(MovementPage, "DASH DISTANCE", 10, 100, 30, function(Value) dashStuds = Value end)
+
+Section(MovementPage, "SPECIAL")
+
+Toggle(MovementPage, "UNDERGROUND", false, function(State)
+    Underground_Ativado = State
+    local char = Player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end
+    local root = char.HumanoidRootPart
+    if State then
+        Underground_Voltando = false
+        if not Underground_CameraPart then
+            Underground_CameraPart = Instance.new("Part")
+            Underground_CameraPart.Name = "CameraGhost"
+            Underground_CameraPart.Size = Vector3.new(1, 1, 1)
+            Underground_CameraPart.Anchored = true
+            Underground_CameraPart.CanCollide = false
+            Underground_CameraPart.Transparency = 1
+            Underground_CameraPart.Parent = Workspace
+        end
+        Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
+        if Underground_Conexao then Underground_Conexao:Disconnect() end
+        Underground_Conexao = RunService.Heartbeat:Connect(function()
+            if not Underground_Ativado or Underground_Voltando then return end
+            local charAtual = Player.Character
+            if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
+            local rootAtual = charAtual.HumanoidRootPart
+            if rootAtual.Position.Y < -22 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z) end
+            if Underground_CameraPart then Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z) end
+        end)
+        local camera = Workspace.CurrentCamera
+        camera.CameraSubject = Underground_CameraPart
+        camera.CameraType = Enum.CameraType.Follow
+    else
+        Underground_Voltando = true
+        if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
+        local camera = Workspace.CurrentCamera
+        if camera then camera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid"); camera.CameraType = Enum.CameraType.Follow end
+        if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+        root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
+        task.wait(0.5)
+        Underground_Voltando = false
+    end
+end)
+
+Toggle(MovementPage, "PASSE LIVRE", false, function(State)
+    PasseLivre_Ativado = State
+    if State then
+        if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
+        PasseLivre_Conexao = RunService.Heartbeat:Connect(function()
+            if not PasseLivre_Ativado then return end
+            local char = Player.Character
+            if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+            local root = char.HumanoidRootPart
+            local posHorizontal = Vector3.new(root.Position.X, 0, root.Position.Z)
+            local centroHorizontal = Vector3.new(PasseLivre_Centro.X, 0, PasseLivre_Centro.Z)
+            local distancia = (posHorizontal - centroHorizontal).Magnitude
+            if distancia <= PasseLivre_Raio then
+                if not PasseLivre_NoClipAtivo then
+                    PasseLivre_NoClipAtivo = true
+                    for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end end
+                    root.CanCollide = false
+                    Notify("Noclip ATIVADO")
+                end
+            else
+                if PasseLivre_NoClipAtivo then
+                    PasseLivre_NoClipAtivo = false
+                    for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end
+                    Notify("Noclip DESATIVADO")
+                end
+            end
+        end)
+    else
+        if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
+        if PasseLivre_NoClipAtivo then
+            PasseLivre_NoClipAtivo = false
+            local char = Player.Character
+            if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end
+        end
+    end
+end)
+
+Section(MovementPage, "AUTO JJ")
+
+Toggle(MovementPage, "AUTO JJ", false, function(State)
+    AutoJJ_Ativado = State
+    if State then IniciarAutoJJ() else DestruirPainelJJ() end
+end)
+
+Toggle(MovementPage, "BLOCOS PARKOUR", false, function(State)
+    BlocosAtivado = State
+    if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+--========================================================--
+-- CONFIG PAGE
+--========================================================--
+
+local ConfigPage = Pages.Config
+
+Section(ConfigPage, "SYSTEM")
+
+Toggle(ConfigPage, "ANIMATIONS", Config.Animations, function(State) Config.Animations = State end)
+Toggle(ConfigPage, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
+
+Section(ConfigPage, "ADMIN")
+
+Toggle(ConfigPage, "ADMIN MODE", false, function(State)
+    Admin_Ativado = State
+    Notify(State and "Admin ATIVADO" or "Admin DESATIVADO")
+end)
+
+Section(ConfigPage, "SERVER")
+
+Button(ConfigPage, "REJOIN", function() task.wait(3); TrocarServidor("rejoin") end)
+Button(ConfigPage, "SERVER CHEIO", function() task.wait(1); TrocarServidor("cheio") end)
+Button(ConfigPage, "SERVER VAZIO", function() task.wait(1); TrocarServidor("vazio") end)
+
+Section(ConfigPage, "THEME")
+
+Button(ConfigPage, "OLIVE THEME", function()
+    Accent = COLORS.Olive
+    TopLine.BackgroundColor3 = Accent
+    BadgeStroke.Color = Accent
+    for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
+    Notify("Olive theme aplicado")
+end)
+
+Button(ConfigPage, "GREEN THEME", function()
+    Accent = COLORS.GreenDark
+    TopLine.BackgroundColor3 = Accent
+    BadgeStroke.Color = Accent
+    for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
+    Notify("Green theme aplicado")
+end)
+
+Section(ConfigPage, "ACTIONS")
+
+Button(ConfigPage, "RESET ALL", function()
+    Config.WalkSpeed = 16
+    Config.JumpPower = 50
+    Config.FOV = 70
+    Config.Gravity = 196.2
+    Config.Time = 14
+    local Character = Player.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    if Humanoid then Humanoid.WalkSpeed = 16; Humanoid.UseJumpPower = true; Humanoid.JumpPower = 50 end
+    local Camera = Workspace.CurrentCamera
+    if Camera then Camera.FieldOfView = 70 end
+    Workspace.Gravity = 196.2
+    Lighting.ClockTime = 14
+    Notify("Configuração restaurada")
+end)
+
+Button(ConfigPage, "DESTRUIR TUDO", function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
-    if PasseLivre_NoClipAtivo then local char = localPlayer.Character; if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end end end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
-    if CoreGui:FindFirstChild("CmdBarGUI") then CoreGui.CmdBarGUI:Destroy() end
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
-    for _, p in pairs(Players:GetPlayers()) do if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1; pcall(function() p.Character.HumanoidRootPart.Color = Color3.fromRGB(255, 255, 255) end); pcall(function() p.Character.HumanoidRootPart.Material = Enum.Material.Plastic end) end end
+    for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
-    Window:Destroy()
-end})
+    Gui:Destroy()
+end)
 
-print("✅ Noxys Hub v3.3 - Interface Compacta!")
-print("Comandos: !to, !bring, !respawn, !invis, !vis, !view, !unview, !sit, !jump, !hipheight, !char, !cmdbar, !chatwindow")
+--========================================================--
+-- RESPAWN
+--========================================================--
+
+Player.CharacterAdded:Connect(function(Character)
+    local Humanoid = Character:WaitForChild("Humanoid", 5)
+    if Humanoid and Config.AutoApply then
+        Humanoid.WalkSpeed = Config.WalkSpeed
+        Humanoid.UseJumpPower = true
+        Humanoid.JumpPower = Config.JumpPower
+    end
+end)
+
+--========================================================--
+-- DRAG DA UI
+--========================================================--
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+Top.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = true
+        DragStart = Input.Position
+        StartPosition = Main.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+    if not Dragging then return end
+    if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseMovement then
+        local Delta = Input.Position - DragStart
+        Main.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = false
+    end
+end)
+
+--========================================================--
+-- REDIMENSIONAMENTO
+--========================================================--
+
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Name = "ResizeHandle"
+ResizeHandle.Size = UDim2.fromOffset(25, 25)
+ResizeHandle.AnchorPoint = Vector2.new(1, 1)
+ResizeHandle.Position = UDim2.new(1, -3, 1, -3)
+ResizeHandle.BackgroundColor3 = COLORS.OliveDark
+ResizeHandle.BackgroundTransparency = 0.05
+ResizeHandle.BorderSizePixel = 0
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = COLORS.Text
+ResizeHandle.TextSize = 12
+ResizeHandle.Font = Enum.Font.GothamBold
+ResizeHandle.AutoButtonColor = false
+ResizeHandle.ZIndex = 100
+ResizeHandle.Parent = Main
+
+local ResizeCorner = Instance.new("UICorner")
+ResizeCorner.CornerRadius = UDim.new(0, 6)
+ResizeCorner.Parent = ResizeHandle
+
+local ResizeStroke = Instance.new("UIStroke")
+ResizeStroke.Color = Accent
+ResizeStroke.Thickness = 1
+ResizeStroke.Parent = ResizeHandle
+
+local Resizing = false
+local ResizeStart
+local StartWidth
+local StartHeight
+
+ResizeHandle.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Resizing = true
+        ResizeStart = Input.Position
+        StartWidth = Main.AbsoluteSize.X
+        StartHeight = Main.AbsoluteSize.Y
+        ResizeHandle.BackgroundColor3 = Accent
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+    if not Resizing then return end
+    if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseMovement then
+        local Delta = Input.Position - ResizeStart
+        local NewWidth = math.clamp(StartWidth + Delta.X, MIN_WIDTH, MAX_WIDTH)
+        local NewHeight = math.clamp(StartHeight + Delta.Y, MIN_HEIGHT, MAX_HEIGHT)
+        Main.Size = UDim2.fromOffset(NewWidth, NewHeight)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Resizing = false
+        ResizeHandle.BackgroundColor3 = COLORS.OliveDark
+    end
+end)
+
+--========================================================--
+-- MINIMIZAR
+--========================================================--
+
+local Minimized = false
+local NormalSize = UDim2.fromOffset(UI_WIDTH, UI_HEIGHT)
+local MiniSize = UDim2.fromOffset(UI_WIDTH, 59)
+
+Minimize.MouseButton1Click:Connect(function()
+    Minimized = not Minimized
+    if Minimized then
+        TweenService:Create(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = MiniSize}):Play()
+        Minimize.Text = "+"
+        Tabs.Visible = false
+        ResizeHandle.Visible = false
+        for _, Page in pairs(Pages) do Page.Visible = false end
+    else
+        TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = NormalSize}):Play()
+        Minimize.Text = "—"
+        Tabs.Visible = true
+        ResizeHandle.Visible = true
+        Pages.Combat.Visible = true
+        TabButtons.Combat.BackgroundColor3 = Accent
+        TabButtons.Combat.TextColor3 = COLORS.Text
+    end
+end)
+
+--========================================================--
+-- ABA INICIAL
+--========================================================--
+
+Pages.Combat.Visible = true
+TabButtons.Combat.BackgroundColor3 = Accent
+TabButtons.Combat.TextColor3 = COLORS.Text
+
+--========================================================--
+-- NOTIFICAÇÃO INICIAL
+--========================================================--
+
+task.delay(0.5, function()
+    Notify("NOXYS HUB ONLINE")
+end)
+
+print("[NOXYS HUB] Tactical Mobile Edition carregada.")
