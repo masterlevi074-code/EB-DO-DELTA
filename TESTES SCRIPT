@@ -108,17 +108,17 @@ FOVCircle.Radius = Aimbot_RaioFOV
 FOVCircle.Filled = false
 
 --========================================================--
--- TAMANHO INICIAL
+-- TAMANHO MENOR
 --========================================================--
 
-local UI_WIDTH = 330
-local UI_HEIGHT = 390
+local UI_WIDTH = 280
+local UI_HEIGHT = 340
 
-local MIN_WIDTH = 280
-local MAX_WIDTH = 500
+local MIN_WIDTH = 240
+local MAX_WIDTH = 420
 
-local MIN_HEIGHT = 300
-local MAX_HEIGHT = 600
+local MIN_HEIGHT = 260
+local MAX_HEIGHT = 500
 
 --========================================================--
 -- CORES TÁTICAS
@@ -188,7 +188,7 @@ Main.ClipsDescendants = true
 Main.Parent = Gui
 
 local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = Main
 
 local MainStroke = Instance.new("UIStroke")
@@ -202,32 +202,31 @@ MainStroke.Parent = Main
 --========================================================--
 
 local TopLine = Instance.new("Frame")
-TopLine.Size = UDim2.new(1, 0, 0, 3)
+TopLine.Size = UDim2.new(1, 0, 0, 2)
 TopLine.BackgroundColor3 = Accent
 TopLine.BorderSizePixel = 0
 TopLine.Parent = Main
 
 --========================================================--
--- HEADER
+-- HEADER COMPACTO
 --========================================================--
 
 local Top = Instance.new("Frame")
-Top.Size = UDim2.new(1, 0, 0, 56)
-Top.Position = UDim2.fromOffset(0, 3)
+Top.Size = UDim2.new(1, 0, 0, 44)
+Top.Position = UDim2.fromOffset(0, 2)
 Top.BackgroundColor3 = COLORS.Panel
 Top.BorderSizePixel = 0
 Top.Parent = Main
 
--- BRASÃO NX
 local Badge = Instance.new("Frame")
-Badge.Size = UDim2.fromOffset(38, 38)
-Badge.Position = UDim2.fromOffset(10, 9)
+Badge.Size = UDim2.fromOffset(30, 30)
+Badge.Position = UDim2.fromOffset(8, 7)
 Badge.BackgroundColor3 = COLORS.OliveDark
 Badge.BorderSizePixel = 0
 Badge.Parent = Top
 
 local BadgeCorner = Instance.new("UICorner")
-BadgeCorner.CornerRadius = UDim.new(0, 8)
+BadgeCorner.CornerRadius = UDim.new(0, 6)
 BadgeCorner.Parent = Badge
 
 local BadgeStroke = Instance.new("UIStroke")
@@ -240,26 +239,24 @@ BadgeText.Size = UDim2.fromScale(1, 1)
 BadgeText.BackgroundTransparency = 1
 BadgeText.Text = "NX"
 BadgeText.TextColor3 = COLORS.Text
-BadgeText.TextSize = 13
+BadgeText.TextSize = 11
 BadgeText.Font = Enum.Font.GothamBlack
 BadgeText.Parent = Badge
 
--- TÍTULO
 local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
-Title.Position = UDim2.fromOffset(58, 7)
-Title.Size = UDim2.fromOffset(105, 22)
+Title.Position = UDim2.fromOffset(44, 5)
+Title.Size = UDim2.fromOffset(80, 18)
 Title.Text = "NOXYS HUB"
 Title.TextColor3 = COLORS.Text
-Title.TextSize = 15
+Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Top
 
--- STATUS
 local StatusDot = Instance.new("Frame")
-StatusDot.Size = UDim2.fromOffset(8, 8)
-StatusDot.Position = UDim2.fromOffset(166, 14)
+StatusDot.Size = UDim2.fromOffset(6, 6)
+StatusDot.Position = UDim2.fromOffset(128, 11)
 StatusDot.BackgroundColor3 = COLORS.Green
 StatusDot.BorderSizePixel = 0
 StatusDot.Parent = Top
@@ -270,63 +267,61 @@ StatusCorner.Parent = StatusDot
 
 local StatusText = Instance.new("TextLabel")
 StatusText.BackgroundTransparency = 1
-StatusText.Position = UDim2.fromOffset(179, 7)
-StatusText.Size = UDim2.fromOffset(60, 22)
+StatusText.Position = UDim2.fromOffset(138, 5)
+StatusText.Size = UDim2.fromOffset(45, 18)
 StatusText.Text = "ONLINE"
 StatusText.TextColor3 = COLORS.Green
-StatusText.TextSize = 9
+StatusText.TextSize = 7
 StatusText.Font = Enum.Font.GothamBold
 StatusText.TextXAlignment = Enum.TextXAlignment.Left
 StatusText.Parent = Top
 
--- SUBTÍTULO
 local Subtitle = Instance.new("TextLabel")
 Subtitle.BackgroundTransparency = 1
-Subtitle.Position = UDim2.fromOffset(59, 29)
-Subtitle.Size = UDim2.new(1, -110, 0, 17)
-Subtitle.Text = "TACTICAL SYSTEM • MOBILE"
+Subtitle.Position = UDim2.fromOffset(45, 23)
+Subtitle.Size = UDim2.new(1, -90, 0, 14)
+Subtitle.Text = "TACTICAL SYSTEM"
 Subtitle.TextColor3 = COLORS.Muted
-Subtitle.TextSize = 8
+Subtitle.TextSize = 7
 Subtitle.Font = Enum.Font.GothamMedium
 Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 Subtitle.Parent = Top
 
--- MINIMIZAR
 local Minimize = Instance.new("TextButton")
-Minimize.Size = UDim2.fromOffset(32, 32)
-Minimize.Position = UDim2.new(1, -42, 0, 11)
+Minimize.Size = UDim2.fromOffset(26, 26)
+Minimize.Position = UDim2.new(1, -34, 0, 9)
 Minimize.BackgroundColor3 = COLORS.Panel2
 Minimize.Text = "—"
 Minimize.TextColor3 = COLORS.Text
-Minimize.TextSize = 16
+Minimize.TextSize = 13
 Minimize.Font = Enum.Font.GothamBold
 Minimize.AutoButtonColor = false
 Minimize.Parent = Top
 
 local MinCorner = Instance.new("UICorner")
-MinCorner.CornerRadius = UDim.new(0, 7)
+MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
 --========================================================--
--- ABAS
+-- ABAS COMPACTAS
 --========================================================--
 
 local Tabs = Instance.new("Frame")
-Tabs.Size = UDim2.new(1, -16, 0, 37)
-Tabs.Position = UDim2.fromOffset(8, 66)
+Tabs.Size = UDim2.new(1, -12, 0, 30)
+Tabs.Position = UDim2.fromOffset(6, 52)
 Tabs.BackgroundColor3 = COLORS.Panel
 Tabs.BorderSizePixel = 0
 Tabs.Parent = Main
 
 local TabsCorner = Instance.new("UICorner")
-TabsCorner.CornerRadius = UDim.new(0, 8)
+TabsCorner.CornerRadius = UDim.new(0, 6)
 TabsCorner.Parent = Tabs
 
 local TabLayout = Instance.new("UIListLayout")
 TabLayout.FillDirection = Enum.FillDirection.Horizontal
 TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-TabLayout.Padding = UDim.new(0, 3)
+TabLayout.Padding = UDim.new(0, 2)
 TabLayout.Parent = Tabs
 
 local Pages = {}
@@ -339,8 +334,8 @@ local TabButtons = {}
 local function CreatePage(Name)
 	local Page = Instance.new("ScrollingFrame")
 	Page.Name = Name
-	Page.Size = UDim2.new(1, -16, 1, -114)
-	Page.Position = UDim2.fromOffset(8, 108)
+	Page.Size = UDim2.new(1, -12, 1, -90)
+	Page.Position = UDim2.fromOffset(6, 86)
 	Page.BackgroundTransparency = 1
 	Page.BorderSizePixel = 0
 	Page.ScrollBarThickness = 2
@@ -352,11 +347,11 @@ local function CreatePage(Name)
 	Page.Parent = Main
 
 	local Padding = Instance.new("UIPadding")
-	Padding.PaddingBottom = UDim.new(0, 10)
+	Padding.PaddingBottom = UDim.new(0, 8)
 	Padding.Parent = Page
 
 	local Layout = Instance.new("UIListLayout")
-	Layout.Padding = UDim.new(0, 6)
+	Layout.Padding = UDim.new(0, 4)
 	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	Layout.Parent = Page
 
@@ -370,17 +365,17 @@ end
 
 local function CreateTab(Name, Icon)
 	local Button = Instance.new("TextButton")
-	Button.Size = UDim2.fromOffset(73, 28)
+	Button.Size = UDim2.fromOffset(60, 22)
 	Button.BackgroundColor3 = COLORS.Panel2
-	Button.Text = Icon .. "  " .. Name
+	Button.Text = Icon .. " " .. Name
 	Button.TextColor3 = COLORS.Muted
-	Button.TextSize = 8
+	Button.TextSize = 7
 	Button.Font = Enum.Font.GothamBold
 	Button.AutoButtonColor = false
 	Button.Parent = Tabs
 
 	local Corner = Instance.new("UICorner")
-	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.CornerRadius = UDim.new(0, 5)
 	Corner.Parent = Button
 
 	TabButtons[Name] = Button
@@ -411,29 +406,29 @@ CreateTab("Movement", "◆")
 CreateTab("Config", "■")
 
 --========================================================--
--- SECTION
+-- SECTION COMPACTA
 --========================================================--
 
 local function Section(Page, Text)
 	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1, -4, 0, 20)
+	Label.Size = UDim2.new(1, -4, 0, 16)
 	Label.BackgroundTransparency = 1
 	Label.Text = "  " .. Text
 	Label.TextColor3 = COLORS.Muted
-	Label.TextSize = 8
+	Label.TextSize = 7
 	Label.Font = Enum.Font.GothamBold
 	Label.TextXAlignment = Enum.TextXAlignment.Left
 	Label.Parent = Page
 end
 
 --========================================================--
--- TOGGLE
+-- TOGGLE COMPACTO
 --========================================================--
 
 local function Toggle(Page, Text, Default, Callback)
 	local State = Default
 	local Button = Instance.new("TextButton")
-	Button.Size = UDim2.new(1, -4, 0, 40)
+	Button.Size = UDim2.new(1, -4, 0, 32)
 	Button.BackgroundColor3 = COLORS.Panel
 	Button.BorderSizePixel = 0
 	Button.Text = ""
@@ -441,23 +436,23 @@ local function Toggle(Page, Text, Default, Callback)
 	Button.Parent = Page
 
 	local Corner = Instance.new("UICorner")
-	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.CornerRadius = UDim.new(0, 6)
 	Corner.Parent = Button
 
 	local Label = Instance.new("TextLabel")
 	Label.BackgroundTransparency = 1
-	Label.Position = UDim2.fromOffset(12, 0)
-	Label.Size = UDim2.new(1, -65, 1, 0)
+	Label.Position = UDim2.fromOffset(10, 0)
+	Label.Size = UDim2.new(1, -55, 1, 0)
 	Label.Text = Text
 	Label.TextColor3 = COLORS.Text
-	Label.TextSize = 10
+	Label.TextSize = 9
 	Label.Font = Enum.Font.GothamMedium
 	Label.TextXAlignment = Enum.TextXAlignment.Left
 	Label.Parent = Button
 
 	local Switch = Instance.new("Frame")
-	Switch.Size = UDim2.fromOffset(36, 19)
-	Switch.Position = UDim2.new(1, -48, 0.5, -9)
+	Switch.Size = UDim2.fromOffset(30, 16)
+	Switch.Position = UDim2.new(1, -40, 0.5, -8)
 	Switch.BackgroundColor3 = COLORS.OliveDark
 	Switch.Parent = Button
 
@@ -466,7 +461,7 @@ local function Toggle(Page, Text, Default, Callback)
 	SwitchCorner.Parent = Switch
 
 	local Circle = Instance.new("Frame")
-	Circle.Size = UDim2.fromOffset(15, 15)
+	Circle.Size = UDim2.fromOffset(12, 12)
 	Circle.Position = UDim2.fromOffset(2, 2)
 	Circle.BackgroundColor3 = COLORS.Text
 	Circle.BorderSizePixel = 0
@@ -478,9 +473,9 @@ local function Toggle(Page, Text, Default, Callback)
 
 	local function Update()
 		local SwitchColor = State and Accent or COLORS.OliveDark
-		local CirclePosition = State and UDim2.new(1, -17, 0, 2) or UDim2.fromOffset(2, 2)
-		TweenService:Create(Switch, TweenInfo.new(0.15), {BackgroundColor3 = SwitchColor}):Play()
-		TweenService:Create(Circle, TweenInfo.new(0.15), {Position = CirclePosition}):Play()
+		local CirclePosition = State and UDim2.new(1, -14, 0, 2) or UDim2.fromOffset(2, 2)
+		TweenService:Create(Switch, TweenInfo.new(0.12), {BackgroundColor3 = SwitchColor}):Play()
+		TweenService:Create(Circle, TweenInfo.new(0.12), {Position = CirclePosition}):Play()
 		if Callback then Callback(State) end
 	end
 
@@ -494,46 +489,46 @@ local function Toggle(Page, Text, Default, Callback)
 end
 
 --========================================================--
--- SLIDER
+-- SLIDER COMPACTO
 --========================================================--
 
 local function Slider(Page, Text, Min, Max, Default, Callback)
 	local Value = Default
 	local Dragging = false
 	local Frame = Instance.new("Frame")
-	Frame.Size = UDim2.new(1, -4, 0, 55)
+	Frame.Size = UDim2.new(1, -4, 0, 42)
 	Frame.BackgroundColor3 = COLORS.Panel
 	Frame.BorderSizePixel = 0
 	Frame.Parent = Page
 
 	local Corner = Instance.new("UICorner")
-	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.CornerRadius = UDim.new(0, 6)
 	Corner.Parent = Frame
 
 	local Label = Instance.new("TextLabel")
 	Label.BackgroundTransparency = 1
-	Label.Position = UDim2.fromOffset(12, 4)
-	Label.Size = UDim2.new(1, -70, 0, 18)
+	Label.Position = UDim2.fromOffset(10, 3)
+	Label.Size = UDim2.new(1, -60, 0, 14)
 	Label.Text = Text
 	Label.TextColor3 = COLORS.Text
-	Label.TextSize = 10
+	Label.TextSize = 8
 	Label.Font = Enum.Font.GothamMedium
 	Label.TextXAlignment = Enum.TextXAlignment.Left
 	Label.Parent = Frame
 
 	local ValueLabel = Instance.new("TextLabel")
 	ValueLabel.BackgroundTransparency = 1
-	ValueLabel.Position = UDim2.new(1, -55, 0, 4)
-	ValueLabel.Size = UDim2.fromOffset(43, 18)
+	ValueLabel.Position = UDim2.new(1, -45, 0, 3)
+	ValueLabel.Size = UDim2.fromOffset(35, 14)
 	ValueLabel.Text = tostring(Value)
 	ValueLabel.TextColor3 = Accent
-	ValueLabel.TextSize = 9
+	ValueLabel.TextSize = 8
 	ValueLabel.Font = Enum.Font.GothamBold
 	ValueLabel.Parent = Frame
 
 	local Bar = Instance.new("Frame")
-	Bar.Size = UDim2.new(1, -24, 0, 5)
-	Bar.Position = UDim2.new(0, 12, 1, -14)
+	Bar.Size = UDim2.new(1, -20, 0, 4)
+	Bar.Position = UDim2.new(0, 10, 1, -10)
 	Bar.BackgroundColor3 = COLORS.OliveDark
 	Bar.BorderSizePixel = 0
 	Bar.Parent = Frame
@@ -555,7 +550,7 @@ local function Slider(Page, Text, Min, Max, Default, Callback)
 	FillCorner.Parent = Fill
 
 	local Knob = Instance.new("Frame")
-	Knob.Size = UDim2.fromOffset(11, 11)
+	Knob.Size = UDim2.fromOffset(9, 9)
 	Knob.AnchorPoint = Vector2.new(0.5, 0.5)
 	Knob.Position = UDim2.new(Percent, 0, 0.5, 0)
 	Knob.BackgroundColor3 = COLORS.Text
@@ -601,23 +596,23 @@ local function Slider(Page, Text, Min, Max, Default, Callback)
 end
 
 --========================================================--
--- BOTÃO
+-- BOTÃO COMPACTO
 --========================================================--
 
 local function Button(Page, Text, Callback)
 	local B = Instance.new("TextButton")
-	B.Size = UDim2.new(1, -4, 0, 39)
+	B.Size = UDim2.new(1, -4, 0, 30)
 	B.BackgroundColor3 = COLORS.Panel
 	B.BorderSizePixel = 0
 	B.Text = Text
 	B.TextColor3 = COLORS.Text
-	B.TextSize = 10
+	B.TextSize = 9
 	B.Font = Enum.Font.GothamMedium
 	B.AutoButtonColor = false
 	B.Parent = Page
 
 	local Corner = Instance.new("UICorner")
-	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.CornerRadius = UDim.new(0, 6)
 	Corner.Parent = B
 
 	B.MouseButton1Click:Connect(function()
@@ -632,26 +627,26 @@ end
 --========================================================--
 
 local NotificationHolder = Instance.new("Frame")
-NotificationHolder.Size = UDim2.fromOffset(220, 160)
-NotificationHolder.Position = UDim2.new(1, -230, 1, -170)
+NotificationHolder.Size = UDim2.fromOffset(180, 130)
+NotificationHolder.Position = UDim2.new(1, -190, 1, -140)
 NotificationHolder.BackgroundTransparency = 1
 NotificationHolder.Parent = Gui
 
 local NotifyLayout = Instance.new("UIListLayout")
 NotifyLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-NotifyLayout.Padding = UDim.new(0, 5)
+NotifyLayout.Padding = UDim.new(0, 4)
 NotifyLayout.Parent = NotificationHolder
 
 local function Notify(Text)
 	if not Config.Notifications then return end
 	local N = Instance.new("Frame")
-	N.Size = UDim2.new(1, 0, 0, 40)
+	N.Size = UDim2.new(1, 0, 0, 32)
 	N.BackgroundColor3 = COLORS.Panel
 	N.BorderSizePixel = 0
 	N.Parent = NotificationHolder
 
 	local Corner = Instance.new("UICorner")
-	Corner.CornerRadius = UDim.new(0, 8)
+	Corner.CornerRadius = UDim.new(0, 6)
 	Corner.Parent = N
 
 	local Stroke = Instance.new("UIStroke")
@@ -661,21 +656,21 @@ local function Notify(Text)
 	Stroke.Parent = N
 
 	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1, -16, 1, 0)
-	Label.Position = UDim2.fromOffset(8, 0)
+	Label.Size = UDim2.new(1, -12, 1, 0)
+	Label.Position = UDim2.fromOffset(6, 0)
 	Label.BackgroundTransparency = 1
 	Label.Text = Text
 	Label.TextColor3 = COLORS.Text
-	Label.TextSize = 9
+	Label.TextSize = 8
 	Label.Font = Enum.Font.GothamMedium
 	Label.TextXAlignment = Enum.TextXAlignment.Left
 	Label.Parent = N
 
-	N.Position = UDim2.new(1, 10, 0, 0)
-	TweenService:Create(N, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+	N.Position = UDim2.new(1, 8, 0, 0)
+	TweenService:Create(N, TweenInfo.new(0.18, Enum.EasingStyle.Quart), {Position = UDim2.new(0, 0, 0, 0)}):Play()
 
-	task.delay(2, function()
-		local Tween = TweenService:Create(N, TweenInfo.new(0.2, Enum.EasingStyle.Quart), {Position = UDim2.new(1, 10, 0, 0)})
+	task.delay(1.8, function()
+		local Tween = TweenService:Create(N, TweenInfo.new(0.18, Enum.EasingStyle.Quart), {Position = UDim2.new(1, 8, 0, 0)})
 		Tween:Play()
 		Tween.Completed:Wait()
 		N:Destroy()
@@ -936,10 +931,10 @@ end)
 
 local function CriarBotaoDash()
    dashButtonScreen = Instance.new("ScreenGui"); dashButtonScreen.Name = "DashButtonScreen"; dashButtonScreen.Parent = CoreGui
-   local mainButton = Instance.new("TextButton"); mainButton.Size = UDim2.new(0, 60, 0, 60); mainButton.Position = UDim2.new(0.85, 0, 0.5, 0)
+   local mainButton = Instance.new("TextButton"); mainButton.Size = UDim2.new(0, 50, 0, 50); mainButton.Position = UDim2.new(0.87, 0, 0.5, 0)
    mainButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35); mainButton.Text = "DASH"; mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-   mainButton.Font = Enum.Font.SourceSansBold; mainButton.TextSize = 14; mainButton.BorderSizePixel = 0; mainButton.Active = true; mainButton.Draggable = true; mainButton.Parent = dashButtonScreen
-   Instance.new("UICorner", mainButton).CornerRadius = UDim.new(0, 12)
+   mainButton.Font = Enum.Font.SourceSansBold; mainButton.TextSize = 12; mainButton.BorderSizePixel = 0; mainButton.Active = true; mainButton.Draggable = true; mainButton.Parent = dashButtonScreen
+   Instance.new("UICorner", mainButton).CornerRadius = UDim.new(0, 10)
    local uiStroke = Instance.new("UIStroke", mainButton); uiStroke.Color = Color3.fromRGB(0, 120, 255); uiStroke.Thickness = 2
    mainButton.MouseButton1Click:Connect(function() local char = Player.Character; if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -dashStuds) end end)
 end
@@ -1067,22 +1062,18 @@ end
 local CombatPage = Pages.Combat
 
 Section(CombatPage, "AIMBOT")
-
-Toggle(CombatPage, "AIMBOT ENABLED", false, function(State) Aimbot_Ativado = State end)
+Toggle(CombatPage, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
 Toggle(CombatPage, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(CombatPage, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(CombatPage, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
-
 Slider(CombatPage, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(CombatPage, "SMOOTHNESS", 1, 20, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 
 Section(CombatPage, "HITBOX")
-
-Toggle(CombatPage, "HITBOX EXPANDER", false, function(State)
+Toggle(CombatPage, "HITBOX", false, function(State)
     Hitbox_Ativado = State
     if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
 end)
-
 Slider(CombatPage, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
 
 --========================================================--
@@ -1092,7 +1083,6 @@ Slider(CombatPage, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Va
 local VisualPage = Pages.Visual
 
 Section(VisualPage, "ESP")
-
 Toggle(VisualPage, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(VisualPage, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
 Toggle(VisualPage, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
@@ -1101,27 +1091,24 @@ Toggle(VisualPage, "ESP TRACERS", false, function(State) ESP_Tracers=State; Atua
 Toggle(VisualPage, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 
 Section(VisualPage, "CAMERA")
-
-Slider(VisualPage, "FIELD OF VIEW", 40, 120, Config.FOV, function(Value)
+Slider(VisualPage, "FOV", 40, 120, Config.FOV, function(Value)
     Config.FOV = Value
     if Config.FOVEnabled then
         local Camera = Workspace.CurrentCamera
         if Camera then Camera.FieldOfView = Value end
     end
 end)
-
 Toggle(VisualPage, "FOV ENABLED", Config.FOVEnabled, function(State)
     Config.FOVEnabled = State
     local Camera = Workspace.CurrentCamera
     if Camera then Camera.FieldOfView = State and Config.FOV or 70 end
 end)
-
 Button(VisualPage, "FULLBRIGHT", function()
     Lighting.Brightness = 2
     Lighting.ClockTime = 14
     Lighting.GlobalShadows = false
     Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
-    Notify("Fullbright ativado")
+    Notify("Fullbright ON")
 end)
 
 --========================================================--
@@ -1131,14 +1118,12 @@ end)
 local MovementPage = Pages.Movement
 
 Section(MovementPage, "MOVEMENT")
-
 Slider(MovementPage, "WALK SPEED", 8, 100, Config.WalkSpeed, function(Value)
     Config.WalkSpeed = Value
     local Character = Player.Character
     local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
     if Humanoid then Humanoid.WalkSpeed = Value end
 end)
-
 Slider(MovementPage, "JUMP POWER", 20, 120, Config.JumpPower, function(Value)
     Config.JumpPower = Value
     local Character = Player.Character
@@ -1146,8 +1131,7 @@ Slider(MovementPage, "JUMP POWER", 20, 120, Config.JumpPower, function(Value)
     if Humanoid then Humanoid.UseJumpPower = true; Humanoid.JumpPower = Value end
 end)
 
-Section(MovementPage, "SPEED HACK")
-
+Section(MovementPage, "SPEED")
 Toggle(MovementPage, "SPEED HACK", false, function(State)
     SpeedHack_Ativado = State
     if State then
@@ -1169,19 +1153,15 @@ Toggle(MovementPage, "SPEED HACK", false, function(State)
         if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     end
 end)
-
 Slider(MovementPage, "SPEED VALUE", 1, 500, 50, function(Value) SpeedHack_Velocidade = Value end)
 
 Section(MovementPage, "DASH")
-
 Toggle(MovementPage, "DASH BUTTON", false, function(State)
     if State then CriarBotaoDash() else RemoverBotaoDash() end
 end)
-
-Slider(MovementPage, "DASH DISTANCE", 10, 100, 30, function(Value) dashStuds = Value end)
+Slider(MovementPage, "DASH DIST", 10, 100, 30, function(Value) dashStuds = Value end)
 
 Section(MovementPage, "SPECIAL")
-
 Toggle(MovementPage, "UNDERGROUND", false, function(State)
     Underground_Ativado = State
     local char = Player.Character
@@ -1223,7 +1203,6 @@ Toggle(MovementPage, "UNDERGROUND", false, function(State)
         Underground_Voltando = false
     end
 end)
-
 Toggle(MovementPage, "PASSE LIVRE", false, function(State)
     PasseLivre_Ativado = State
     if State then
@@ -1241,13 +1220,13 @@ Toggle(MovementPage, "PASSE LIVRE", false, function(State)
                     PasseLivre_NoClipAtivo = true
                     for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = false end end
                     root.CanCollide = false
-                    Notify("Noclip ATIVADO")
+                    Notify("Noclip ON")
                 end
             else
                 if PasseLivre_NoClipAtivo then
                     PasseLivre_NoClipAtivo = false
                     for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = true end end
-                    Notify("Noclip DESATIVADO")
+                    Notify("Noclip OFF")
                 end
             end
         end)
@@ -1262,13 +1241,11 @@ Toggle(MovementPage, "PASSE LIVRE", false, function(State)
 end)
 
 Section(MovementPage, "AUTO JJ")
-
 Toggle(MovementPage, "AUTO JJ", false, function(State)
     AutoJJ_Ativado = State
     if State then IniciarAutoJJ() else DestruirPainelJJ() end
 end)
-
-Toggle(MovementPage, "BLOCOS PARKOUR", false, function(State)
+Toggle(MovementPage, "BLOCOS", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
 end)
@@ -1280,60 +1257,48 @@ end)
 local ConfigPage = Pages.Config
 
 Section(ConfigPage, "SYSTEM")
-
-Toggle(ConfigPage, "ANIMATIONS", Config.Animations, function(State) Config.Animations = State end)
 Toggle(ConfigPage, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
 
 Section(ConfigPage, "ADMIN")
-
 Toggle(ConfigPage, "ADMIN MODE", false, function(State)
     Admin_Ativado = State
-    Notify(State and "Admin ATIVADO" or "Admin DESATIVADO")
+    Notify(State and "Admin ON" or "Admin OFF")
 end)
 
 Section(ConfigPage, "SERVER")
-
 Button(ConfigPage, "REJOIN", function() task.wait(3); TrocarServidor("rejoin") end)
 Button(ConfigPage, "SERVER CHEIO", function() task.wait(1); TrocarServidor("cheio") end)
 Button(ConfigPage, "SERVER VAZIO", function() task.wait(1); TrocarServidor("vazio") end)
 
 Section(ConfigPage, "THEME")
-
 Button(ConfigPage, "OLIVE THEME", function()
     Accent = COLORS.Olive
     TopLine.BackgroundColor3 = Accent
     BadgeStroke.Color = Accent
     for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
-    Notify("Olive theme aplicado")
+    Notify("Olive theme")
 end)
-
 Button(ConfigPage, "GREEN THEME", function()
     Accent = COLORS.GreenDark
     TopLine.BackgroundColor3 = Accent
     BadgeStroke.Color = Accent
     for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
-    Notify("Green theme aplicado")
+    Notify("Green theme")
 end)
 
 Section(ConfigPage, "ACTIONS")
-
 Button(ConfigPage, "RESET ALL", function()
     Config.WalkSpeed = 16
     Config.JumpPower = 50
     Config.FOV = 70
-    Config.Gravity = 196.2
-    Config.Time = 14
     local Character = Player.Character
     local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
     if Humanoid then Humanoid.WalkSpeed = 16; Humanoid.UseJumpPower = true; Humanoid.JumpPower = 50 end
     local Camera = Workspace.CurrentCamera
     if Camera then Camera.FieldOfView = 70 end
-    Workspace.Gravity = 196.2
-    Lighting.ClockTime = 14
-    Notify("Configuração restaurada")
+    Notify("Resetado")
 end)
-
-Button(ConfigPage, "DESTRUIR TUDO", function()
+Button(ConfigPage, "DESTRUIR", function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
@@ -1397,22 +1362,22 @@ end)
 
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Name = "ResizeHandle"
-ResizeHandle.Size = UDim2.fromOffset(25, 25)
+ResizeHandle.Size = UDim2.fromOffset(20, 20)
 ResizeHandle.AnchorPoint = Vector2.new(1, 1)
-ResizeHandle.Position = UDim2.new(1, -3, 1, -3)
+ResizeHandle.Position = UDim2.new(1, -2, 1, -2)
 ResizeHandle.BackgroundColor3 = COLORS.OliveDark
 ResizeHandle.BackgroundTransparency = 0.05
 ResizeHandle.BorderSizePixel = 0
 ResizeHandle.Text = "◢"
 ResizeHandle.TextColor3 = COLORS.Text
-ResizeHandle.TextSize = 12
+ResizeHandle.TextSize = 10
 ResizeHandle.Font = Enum.Font.GothamBold
 ResizeHandle.AutoButtonColor = false
 ResizeHandle.ZIndex = 100
 ResizeHandle.Parent = Main
 
 local ResizeCorner = Instance.new("UICorner")
-ResizeCorner.CornerRadius = UDim.new(0, 6)
+ResizeCorner.CornerRadius = UDim.new(0, 5)
 ResizeCorner.Parent = ResizeHandle
 
 local ResizeStroke = Instance.new("UIStroke")
@@ -1458,18 +1423,18 @@ end)
 
 local Minimized = false
 local NormalSize = UDim2.fromOffset(UI_WIDTH, UI_HEIGHT)
-local MiniSize = UDim2.fromOffset(UI_WIDTH, 59)
+local MiniSize = UDim2.fromOffset(UI_WIDTH, 46)
 
 Minimize.MouseButton1Click:Connect(function()
     Minimized = not Minimized
     if Minimized then
-        TweenService:Create(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = MiniSize}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = MiniSize}):Play()
         Minimize.Text = "+"
         Tabs.Visible = false
         ResizeHandle.Visible = false
         for _, Page in pairs(Pages) do Page.Visible = false end
     else
-        TweenService:Create(Main, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = NormalSize}):Play()
+        TweenService:Create(Main, TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = NormalSize}):Play()
         Minimize.Text = "—"
         Tabs.Visible = true
         ResizeHandle.Visible = true
