@@ -396,7 +396,7 @@ CreateTab("Movement", "■")
 CreateTab("Config", "▲")
 
 --========================================================--
--- SECTION (COM CONTAINER PRÓPRIO)
+-- SECTION (COM CONTAINER PRÓPRIO - CORRIGIDO)
 --========================================================--
 
 local SectionContainers = {}
@@ -404,11 +404,19 @@ local SectionContainers = {}
 local function Section(Page, Text)
     local PageName = Page.Name
     
+    -- Inicializar contador se não existir
+    if not SectionContainers[PageName] then
+        SectionContainers[PageName] = {}
+    end
+    
+    -- Calcular LayoutOrder baseado no número de seções existentes
+    local SectionOrder = (#SectionContainers[PageName] + 1) * 100
+    
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(1, -4, 0, 0)
     Container.BackgroundTransparency = 1
     Container.BorderSizePixel = 0
-    Container.LayoutOrder = (#SectionContainers[PageName] or 0) + 1
+    Container.LayoutOrder = SectionOrder
     Container.Parent = Page
     
     local ContainerLayout = Instance.new("UIListLayout")
@@ -439,9 +447,6 @@ local function Section(Page, Text)
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Header
     
-    if not SectionContainers[PageName] then
-        SectionContainers[PageName] = {}
-    end
     table.insert(SectionContainers[PageName], Container)
     
     return Container
