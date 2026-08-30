@@ -337,13 +337,10 @@ local function CreatePage(Name)
 	Page.Visible = false
 	Page.Parent = Main
 
-	local Padding = Instance.new("UIPadding")
-	Padding.PaddingBottom = UDim.new(0, 8)
-	Padding.Parent = Page
-
 	local Layout = Instance.new("UIListLayout")
 	Layout.Padding = UDim.new(0, 4)
 	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	Layout.SortOrder = Enum.SortOrder.LayoutOrder
 	Layout.Parent = Page
 
 	Pages[Name] = Page
@@ -356,7 +353,7 @@ end
 
 local function CreateTab(Name, Icon)
 	local Button = Instance.new("TextButton")
-	Button.Size = UDim2.fromOffset(60, 22)
+	Button.Size = UDim2.fromOffset(52, 22)
 	Button.BackgroundColor3 = COLORS.Panel2
 	Button.Text = Icon .. " " .. Name
 	Button.TextColor3 = COLORS.Muted
@@ -386,35 +383,64 @@ local function CreateTab(Name, Icon)
 	end)
 end
 
+CreatePage("Main")
 CreatePage("Combat")
 CreatePage("Visual")
 CreatePage("Movement")
 CreatePage("Config")
 
-CreateTab("Combat", "●")
-CreateTab("Visual", "◉")
-CreateTab("Movement", "◆")
-CreateTab("Config", "■")
+CreateTab("Main", "●")
+CreateTab("Combat", "◉")
+CreateTab("Visual", "◆")
+CreateTab("Movement", "■")
+CreateTab("Config", "▲")
 
 --========================================================--
--- SECTION
+-- SECTION (COM SEPARADOR VISUAL)
 --========================================================--
+
+local SectionCounter = {}
 
 local function Section(Page, Text)
+	local PageName = Page.Name
+	SectionCounter[PageName] = (SectionCounter[PageName] or 0) + 1
+
+	local Container = Instance.new("Frame")
+	Container.Size = UDim2.new(1, -4, 0, 20)
+	Container.BackgroundColor3 = COLORS.Panel2
+	Container.BorderSizePixel = 0
+	Container.LayoutOrder = SectionCounter[PageName] * 100
+	Container.Parent = Page
+
+	local ContainerCorner = Instance.new("UICorner")
+	ContainerCorner.CornerRadius = UDim.new(0, 4)
+	ContainerCorner.Parent = Container
+
 	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1, -4, 0, 16)
+	Label.Size = UDim2.new(1, -8, 1, 0)
+	Label.Position = UDim2.fromOffset(4, 0)
 	Label.BackgroundTransparency = 1
-	Label.Text = "  " .. Text
-	Label.TextColor3 = COLORS.Muted
+	Label.Text = "▸ " .. Text
+	Label.TextColor3 = Accent
 	Label.TextSize = 7
 	Label.Font = Enum.Font.GothamBold
 	Label.TextXAlignment = Enum.TextXAlignment.Left
-	Label.Parent = Page
+	Label.Parent = Container
+
+	return Container
 end
 
 --========================================================--
--- TOGGLE
+-- TOGGLE (COM LAYOUT ORDER)
 --========================================================--
+
+local ElementCounter = {}
+
+local function GetNextOrder(Page)
+	local PageName = Page.Name
+	ElementCounter[PageName] = (ElementCounter[PageName] or 0) + 1
+	return ElementCounter[PageName]
+end
 
 local function Toggle(Page, Text, Default, Callback)
 	local State = Default
@@ -424,6 +450,7 @@ local function Toggle(Page, Text, Default, Callback)
 	Button.BorderSizePixel = 0
 	Button.Text = ""
 	Button.AutoButtonColor = false
+	Button.LayoutOrder = GetNextOrder(Page)
 	Button.Parent = Page
 
 	local Corner = Instance.new("UICorner")
@@ -480,7 +507,7 @@ local function Toggle(Page, Text, Default, Callback)
 end
 
 --========================================================--
--- SLIDER
+-- SLIDER (COM LAYOUT ORDER)
 --========================================================--
 
 local function Slider(Page, Text, Min, Max, Default, Callback)
@@ -490,6 +517,7 @@ local function Slider(Page, Text, Min, Max, Default, Callback)
 	Frame.Size = UDim2.new(1, -4, 0, 42)
 	Frame.BackgroundColor3 = COLORS.Panel
 	Frame.BorderSizePixel = 0
+	Frame.LayoutOrder = GetNextOrder(Page)
 	Frame.Parent = Page
 
 	local Corner = Instance.new("UICorner")
@@ -587,7 +615,7 @@ local function Slider(Page, Text, Min, Max, Default, Callback)
 end
 
 --========================================================--
--- BOTÃO
+-- BOTÃO (COM LAYOUT ORDER)
 --========================================================--
 
 local function Button(Page, Text, Callback)
@@ -600,6 +628,7 @@ local function Button(Page, Text, Callback)
 	B.TextSize = 9
 	B.Font = Enum.Font.GothamMedium
 	B.AutoButtonColor = false
+	B.LayoutOrder = GetNextOrder(Page)
 	B.Parent = Page
 
 	local Corner = Instance.new("UICorner")
@@ -1049,6 +1078,24 @@ local function DesativarChatWindow()
 end
 
 --========================================================--
+-- MAIN PAGE (PRINCIPAL)
+--========================================================--
+
+local MainPage = Pages.Main
+
+Section(MainPage, "AUTO JJ")
+Toggle(MainPage, "AUTO JJ", false, function(State)
+    AutoJJ_Ativado = State
+    if State then IniciarAutoJJ() else DestruirPainelJJ() end
+end)
+
+Section(MainPage, "BLOCOS")
+Toggle(MainPage, "BLOCOS PARKOUR", false, function(State)
+    BlocosAtivado = State
+    if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+--========================================================--
 -- COMBAT PAGE
 --========================================================--
 
@@ -1219,16 +1266,6 @@ Toggle(MovementPage, "PASSE LIVRE", false, function(State)
     end
 end)
 
-Section(MovementPage, "AUTO JJ")
-Toggle(MovementPage, "AUTO JJ", false, function(State)
-    AutoJJ_Ativado = State
-    if State then IniciarAutoJJ() else DestruirPainelJJ() end
-end)
-Toggle(MovementPage, "BLOCOS", false, function(State)
-    BlocosAtivado = State
-    if State then CreateHitboxes() else RemoveHitboxes() end
-end)
-
 --========================================================--
 -- CONFIG PAGE
 --========================================================--
@@ -1393,9 +1430,9 @@ Minimize.MouseButton1Click:Connect(function()
         Minimize.Text = "—"
         Tabs.Visible = true
         ResizeHandle.Visible = true
-        Pages.Combat.Visible = true
-        TabButtons.Combat.BackgroundColor3 = Accent
-        TabButtons.Combat.TextColor3 = COLORS.Text
+        Pages.Main.Visible = true
+        TabButtons.Main.BackgroundColor3 = Accent
+        TabButtons.Main.TextColor3 = COLORS.Text
     end
 end)
 
@@ -1403,9 +1440,9 @@ end)
 -- ABA INICIAL
 --========================================================--
 
-Pages.Combat.Visible = true
-TabButtons.Combat.BackgroundColor3 = Accent
-TabButtons.Combat.TextColor3 = COLORS.Text
+Pages.Main.Visible = true
+TabButtons.Main.BackgroundColor3 = Accent
+TabButtons.Main.TextColor3 = COLORS.Text
 
 --========================================================--
 -- NOTIFICAÇÃO INICIAL
