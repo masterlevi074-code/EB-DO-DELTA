@@ -990,10 +990,10 @@ local data = {
     {pos = Vector3.new(167.09, 53.26, -891.043), size = Vector3.new(5.00, 0.50, 5.00)},
     {pos = Vector3.new(181.65, 53.26, -902.043), size = Vector3.new(5.00, 0.50, 5.00)},
     {pos = Vector3.new(180.48, 53.26, -893.06), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(201.203, 53.798, -896.443), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(211.682, 53.798, -896.443), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(223.52, 53.33, -898.25), size = Vector3.new(5.00, 0.50, 5.00)},
-    {pos = Vector3.new(235.61, 53.33, -897.82), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(201.203, 53.798, -896.443), size = Vector3.new(7.00, 0.50, 7.00)},
+    {pos = Vector3.new(211.682, 53.798, -896.443), size = Vector3.new(7.00, 0.50, 7.00)},
+    {pos = Vector3.new(222.218, 53.798, -896.443), size = Vector3.new(7.00, 0.50, 7.00)},
+    {pos = Vector3.new(232.595, 53.798, -896.443), size = Vector3.new(7.00, 0.50, 7.00)},
 }
 
 local function CreateHitboxes()
