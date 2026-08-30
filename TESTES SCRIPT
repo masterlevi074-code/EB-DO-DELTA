@@ -1322,7 +1322,7 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
             local charAtual = Player.Character
             if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
             local rootAtual = charAtual.HumanoidRootPart
-            if rootAtual.Position.Y < -22 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -19, rootAtual.Position.Z) end
+            if rootAtual.Position.Y < -22 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -90, rootAtual.Position.Z) end
             if Underground_CameraPart then Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z) end
         end)
         local camera = Workspace.CurrentCamera
