@@ -84,6 +84,7 @@ local Underground_yAbaixo = -19
 local Underground_yCamera = 4.7
 local Underground_Voltando = false
 local Underground_CameraPart = nil
+local UndergroundFloor = nil  -- NOVO: bloco invisível de sustentação
 
 local PasseLivre_Ativado = false
 local PasseLivre_Conexao = nil
@@ -1305,6 +1306,20 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
     local root = char.HumanoidRootPart
     if State then
         Underground_Voltando = false
+        
+        -- Criar bloco invisível de sustentação
+        if not UndergroundFloor then
+            UndergroundFloor = Instance.new("Part")
+            UndergroundFloor.Name = "UndergroundFloor"
+            UndergroundFloor.Size = Vector3.new(10, 1, 10)
+            UndergroundFloor.Anchored = true
+            UndergroundFloor.CanCollide = true
+            UndergroundFloor.Transparency = 1
+            UndergroundFloor.Parent = Workspace
+        end
+        UndergroundFloor.Position = Vector3.new(root.Position.X, Underground_yAbaixo - 3, root.Position.Z)
+        
+        -- Câmera fantasma
         if not Underground_CameraPart then
             Underground_CameraPart = Instance.new("Part")
             Underground_CameraPart.Name = "CameraGhost"
@@ -1316,14 +1331,22 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
         end
         Underground_CameraPart.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
         root.CFrame = CFrame.new(root.Position.X, Underground_yAbaixo, root.Position.Z)
+        
         if Underground_Conexao then Underground_Conexao:Disconnect() end
         Underground_Conexao = RunService.Heartbeat:Connect(function()
             if not Underground_Ativado or Underground_Voltando then return end
             local charAtual = Player.Character
             if not charAtual or not charAtual:FindFirstChild("HumanoidRootPart") then return end
             local rootAtual = charAtual.HumanoidRootPart
-            if rootAtual.Position.Y < -92 then rootAtual.CFrame = CFrame.new(rootAtual.Position.X, -90, rootAtual.Position.Z) end
-            if Underground_CameraPart then Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z) end
+            if rootAtual.Position.Y < Underground_yAbaixo - 2 then
+                rootAtual.CFrame = CFrame.new(rootAtual.Position.X, Underground_yAbaixo, rootAtual.Position.Z)
+            end
+            if UndergroundFloor then
+                UndergroundFloor.Position = Vector3.new(rootAtual.Position.X, Underground_yAbaixo - 3, rootAtual.Position.Z)
+            end
+            if Underground_CameraPart then
+                Underground_CameraPart.CFrame = CFrame.new(rootAtual.Position.X, Underground_yCamera, rootAtual.Position.Z)
+            end
         end)
         local camera = Workspace.CurrentCamera
         camera.CameraSubject = Underground_CameraPart
@@ -1334,6 +1357,7 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
         local camera = Workspace.CurrentCamera
         if camera then camera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid"); camera.CameraType = Enum.CameraType.Follow end
         if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+        if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
         root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
         task.wait(0.5)
         Underground_Voltando = false
@@ -1418,6 +1442,7 @@ Button(ActionsSection, "DESTRUIR", function()
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
+    if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
