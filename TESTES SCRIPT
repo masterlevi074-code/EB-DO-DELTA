@@ -338,7 +338,7 @@ local function CreatePage(Name)
 	Page.Parent = Main
 
 	local Layout = Instance.new("UIListLayout")
-	Layout.Padding = UDim.new(0, 4)
+	Layout.Padding = UDim.new(0, 6)
 	Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	Layout.SortOrder = Enum.SortOrder.LayoutOrder
 	Layout.Parent = Page
@@ -396,62 +396,71 @@ CreateTab("Movement", "■")
 CreateTab("Config", "▲")
 
 --========================================================--
--- SECTION (COM SEPARADOR VISUAL)
+-- SECTION (COM CONTAINER PRÓPRIO)
 --========================================================--
 
-local SectionCounter = {}
+local SectionContainers = {}
 
 local function Section(Page, Text)
-	local PageName = Page.Name
-	SectionCounter[PageName] = (SectionCounter[PageName] or 0) + 1
-
-	local Container = Instance.new("Frame")
-	Container.Size = UDim2.new(1, -4, 0, 20)
-	Container.BackgroundColor3 = COLORS.Panel2
-	Container.BorderSizePixel = 0
-	Container.LayoutOrder = SectionCounter[PageName] * 100
-	Container.Parent = Page
-
-	local ContainerCorner = Instance.new("UICorner")
-	ContainerCorner.CornerRadius = UDim.new(0, 4)
-	ContainerCorner.Parent = Container
-
-	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(1, -8, 1, 0)
-	Label.Position = UDim2.fromOffset(4, 0)
-	Label.BackgroundTransparency = 1
-	Label.Text = "▸ " .. Text
-	Label.TextColor3 = Accent
-	Label.TextSize = 7
-	Label.Font = Enum.Font.GothamBold
-	Label.TextXAlignment = Enum.TextXAlignment.Left
-	Label.Parent = Container
-
-	return Container
+    local PageName = Page.Name
+    
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(1, -4, 0, 0)
+    Container.BackgroundTransparency = 1
+    Container.BorderSizePixel = 0
+    Container.LayoutOrder = (#SectionContainers[PageName] or 0) + 1
+    Container.Parent = Page
+    
+    local ContainerLayout = Instance.new("UIListLayout")
+    ContainerLayout.Padding = UDim.new(0, 4)
+    ContainerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    ContainerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ContainerLayout.Parent = Container
+    
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 20)
+    Header.BackgroundColor3 = COLORS.Panel2
+    Header.BorderSizePixel = 0
+    Header.LayoutOrder = 0
+    Header.Parent = Container
+    
+    local HeaderCorner = Instance.new("UICorner")
+    HeaderCorner.CornerRadius = UDim.new(0, 4)
+    HeaderCorner.Parent = Header
+    
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -8, 1, 0)
+    Label.Position = UDim2.fromOffset(4, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = "▸ " .. Text
+    Label.TextColor3 = Accent
+    Label.TextSize = 7
+    Label.Font = Enum.Font.GothamBold
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Header
+    
+    if not SectionContainers[PageName] then
+        SectionContainers[PageName] = {}
+    end
+    table.insert(SectionContainers[PageName], Container)
+    
+    return Container
 end
 
 --========================================================--
--- TOGGLE (COM LAYOUT ORDER)
+-- TOGGLE (DENTRO DO CONTAINER)
 --========================================================--
 
-local ElementCounter = {}
-
-local function GetNextOrder(Page)
-	local PageName = Page.Name
-	ElementCounter[PageName] = (ElementCounter[PageName] or 0) + 1
-	return ElementCounter[PageName]
-end
-
-local function Toggle(Page, Text, Default, Callback)
+local function Toggle(Container, Text, Default, Callback)
 	local State = Default
 	local Button = Instance.new("TextButton")
-	Button.Size = UDim2.new(1, -4, 0, 32)
+	Button.Size = UDim2.new(1, 0, 0, 32)
 	Button.BackgroundColor3 = COLORS.Panel
 	Button.BorderSizePixel = 0
 	Button.Text = ""
 	Button.AutoButtonColor = false
-	Button.LayoutOrder = GetNextOrder(Page)
-	Button.Parent = Page
+	Button.LayoutOrder = 1
+	Button.Parent = Container
 
 	local Corner = Instance.new("UICorner")
 	Corner.CornerRadius = UDim.new(0, 6)
@@ -507,18 +516,18 @@ local function Toggle(Page, Text, Default, Callback)
 end
 
 --========================================================--
--- SLIDER (COM LAYOUT ORDER)
+-- SLIDER (DENTRO DO CONTAINER)
 --========================================================--
 
-local function Slider(Page, Text, Min, Max, Default, Callback)
+local function Slider(Container, Text, Min, Max, Default, Callback)
 	local Value = Default
 	local Dragging = false
 	local Frame = Instance.new("Frame")
-	Frame.Size = UDim2.new(1, -4, 0, 42)
+	Frame.Size = UDim2.new(1, 0, 0, 42)
 	Frame.BackgroundColor3 = COLORS.Panel
 	Frame.BorderSizePixel = 0
-	Frame.LayoutOrder = GetNextOrder(Page)
-	Frame.Parent = Page
+	Frame.LayoutOrder = 1
+	Frame.Parent = Container
 
 	local Corner = Instance.new("UICorner")
 	Corner.CornerRadius = UDim.new(0, 6)
@@ -615,12 +624,12 @@ local function Slider(Page, Text, Min, Max, Default, Callback)
 end
 
 --========================================================--
--- BOTÃO (COM LAYOUT ORDER)
+-- BOTÃO (DENTRO DO CONTAINER)
 --========================================================--
 
-local function Button(Page, Text, Callback)
+local function Button(Container, Text, Callback)
 	local B = Instance.new("TextButton")
-	B.Size = UDim2.new(1, -4, 0, 30)
+	B.Size = UDim2.new(1, 0, 0, 30)
 	B.BackgroundColor3 = COLORS.Panel
 	B.BorderSizePixel = 0
 	B.Text = Text
@@ -628,8 +637,8 @@ local function Button(Page, Text, Callback)
 	B.TextSize = 9
 	B.Font = Enum.Font.GothamMedium
 	B.AutoButtonColor = false
-	B.LayoutOrder = GetNextOrder(Page)
-	B.Parent = Page
+	B.LayoutOrder = 1
+	B.Parent = Container
 
 	local Corner = Instance.new("UICorner")
 	Corner.CornerRadius = UDim.new(0, 6)
@@ -884,6 +893,105 @@ local data = {
     {pos = Vector3.new(185.65, 29.34, -618.67), size = Vector3.new(4.00, 0.50, 16.00)},
     {pos = Vector3.new(186.12, 37.36, -618.43), size = Vector3.new(4.00, 0.50, 15.00)},
     {pos = Vector3.new(186.30, 45.34, -617.87), size = Vector3.new(5.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.41, 53.36, -618.05), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.62, 61.40, -617.79), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.58, 69.40, -617.79), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(185.87, 77.42, -618.33), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.73, 85.44, -618.62), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.68, 93.48, -618.49), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(185.83, 101.46, -617.76), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(185.57, 109.48, -618.45), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(270.22, 4.24, -661.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(277.86, 4.24, -655.56), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(269.80, 4.24, -649.96), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(284.45, 4.24, -660.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(284.59, 4.24, -650.23), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(267.14, 5.04, -627.94), size = Vector3.new(4.00, 0.50, 32.00)},
+    {pos = Vector3.new(288.33, 5.04, -627.86), size = Vector3.new(4.00, 0.50, 31.00)},
+    {pos = Vector3.new(277.48, 7.63, -591.97), size = Vector3.new(4.00, 0.50, 27.00)},
+    {pos = Vector3.new(271.76, 7.64, -569.98), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(279.08, 7.64, -567.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(265.48, 7.64, -564.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(271.34, 7.64, -559.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(259.46, 7.64, -561.92), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(260.50, 7.64, -554.72), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(250.93, 7.64, -561.91), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(248.66, 7.64, -554.60), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(243.06, 7.64, -565.74), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(235.96, 7.64, -560.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(240.08, 7.64, -592.47), size = Vector3.new(4.00, 0.50, 27.00)},
+    {pos = Vector3.new(394.19, 5.06, -850.78), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.19, 7.45, -855.82), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(392.91, 5.06, -861.09), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(384.07, 10.15, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(377.51, 12.94, -855.73), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(370.87, 14.68, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(365.12, 16.20, -856.03), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(358.50, 17.61, -855.96), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(351.76, 19.27, -856.05), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(345.37, 20.53, -855.83), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(339.00, 21.54, -855.95), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(334.51, 21.54, -850.11), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(328.83, 21.54, -855.97), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(335.00, 21.54, -861.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(324.43, 21.54, -861.35), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(324.69, 21.54, -850.36), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(318.73, 21.54, -855.70), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(313.47, 21.54, -861.90), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(308.27, 21.54, -855.88), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(314.49, 21.54, -850.04), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(303.58, 21.54, -861.59), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(303.61, 21.54, -850.61), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(298.50, 21.54, -856.16), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(393.87, 2.87, -892.93), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(394.65, 2.87, -902.16), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.37, 5.04, -892.40), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(389.57, 5.04, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(383.37, 7.79, -892.63), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(383.64, 7.79, -903.27), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(378.64, 9.35, -892.48), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(378.64, 9.35, -903.24), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(373.27, 11.53, -892.90), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(372.82, 11.53, -903.33), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(368.47, 11.53, -892.69), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(367.91, 11.53, -903.02), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(362.88, 11.53, -894.04), size = Vector3.new(4.00, 0.50, 7.00)},
+    {pos = Vector3.new(358.03, 11.53, -901.74), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(352.36, 11.53, -894.75), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(347.47, 11.53, -899.21), size = Vector3.new(4.00, 0.50, 6.00)},
+    {pos = Vector3.new(333.21, 11.53, -897.81), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(325.73, 11.53, -898.53), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(318.25, 11.53, -897.79), size = Vector3.new(5.00, 0.50, 11.00)},
+    {pos = Vector3.new(310.71, 11.53, -898.95), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(303.10, 11.53, -898.29), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(295.54, 11.53, -898.01), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(288.21, 11.53, -898.79), size = Vector3.new(5.00, 0.50, 12.00)},
+    {pos = Vector3.new(149.54, 1.04, -856.00), size = Vector3.new(3.00, 0.50, 13.00)},
+    {pos = Vector3.new(148.21, 7.50, -855.93), size = Vector3.new(4.00, 0.50, 13.00)},
+    {pos = Vector3.new(148.27, 13.38, -856.27), size = Vector3.new(4.00, 0.50, 13.00)},
+    {pos = Vector3.new(162.71, 13.70, -859.82), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(170.73, 13.70, -852.89), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(181.41, 13.70, -859.17), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(190.97, 13.70, -853.25), size = Vector3.new(8.00, 0.50, 5.00)},
+    {pos = Vector3.new(217.92, 11.53, -848.28), size = Vector3.new(32.00, 0.50, 4.00)},
+    {pos = Vector3.new(217.99, 12.04, -863.62), size = Vector3.new(29.00, 0.50, 4.00)},
+    {pos = Vector3.new(243.52, 12.04, -855.57), size = Vector3.new(14.00, 0.50, 3.00)},
+    {pos = Vector3.new(150.43, 5.27, -897.87), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(150.71, 13.28, -898.27), size = Vector3.new(4.00, 0.50, 17.00)},
+    {pos = Vector3.new(150.28, 21.29, -898.42), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.45, 29.30, -898.11), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(150.52, 37.31, -898.44), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.56, 45.32, -897.73), size = Vector3.new(4.00, 0.50, 15.00)},
+    {pos = Vector3.new(150.95, 53.33, -898.02), size = Vector3.new(4.00, 0.50, 16.00)},
+    {pos = Vector3.new(167.23, 53.26, -903.84), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(172.90, 53.26, -900.06), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(167.09, 53.26, -890.73), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(181.65, 53.26, -902.00), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(180.48, 53.26, -893.06), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(199.10, 53.33, -897.28), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(210.50, 53.33, -897.85), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(223.52, 53.33, -898.25), size = Vector3.new(5.00, 0.50, 5.00)},
+    {pos = Vector3.new(235.61, 53.33, -897.82), size = Vector3.new(5.00, 0.50, 5.00)},
 }
 
 local function CreateHitboxes()
@@ -1083,14 +1191,14 @@ end
 
 local MainPage = Pages.Main
 
-Section(MainPage, "AUTO JJ")
-Toggle(MainPage, "AUTO JJ", false, function(State)
+local AutoJJSection = Section(MainPage, "AUTO JJ")
+Toggle(AutoJJSection, "AUTO JJ", false, function(State)
     AutoJJ_Ativado = State
     if State then IniciarAutoJJ() else DestruirPainelJJ() end
 end)
 
-Section(MainPage, "BLOCOS")
-Toggle(MainPage, "BLOCOS PARKOUR", false, function(State)
+local BlocosSection = Section(MainPage, "BLOCOS")
+Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
 end)
@@ -1101,20 +1209,20 @@ end)
 
 local CombatPage = Pages.Combat
 
-Section(CombatPage, "AIMBOT")
-Toggle(CombatPage, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
-Toggle(CombatPage, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
-Toggle(CombatPage, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
-Toggle(CombatPage, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
-Slider(CombatPage, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
-Slider(CombatPage, "SMOOTHNESS", 1, 20, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
+local AimbotSection = Section(CombatPage, "AIMBOT")
+Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
+Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
+Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
+Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
+Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
+Slider(AimbotSection, "SMOOTHNESS", 1, 20, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 
-Section(CombatPage, "HITBOX")
-Toggle(CombatPage, "HITBOX", false, function(State)
+local HitboxSection = Section(CombatPage, "HITBOX")
+Toggle(HitboxSection, "HITBOX", false, function(State)
     Hitbox_Ativado = State
     if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
 end)
-Slider(CombatPage, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
+Slider(HitboxSection, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
 
 --========================================================--
 -- VISUAL PAGE
@@ -1122,28 +1230,28 @@ Slider(CombatPage, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Va
 
 local VisualPage = Pages.Visual
 
-Section(VisualPage, "ESP")
-Toggle(VisualPage, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
-Toggle(VisualPage, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
-Toggle(VisualPage, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
-Toggle(VisualPage, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
-Toggle(VisualPage, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
-Toggle(VisualPage, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
+local ESPSection = Section(VisualPage, "ESP")
+Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 
-Section(VisualPage, "CAMERA")
-Slider(VisualPage, "FOV", 40, 120, Config.FOV, function(Value)
+local CameraSection = Section(VisualPage, "CAMERA")
+Slider(CameraSection, "FOV", 40, 120, Config.FOV, function(Value)
     Config.FOV = Value
     if Config.FOVEnabled then
         local Camera = Workspace.CurrentCamera
         if Camera then Camera.FieldOfView = Value end
     end
 end)
-Toggle(VisualPage, "FOV ENABLED", Config.FOVEnabled, function(State)
+Toggle(CameraSection, "FOV ENABLED", Config.FOVEnabled, function(State)
     Config.FOVEnabled = State
     local Camera = Workspace.CurrentCamera
     if Camera then Camera.FieldOfView = State and Config.FOV or 70 end
 end)
-Button(VisualPage, "FULLBRIGHT", function()
+Button(CameraSection, "FULLBRIGHT", function()
     Lighting.Brightness = 2
     Lighting.ClockTime = 14
     Lighting.GlobalShadows = false
@@ -1157,8 +1265,8 @@ end)
 
 local MovementPage = Pages.Movement
 
-Section(MovementPage, "SPEED HACK")
-Toggle(MovementPage, "SPEED HACK", false, function(State)
+local SpeedSection = Section(MovementPage, "SPEED HACK")
+Toggle(SpeedSection, "SPEED HACK", false, function(State)
     SpeedHack_Ativado = State
     if State then
         if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect() end
@@ -1179,16 +1287,16 @@ Toggle(MovementPage, "SPEED HACK", false, function(State)
         if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     end
 end)
-Slider(MovementPage, "SPEED VALUE", 1, 500, 50, function(Value) SpeedHack_Velocidade = Value end)
+Slider(SpeedSection, "SPEED VALUE", 1, 500, 50, function(Value) SpeedHack_Velocidade = Value end)
 
-Section(MovementPage, "DASH")
-Toggle(MovementPage, "DASH BUTTON", false, function(State)
+local DashSection = Section(MovementPage, "DASH")
+Toggle(DashSection, "DASH BUTTON", false, function(State)
     if State then CriarBotaoDash() else RemoverBotaoDash() end
 end)
-Slider(MovementPage, "DASH DIST", 10, 100, 30, function(Value) dashStuds = Value end)
+Slider(DashSection, "DASH DIST", 10, 100, 30, function(Value) dashStuds = Value end)
 
-Section(MovementPage, "SPECIAL")
-Toggle(MovementPage, "UNDERGROUND", false, function(State)
+local SpecialSection = Section(MovementPage, "SPECIAL")
+Toggle(SpecialSection, "UNDERGROUND", false, function(State)
     Underground_Ativado = State
     local char = Player.Character
     if not char or not char:FindFirstChild("HumanoidRootPart") then Underground_Ativado = false; return end
@@ -1229,7 +1337,7 @@ Toggle(MovementPage, "UNDERGROUND", false, function(State)
         Underground_Voltando = false
     end
 end)
-Toggle(MovementPage, "PASSE LIVRE", false, function(State)
+Toggle(SpecialSection, "PASSE LIVRE", false, function(State)
     PasseLivre_Ativado = State
     if State then
         if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect() end
@@ -1272,29 +1380,29 @@ end)
 
 local ConfigPage = Pages.Config
 
-Section(ConfigPage, "SYSTEM")
-Toggle(ConfigPage, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
+local SystemSection = Section(ConfigPage, "SYSTEM")
+Toggle(SystemSection, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
 
-Section(ConfigPage, "ADMIN")
-Toggle(ConfigPage, "ADMIN MODE", false, function(State)
+local AdminSection = Section(ConfigPage, "ADMIN")
+Toggle(AdminSection, "ADMIN MODE", false, function(State)
     Admin_Ativado = State
     Notify(State and "Admin ON" or "Admin OFF")
 end)
 
-Section(ConfigPage, "SERVER")
-Button(ConfigPage, "REJOIN", function() task.wait(3); TrocarServidor("rejoin") end)
-Button(ConfigPage, "SERVER CHEIO", function() task.wait(1); TrocarServidor("cheio") end)
-Button(ConfigPage, "SERVER VAZIO", function() task.wait(1); TrocarServidor("vazio") end)
+local ServerSection = Section(ConfigPage, "SERVER")
+Button(ServerSection, "REJOIN", function() task.wait(3); TrocarServidor("rejoin") end)
+Button(ServerSection, "SERVER CHEIO", function() task.wait(1); TrocarServidor("cheio") end)
+Button(ServerSection, "SERVER VAZIO", function() task.wait(1); TrocarServidor("vazio") end)
 
-Section(ConfigPage, "THEME")
-Button(ConfigPage, "OLIVE THEME", function()
+local ThemeSection = Section(ConfigPage, "THEME")
+Button(ThemeSection, "OLIVE THEME", function()
     Accent = COLORS.Olive
     TopLine.BackgroundColor3 = Accent
     BadgeStroke.Color = Accent
     for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
     Notify("Olive theme")
 end)
-Button(ConfigPage, "GREEN THEME", function()
+Button(ThemeSection, "GREEN THEME", function()
     Accent = COLORS.GreenDark
     TopLine.BackgroundColor3 = Accent
     BadgeStroke.Color = Accent
@@ -1302,8 +1410,8 @@ Button(ConfigPage, "GREEN THEME", function()
     Notify("Green theme")
 end)
 
-Section(ConfigPage, "ACTIONS")
-Button(ConfigPage, "DESTRUIR", function()
+local ActionsSection = Section(ConfigPage, "ACTIONS")
+Button(ActionsSection, "DESTRUIR", function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
