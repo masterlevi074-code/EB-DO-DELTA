@@ -414,6 +414,7 @@ local function Section(Page, Text)
     
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(1, -4, 0, 0)
+    Container.AutomaticSize = Enum.AutomaticSize.Y  -- Altura automática
     Container.BackgroundTransparency = 1
     Container.BorderSizePixel = 0
     Container.LayoutOrder = SectionOrder
