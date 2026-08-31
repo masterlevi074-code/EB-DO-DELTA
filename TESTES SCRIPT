@@ -440,7 +440,7 @@ local function Section(Page, Text)
     Label.Size = UDim2.new(1, -8, 1, 0)
     Label.Position = UDim2.fromOffset(4, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = "⬤ " .. Text
+    Label.Text = "▸ " .. Text
     Label.TextColor3 = Accent
     Label.TextSize = 7
     Label.Font = Enum.Font.GothamBold
@@ -654,6 +654,85 @@ local function Button(Container, Text, Callback)
 	end)
 
 	return B
+end
+
+--========================================================--
+-- COLOR PICKER (MODERNO)
+--========================================================--
+
+local function ColorPicker(Container, Category, DefaultColor)
+    local colorList = {
+        {Name = "Branco", Color = Color3.fromRGB(255,255,255)},
+        {Name = "Vermelho", Color = Color3.fromRGB(255,50,50)},
+        {Name = "Azul", Color = Color3.fromRGB(50,150,255)},
+        {Name = "Verde", Color = Color3.fromRGB(50,255,100)},
+        {Name = "Amarelo", Color = Color3.fromRGB(255,220,50)},
+        {Name = "Roxo", Color = Color3.fromRGB(170,0,255)},
+        {Name = "Ciano", Color = Color3.fromRGB(0,255,255)},
+        {Name = "Rosa", Color = Color3.fromRGB(255,0,180)},
+    }
+
+    local Holder = Instance.new("Frame")
+    Holder.Size = UDim2.new(1, 0, 0, 28)
+    Holder.BackgroundTransparency = 1
+    Holder.BorderSizePixel = 0
+    Holder.LayoutOrder = 1
+    Holder.Parent = Container
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.FillDirection = Enum.FillDirection.Horizontal
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    Layout.VerticalAlignment = Enum.VerticalAlignment.Center
+    Layout.Padding = UDim.new(0, 6)
+    Layout.Parent = Holder
+
+    local selectedButton = nil
+
+    local function updateSelection(button)
+        if selectedButton then
+            selectedButton.UIStroke.Transparency = 1
+        end
+        selectedButton = button
+        button.UIStroke.Transparency = 0
+    end
+
+    for _, col in ipairs(colorList) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.fromOffset(22, 22)
+        btn.BackgroundColor3 = col.Color
+        btn.BorderSizePixel = 0
+        btn.AutoButtonColor = false
+        btn.Text = ""
+        btn.Parent = Holder
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = btn
+
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = Color3.fromRGB(255,255,255)
+        stroke.Thickness = 2
+        stroke.Transparency = 1
+        stroke.Parent = btn
+
+        btn.MouseButton1Click:Connect(function()
+            if Category == "FOV" then
+                Aimbot_CorFOV = col.Color
+                FOVCircle.Color = col.Color
+            elseif Category == "Hitbox" then
+                Hitbox_Cor = col.Color
+            elseif Category == "ESP" then
+                CorESP = col.Color
+                AtualizarESP()
+            end
+            updateSelection(btn)
+            Notify(Category .. " cor: " .. col.Name)
+        end)
+
+        if col.Color == DefaultColor then
+            updateSelection(btn)
+        end
+    end
 end
 
 --========================================================--
@@ -1220,7 +1299,7 @@ Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 
--- Seção de corpo alvo
+-- CORPO ALVO
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
 Button(BodyTargetSection, "HEAD", function()
     Aimbot_ParteAlvo = "Head"
@@ -1235,49 +1314,11 @@ Button(BodyTargetSection, "PERNA", function()
     Notify("Alvo: Perna")
 end)
 
--- COR DO FOV
+-- COR DO FOV (PALETA MODERNA)
 local FOVColorSection = Section(CombatPage, "COR DO FOV")
-Button(FOVColorSection, "BRANCO", function()
-    Aimbot_CorFOV = Color3.fromRGB(255,255,255)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV branco")
-end)
-Button(FOVColorSection, "VERMELHO", function()
-    Aimbot_CorFOV = Color3.fromRGB(255,50,50)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV vermelho")
-end)
-Button(FOVColorSection, "AZUL", function()
-    Aimbot_CorFOV = Color3.fromRGB(50,150,255)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV azul")
-end)
-Button(FOVColorSection, "VERDE", function()
-    Aimbot_CorFOV = Color3.fromRGB(50,255,100)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV verde")
-end)
-Button(FOVColorSection, "AMARELO", function()
-    Aimbot_CorFOV = Color3.fromRGB(255,220,50)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV amarelo")
-end)
-Button(FOVColorSection, "ROXO", function()
-    Aimbot_CorFOV = Color3.fromRGB(170,0,255)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV roxo")
-end)
-Button(FOVColorSection, "CIANO", function()
-    Aimbot_CorFOV = Color3.fromRGB(0,255,255)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV ciano")
-end)
-Button(FOVColorSection, "ROSA", function()
-    Aimbot_CorFOV = Color3.fromRGB(255,0,180)
-    FOVCircle.Color = Aimbot_CorFOV
-    Notify("FOV rosa")
-end)
+ColorPicker(FOVColorSection, "FOV", Aimbot_CorFOV)
 
+-- HITBOX
 local HitboxSection = Section(CombatPage, "HITBOX")
 Toggle(HitboxSection, "HITBOX", false, function(State)
     Hitbox_Ativado = State
@@ -1285,36 +1326,9 @@ Toggle(HitboxSection, "HITBOX", false, function(State)
 end)
 Slider(HitboxSection, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
 
--- COR DA HITBOX
+-- COR DA HITBOX (PALETA MODERNA)
 local HitboxColorSection = Section(CombatPage, "COR DA HITBOX")
-Button(HitboxColorSection, "VERMELHO", function()
-    Hitbox_Cor = Color3.fromRGB(255,30,30)
-    Notify("Hitbox vermelha")
-end)
-Button(HitboxColorSection, "AZUL", function()
-    Hitbox_Cor = Color3.fromRGB(30,100,255)
-    Notify("Hitbox azul")
-end)
-Button(HitboxColorSection, "VERDE", function()
-    Hitbox_Cor = Color3.fromRGB(50,255,50)
-    Notify("Hitbox verde")
-end)
-Button(HitboxColorSection, "AMARELO", function()
-    Hitbox_Cor = Color3.fromRGB(255,220,0)
-    Notify("Hitbox amarela")
-end)
-Button(HitboxColorSection, "ROXO", function()
-    Hitbox_Cor = Color3.fromRGB(170,0,255)
-    Notify("Hitbox roxa")
-end)
-Button(HitboxColorSection, "BRANCO", function()
-    Hitbox_Cor = Color3.fromRGB(255,255,255)
-    Notify("Hitbox branca")
-end)
-Button(HitboxColorSection, "ROSA", function()
-    Hitbox_Cor = Color3.fromRGB(255,0,180)
-    Notify("Hitbox rosa")
-end)
+ColorPicker(HitboxColorSection, "Hitbox", Hitbox_Cor)
 
 --========================================================--
 -- VISUAL PAGE
@@ -1330,49 +1344,11 @@ Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; Atualiza
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 
--- COR DO ESP
+-- COR DO ESP (PALETA MODERNA)
 local ESPColorSection = Section(VisualPage, "COR DO ESP")
-Button(ESPColorSection, "VERMELHO", function()
-    CorESP = Color3.fromRGB(255,50,50)
-    AtualizarESP()
-    Notify("ESP vermelho")
-end)
-Button(ESPColorSection, "AZUL", function()
-    CorESP = Color3.fromRGB(50,150,255)
-    AtualizarESP()
-    Notify("ESP azul")
-end)
-Button(ESPColorSection, "VERDE", function()
-    CorESP = Color3.fromRGB(50,255,100)
-    AtualizarESP()
-    Notify("ESP verde")
-end)
-Button(ESPColorSection, "AMARELO", function()
-    CorESP = Color3.fromRGB(255,220,50)
-    AtualizarESP()
-    Notify("ESP amarelo")
-end)
-Button(ESPColorSection, "ROXO", function()
-    CorESP = Color3.fromRGB(170,0,255)
-    AtualizarESP()
-    Notify("ESP roxo")
-end)
-Button(ESPColorSection, "CIANO", function()
-    CorESP = Color3.fromRGB(0,255,255)
-    AtualizarESP()
-    Notify("ESP ciano")
-end)
-Button(ESPColorSection, "BRANCO", function()
-    CorESP = Color3.fromRGB(255,255,255)
-    AtualizarESP()
-    Notify("ESP branco")
-end)
-Button(ESPColorSection, "ROSA", function()
-    CorESP = Color3.fromRGB(255,0,180)
-    AtualizarESP()
-    Notify("ESP rosa")
-end)
+ColorPicker(ESPColorSection, "ESP", CorESP)
 
+-- CAMERA
 local CameraSection = Section(VisualPage, "CAMERA")
 Slider(CameraSection, "FOV", 40, 120, Config.FOV, function(Value)
     Config.FOV = Value
