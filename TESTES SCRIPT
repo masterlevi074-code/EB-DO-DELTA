@@ -878,6 +878,17 @@ local function AtualizarESP()
                 if nameGui then nameGui.Enabled = ESP_Names and mostrarESP
                     if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = CorESP end) end
                 end
+                -- Vida
+                local vidaGui = head:FindFirstChild("NoahzinVida")
+                if vidaGui then
+                    vidaGui.Enabled = ESP_Vida and mostrarESP
+                    if vidaGui:FindFirstChild("TextLabel") then
+                        local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                        if hum then
+                            vidaGui.TextLabel.Text = string.format("[%d/%d]", math.floor(hum.Health), math.floor(hum.MaxHealth))
+                        end
+                    end
+                end
             end
             if LinhasTracers[p] then pcall(function() LinhasTracers[p].Color = CorESP end); LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
         end
@@ -900,6 +911,24 @@ local function CriarESP(p)
         tl.Size = UDim2.new(1, 0, 1, 0); tl.BackgroundTransparency = 1; tl.Text = p.Name
         pcall(function() tl.TextColor3 = CorESP end)
         tl.Font = Enum.Font.GothamBold; tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
+        -- Vida
+        local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
+        bgVida.Name = "NoahzinVida"
+        bgVida.Size = UDim2.new(0, 100, 0, 20)
+        bgVida.AlwaysOnTop = true
+        bgVida.ExtentsOffset = Vector3.new(0, 5, 0)
+        bgVida.Enabled = ESP_Vida
+        bgVida.Parent = head
+
+        local tlVida = bgVida:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlVida.Size = UDim2.new(1, 0, 1, 0)
+        tlVida.BackgroundTransparency = 1
+        tlVida.Text = ""
+        tlVida.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tlVida.Font = Enum.Font.GothamBold
+        tlVida.TextSize = 11
+        tlVida.TextStrokeTransparency = 0
+        tlVida.Parent = bgVida
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
         box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = CorESP end)
         box.LineThickness = 0.05; box.SurfaceTransparency = 1; box.Visible = ESP_Box; box.Parent = c
@@ -1176,9 +1205,21 @@ RunService.RenderStepped:Connect(function()
     end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
-            local head = p.Character:FindFirstChild("Head"); local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            if head and hum and ESP_Names then local nameGui = head:FindFirstChild("NoahzinName")
-                if nameGui and nameGui:FindFirstChild("TextLabel") then nameGui.TextLabel.Text = ESP_Vida and string.format("%s [%d/%d]", p.Name, math.floor(hum.Health), math.floor(hum.MaxHealth)) or p.Name end
+            local head = p.Character:FindFirstChild("Head")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if head and hum then
+                if ESP_Names then
+                    local nameGui = head:FindFirstChild("NoahzinName")
+                    if nameGui and nameGui:FindFirstChild("TextLabel") then
+                        nameGui.TextLabel.Text = p.Name
+                    end
+                end
+                if ESP_Vida then
+                    local vidaGui = head:FindFirstChild("NoahzinVida")
+                    if vidaGui and vidaGui:FindFirstChild("TextLabel") then
+                        vidaGui.TextLabel.Text = string.format("[%d/%d]", math.floor(hum.Health), math.floor(hum.MaxHealth))
+                    end
+                end
             end
         end
     end
@@ -1356,7 +1397,6 @@ Slider(AimbotSection, "FOV THICKNESS", 1, 10, 1.5, function(Value)
     FOVCircle.Thickness = Aimbot_EspessuraFOV
 end)
 
--- CORPO ALVO
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
 Button(BodyTargetSection, "HEAD", function()
     Aimbot_ParteAlvo = "Head"
@@ -1371,11 +1411,9 @@ Button(BodyTargetSection, "PERNA", function()
     Notify("Alvo: Perna")
 end)
 
--- COR DO FOV (PALETA MODERNA)
 local FOVColorSection = Section(CombatPage, "COR DO FOV")
 ColorPicker(FOVColorSection, "FOV", Aimbot_CorFOV)
 
--- HITBOX
 local HitboxSection = Section(CombatPage, "HITBOX")
 Toggle(HitboxSection, "HITBOX", false, function(State)
     Hitbox_Ativado = State
@@ -1386,7 +1424,6 @@ Slider(HitboxSection, "HITBOX TRANSP", 0, 100, 70, function(Value)
     Hitbox_Transparencia = Value / 100
 end)
 
--- COR DA HITBOX (PALETA MODERNA)
 local HitboxColorSection = Section(CombatPage, "COR DA HITBOX")
 ColorPicker(HitboxColorSection, "Hitbox", Hitbox_Cor)
 
@@ -1404,7 +1441,6 @@ Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; Atualiza
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 
--- ESP POR TIMES
 local TimesSection = Section(VisualPage, "ESP POR TIMES")
 Toggle(TimesSection, "FILTRAR POR TIMES", false, function(State)
     ESP_TimesAtivado = State
@@ -1418,11 +1454,9 @@ for _, time in ipairs(timesNomes) do
     end)
 end
 
--- COR DO ESP (PALETA MODERNA)
 local ESPColorSection = Section(VisualPage, "COR DO ESP")
 ColorPicker(ESPColorSection, "ESP", CorESP)
 
--- CAMERA
 local CameraSection = Section(VisualPage, "CAMERA")
 Slider(CameraSection, "FOV", 40, 120, Config.FOV, function(Value)
     Config.FOV = Value
@@ -1644,7 +1678,7 @@ Button(ActionsSection, "DESTRUIR", function()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end end end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
 
