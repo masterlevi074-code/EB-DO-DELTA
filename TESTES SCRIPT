@@ -440,7 +440,7 @@ local function Section(Page, Text)
     Label.Size = UDim2.new(1, -8, 1, 0)
     Label.Position = UDim2.fromOffset(4, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = "▸ " .. Text
+    Label.Text = "⬤ " .. Text
     Label.TextColor3 = Accent
     Label.TextSize = 7
     Label.Font = Enum.Font.GothamBold
@@ -1215,8 +1215,25 @@ Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State en
 Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
+Toggle(AimbotSection, "DISTANCE CHECK", false, function(State) Aimbot_PrioridadeDistancia = State end)
+Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
+
+-- Seção de corpo alvo
+local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
+Button(BodyTargetSection, "HEAD", function()
+    Aimbot_ParteAlvo = "Head"
+    Notify("Alvo: Cabeça")
+end)
+Button(BodyTargetSection, "TORSO", function()
+    Aimbot_ParteAlvo = "Torso"
+    Notify("Alvo: Torso")
+end)
+Button(BodyTargetSection, "PERNA", function()
+    Aimbot_ParteAlvo = "Perna"
+    Notify("Alvo: Perna")
+end)
 
 -- COR DO FOV
 local FOVColorSection = Section(CombatPage, "COR DO FOV")
