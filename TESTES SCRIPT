@@ -84,7 +84,7 @@ local Underground_yAbaixo = -90
 local Underground_yCamera = 4.7
 local Underground_Voltando = false
 local Underground_CameraPart = nil
-local UndergroundFloor = nil  -- NOVO: bloco invisível de sustentação
+local UndergroundFloor = nil
 
 local PasseLivre_Ativado = false
 local PasseLivre_Conexao = nil
@@ -405,17 +405,15 @@ local SectionContainers = {}
 local function Section(Page, Text)
     local PageName = Page.Name
     
-    -- Inicializar contador se não existir
     if not SectionContainers[PageName] then
         SectionContainers[PageName] = {}
     end
     
-    -- Calcular LayoutOrder baseado no número de seções existentes
     local SectionOrder = (#SectionContainers[PageName] + 1) * 100
     
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(1, -4, 0, 0)
-    Container.AutomaticSize = Enum.AutomaticSize.Y  -- Altura automática
+    Container.AutomaticSize = Enum.AutomaticSize.Y
     Container.BackgroundTransparency = 1
     Container.BorderSizePixel = 0
     Container.LayoutOrder = SectionOrder
@@ -442,7 +440,7 @@ local function Section(Page, Text)
     Label.Size = UDim2.new(1, -8, 1, 0)
     Label.Position = UDim2.fromOffset(4, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = "- " .. Text
+    Label.Text = "▸ " .. Text
     Label.TextColor3 = Accent
     Label.TextSize = 7
     Label.Font = Enum.Font.GothamBold
@@ -1218,7 +1216,50 @@ Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State;
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
-Slider(AimbotSection, "SMOOTHNESS", 1, 20, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
+Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
+
+-- COR DO FOV
+local FOVColorSection = Section(CombatPage, "COR DO FOV")
+Button(FOVColorSection, "BRANCO", function()
+    Aimbot_CorFOV = Color3.fromRGB(255,255,255)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV branco")
+end)
+Button(FOVColorSection, "VERMELHO", function()
+    Aimbot_CorFOV = Color3.fromRGB(255,50,50)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV vermelho")
+end)
+Button(FOVColorSection, "AZUL", function()
+    Aimbot_CorFOV = Color3.fromRGB(50,150,255)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV azul")
+end)
+Button(FOVColorSection, "VERDE", function()
+    Aimbot_CorFOV = Color3.fromRGB(50,255,100)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV verde")
+end)
+Button(FOVColorSection, "AMARELO", function()
+    Aimbot_CorFOV = Color3.fromRGB(255,220,50)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV amarelo")
+end)
+Button(FOVColorSection, "ROXO", function()
+    Aimbot_CorFOV = Color3.fromRGB(170,0,255)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV roxo")
+end)
+Button(FOVColorSection, "CIANO", function()
+    Aimbot_CorFOV = Color3.fromRGB(0,255,255)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV ciano")
+end)
+Button(FOVColorSection, "ROSA", function()
+    Aimbot_CorFOV = Color3.fromRGB(255,0,180)
+    FOVCircle.Color = Aimbot_CorFOV
+    Notify("FOV rosa")
+end)
 
 local HitboxSection = Section(CombatPage, "HITBOX")
 Toggle(HitboxSection, "HITBOX", false, function(State)
@@ -1226,6 +1267,37 @@ Toggle(HitboxSection, "HITBOX", false, function(State)
     if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
 end)
 Slider(HitboxSection, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
+
+-- COR DA HITBOX
+local HitboxColorSection = Section(CombatPage, "COR DA HITBOX")
+Button(HitboxColorSection, "VERMELHO", function()
+    Hitbox_Cor = Color3.fromRGB(255,30,30)
+    Notify("Hitbox vermelha")
+end)
+Button(HitboxColorSection, "AZUL", function()
+    Hitbox_Cor = Color3.fromRGB(30,100,255)
+    Notify("Hitbox azul")
+end)
+Button(HitboxColorSection, "VERDE", function()
+    Hitbox_Cor = Color3.fromRGB(50,255,50)
+    Notify("Hitbox verde")
+end)
+Button(HitboxColorSection, "AMARELO", function()
+    Hitbox_Cor = Color3.fromRGB(255,220,0)
+    Notify("Hitbox amarela")
+end)
+Button(HitboxColorSection, "ROXO", function()
+    Hitbox_Cor = Color3.fromRGB(170,0,255)
+    Notify("Hitbox roxa")
+end)
+Button(HitboxColorSection, "BRANCO", function()
+    Hitbox_Cor = Color3.fromRGB(255,255,255)
+    Notify("Hitbox branca")
+end)
+Button(HitboxColorSection, "ROSA", function()
+    Hitbox_Cor = Color3.fromRGB(255,0,180)
+    Notify("Hitbox rosa")
+end)
 
 --========================================================--
 -- VISUAL PAGE
@@ -1240,6 +1312,49 @@ Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; Atualiza
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
+
+-- COR DO ESP
+local ESPColorSection = Section(VisualPage, "COR DO ESP")
+Button(ESPColorSection, "VERMELHO", function()
+    CorESP = Color3.fromRGB(255,50,50)
+    AtualizarESP()
+    Notify("ESP vermelho")
+end)
+Button(ESPColorSection, "AZUL", function()
+    CorESP = Color3.fromRGB(50,150,255)
+    AtualizarESP()
+    Notify("ESP azul")
+end)
+Button(ESPColorSection, "VERDE", function()
+    CorESP = Color3.fromRGB(50,255,100)
+    AtualizarESP()
+    Notify("ESP verde")
+end)
+Button(ESPColorSection, "AMARELO", function()
+    CorESP = Color3.fromRGB(255,220,50)
+    AtualizarESP()
+    Notify("ESP amarelo")
+end)
+Button(ESPColorSection, "ROXO", function()
+    CorESP = Color3.fromRGB(170,0,255)
+    AtualizarESP()
+    Notify("ESP roxo")
+end)
+Button(ESPColorSection, "CIANO", function()
+    CorESP = Color3.fromRGB(0,255,255)
+    AtualizarESP()
+    Notify("ESP ciano")
+end)
+Button(ESPColorSection, "BRANCO", function()
+    CorESP = Color3.fromRGB(255,255,255)
+    AtualizarESP()
+    Notify("ESP branco")
+end)
+Button(ESPColorSection, "ROSA", function()
+    CorESP = Color3.fromRGB(255,0,180)
+    AtualizarESP()
+    Notify("ESP rosa")
+end)
 
 local CameraSection = Section(VisualPage, "CAMERA")
 Slider(CameraSection, "FOV", 40, 120, Config.FOV, function(Value)
@@ -1307,7 +1422,6 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
     if State then
         Underground_Voltando = false
         
-        -- Criar bloco invisível de sustentação
         if not UndergroundFloor then
             UndergroundFloor = Instance.new("Part")
             UndergroundFloor.Name = "UndergroundFloor"
@@ -1319,7 +1433,6 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
         end
         UndergroundFloor.Position = Vector3.new(root.Position.X, Underground_yAbaixo - 3, root.Position.Z)
         
-        -- Câmera fantasma
         if not Underground_CameraPart then
             Underground_CameraPart = Instance.new("Part")
             Underground_CameraPart.Name = "CameraGhost"
