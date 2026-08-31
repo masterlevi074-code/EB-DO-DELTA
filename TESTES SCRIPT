@@ -440,7 +440,7 @@ local function Section(Page, Text)
     Label.Size = UDim2.new(1, -8, 1, 0)
     Label.Position = UDim2.fromOffset(4, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = "▸ " .. Text
+    Label.Text = "▶ " .. Text
     Label.TextColor3 = Accent
     Label.TextSize = 7
     Label.Font = Enum.Font.GothamBold
@@ -906,38 +906,38 @@ local function CriarESP(p)
         pcall(function() tl.TextColor3 = CorESP end)
         tl.Font = Enum.Font.GothamBold; tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
 
-        -- Barra de vida
-        local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
-        bgVida.Name = "NoahzinVida"
-        bgVida.Size = UDim2.new(0, 20, 0, 30)
-        bgVida.AlwaysOnTop = true
-        bgVida.ExtentsOffset = Vector3.new(-35, 5, 0)  -- deslocada para a esquerda
-        bgVida.Enabled = ESP_Vida
-        bgVida.Parent = head
+        -- Barra de vida (fina e colada)
+local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
+bgVida.Name = "NoahzinVida"
+bgVida.Size = UDim2.new(0, 10, 0, 20)
+bgVida.AlwaysOnTop = true
+bgVida.ExtentsOffset = Vector3.new(-1.5, 0, 0)  -- bem próximo do personagem
+bgVida.Enabled = ESP_Vida
+bgVida.Parent = head
 
-        local barBg = bgVida:FindFirstChild("BarBg") or Instance.new("Frame")
-        barBg.Name = "BarBg"
-        barBg.Size = UDim2.new(0, 4, 0, 20)
-        barBg.Position = UDim2.new(0, 8, 0, 5)
-        barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        barBg.BorderSizePixel = 0
-        barBg.Parent = bgVida
+local barBg = bgVida:FindFirstChild("BarBg") or Instance.new("Frame")
+barBg.Name = "BarBg"
+barBg.Size = UDim2.new(0, 2, 0, 12)            -- largura 2px, altura 12px
+barBg.Position = UDim2.new(0, 4, 0, 4)
+barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+barBg.BorderSizePixel = 0
+barBg.Parent = bgVida
 
-        local barBgCorner = Instance.new("UICorner")
-        barBgCorner.CornerRadius = UDim.new(0, 2)
-        barBgCorner.Parent = barBg
+local barBgCorner = Instance.new("UICorner")
+barBgCorner.CornerRadius = UDim.new(0, 1)
+barBgCorner.Parent = barBg
 
-        local barFill = barBg:FindFirstChild("BarFill") or Instance.new("Frame")
-        barFill.Name = "BarFill"
-        barFill.Size = UDim2.new(1, 0, 1, 0)  -- começa cheio
-        barFill.Position = UDim2.new(0, 0, 0, 0)
-        barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)  -- verde
-        barFill.BorderSizePixel = 0
-        barFill.Parent = barBg
+local barFill = barBg:FindFirstChild("BarFill") or Instance.new("Frame")
+barFill.Name = "BarFill"
+barFill.Size = UDim2.new(1, 0, 1, 0)          -- preenchimento total
+barFill.Position = UDim2.new(0, 0, 0, 0)
+barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+barFill.BorderSizePixel = 0
+barFill.Parent = barBg
 
-        local barFillCorner = Instance.new("UICorner")
-        barFillCorner.CornerRadius = UDim.new(0, 2)
-        barFillCorner.Parent = barFill
+local barFillCorner = Instance.new("UICorner")
+barFillCorner.CornerRadius = UDim.new(0, 1)
+barFillCorner.Parent = barFill
 
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
         box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = CorESP end)
