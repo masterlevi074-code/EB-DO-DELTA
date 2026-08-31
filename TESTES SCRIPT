@@ -878,16 +878,10 @@ local function AtualizarESP()
                 if nameGui then nameGui.Enabled = ESP_Names and mostrarESP
                     if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = CorESP end) end
                 end
-                -- Vida
+                -- Vida (barra)
                 local vidaGui = head:FindFirstChild("NoahzinVida")
                 if vidaGui then
                     vidaGui.Enabled = ESP_Vida and mostrarESP
-                    if vidaGui:FindFirstChild("TextLabel") then
-                        local hum = p.Character:FindFirstChildOfClass("Humanoid")
-                        if hum then
-                            vidaGui.TextLabel.Text = string.format("[%d/%d]", math.floor(hum.Health), math.floor(hum.MaxHealth))
-                        end
-                    end
                 end
             end
             if LinhasTracers[p] then pcall(function() LinhasTracers[p].Color = CorESP end); LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
@@ -911,24 +905,40 @@ local function CriarESP(p)
         tl.Size = UDim2.new(1, 0, 1, 0); tl.BackgroundTransparency = 1; tl.Text = p.Name
         pcall(function() tl.TextColor3 = CorESP end)
         tl.Font = Enum.Font.GothamBold; tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
-        -- Vida
+
+        -- Barra de vida
         local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
         bgVida.Name = "NoahzinVida"
-        bgVida.Size = UDim2.new(0, 100, 0, 20)
+        bgVida.Size = UDim2.new(0, 20, 0, 30)
         bgVida.AlwaysOnTop = true
-        bgVida.ExtentsOffset = Vector3.new(0, 5, 0)
+        bgVida.ExtentsOffset = Vector3.new(-35, 5, 0)  -- deslocada para a esquerda
         bgVida.Enabled = ESP_Vida
         bgVida.Parent = head
 
-        local tlVida = bgVida:FindFirstChild("TextLabel") or Instance.new("TextLabel")
-        tlVida.Size = UDim2.new(1, 0, 1, 0)
-        tlVida.BackgroundTransparency = 1
-        tlVida.Text = ""
-        tlVida.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tlVida.Font = Enum.Font.GothamBold
-        tlVida.TextSize = 11
-        tlVida.TextStrokeTransparency = 0
-        tlVida.Parent = bgVida
+        local barBg = bgVida:FindFirstChild("BarBg") or Instance.new("Frame")
+        barBg.Name = "BarBg"
+        barBg.Size = UDim2.new(0, 4, 0, 20)
+        barBg.Position = UDim2.new(0, 8, 0, 5)
+        barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        barBg.BorderSizePixel = 0
+        barBg.Parent = bgVida
+
+        local barBgCorner = Instance.new("UICorner")
+        barBgCorner.CornerRadius = UDim.new(0, 2)
+        barBgCorner.Parent = barBg
+
+        local barFill = barBg:FindFirstChild("BarFill") or Instance.new("Frame")
+        barFill.Name = "BarFill"
+        barFill.Size = UDim2.new(1, 0, 1, 0)  -- começa cheio
+        barFill.Position = UDim2.new(0, 0, 0, 0)
+        barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)  -- verde
+        barFill.BorderSizePixel = 0
+        barFill.Parent = barBg
+
+        local barFillCorner = Instance.new("UICorner")
+        barFillCorner.CornerRadius = UDim.new(0, 2)
+        barFillCorner.Parent = barFill
+
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
         box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = CorESP end)
         box.LineThickness = 0.05; box.SurfaceTransparency = 1; box.Visible = ESP_Box; box.Parent = c
@@ -1208,16 +1218,26 @@ RunService.RenderStepped:Connect(function()
             local head = p.Character:FindFirstChild("Head")
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if head and hum then
+                -- Atualizar nome
                 if ESP_Names then
                     local nameGui = head:FindFirstChild("NoahzinName")
                     if nameGui and nameGui:FindFirstChild("TextLabel") then
                         nameGui.TextLabel.Text = p.Name
                     end
                 end
+                -- Atualizar barra de vida
                 if ESP_Vida then
                     local vidaGui = head:FindFirstChild("NoahzinVida")
-                    if vidaGui and vidaGui:FindFirstChild("TextLabel") then
-                        vidaGui.TextLabel.Text = string.format("[%d/%d]", math.floor(hum.Health), math.floor(hum.MaxHealth))
+                    if vidaGui then
+                        local barFill = vidaGui:FindFirstChild("BarBg") and vidaGui.BarBg:FindFirstChild("BarFill")
+                        if barFill and hum.MaxHealth > 0 then
+                            local percent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                            barFill.Size = UDim2.new(1, 0, percent, 0)
+                            -- Cor: verde -> amarelo -> vermelho
+                            local r = math.clamp((1 - percent) * 2, 0, 1)
+                            local g = math.clamp(percent * 2, 0, 1)
+                            barFill.BackgroundColor3 = Color3.fromRGB(r * 255, g * 255, 0)
+                        end
                     end
                 end
             end
@@ -1678,7 +1698,15 @@ Button(ActionsSection, "DESTRUIR", function()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then
+        local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
+        local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
+        local h = plr.Character:FindFirstChild("Head")
+        if h then
+            local n = h:FindFirstChild("NoahzinName") if n then n:Destroy() end
+            local v = h:FindFirstChild("NoahzinVida") if v then v:Destroy() end
+        end
+    end end
     Gui:Destroy()
 end)
 
