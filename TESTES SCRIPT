@@ -657,6 +657,59 @@ local function Button(Container, Text, Callback)
 end
 
 --========================================================--
+-- INPUT (DENTRO DO CONTAINER)
+--========================================================--
+
+local function Input(Container, LabelText, Placeholder, Callback)
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1, 0, 0, 38)
+    Frame.BackgroundColor3 = COLORS.Panel
+    Frame.BorderSizePixel = 0
+    Frame.LayoutOrder = 1
+    Frame.Parent = Container
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Frame
+
+    local Label = Instance.new("TextLabel")
+    Label.BackgroundTransparency = 1
+    Label.Position = UDim2.fromOffset(10, 3)
+    Label.Size = UDim2.new(1, -20, 0, 14)
+    Label.Text = LabelText
+    Label.TextColor3 = COLORS.Text
+    Label.TextSize = 8
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Frame
+
+    local Box = Instance.new("TextBox")
+    Box.Size = UDim2.new(1, -20, 0, 18)
+    Box.Position = UDim2.fromOffset(10, 18)
+    Box.BackgroundColor3 = COLORS.Panel2
+    Box.BorderSizePixel = 0
+    Box.Text = Placeholder or ""
+    Box.TextColor3 = COLORS.Text
+    Box.PlaceholderText = Placeholder or ""
+    Box.PlaceholderColor3 = COLORS.Muted
+    Box.TextSize = 8
+    Box.Font = Enum.Font.Code
+    Box.Parent = Frame
+
+    local BoxCorner = Instance.new("UICorner")
+    BoxCorner.CornerRadius = UDim.new(0, 4)
+    BoxCorner.Parent = Box
+
+    Box.FocusLost:Connect(function(enterPressed)
+        if enterPressed and Callback then
+            Callback(Box.Text)
+        end
+    end)
+
+    return Box
+end
+
+--========================================================--
 -- COLOR PICKER (MODERNO)
 --========================================================--
 
@@ -1298,6 +1351,10 @@ Toggle(AimbotSection, "DISTANCE CHECK", false, function(State) Aimbot_Prioridade
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
+Slider(AimbotSection, "FOV THICKNESS", 1, 10, 1.5, function(Value)
+    Aimbot_EspessuraFOV = Value / 10
+    FOVCircle.Thickness = Aimbot_EspessuraFOV
+end)
 
 -- CORPO ALVO
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
@@ -1325,6 +1382,9 @@ Toggle(HitboxSection, "HITBOX", false, function(State)
     if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
 end)
 Slider(HitboxSection, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
+Slider(HitboxSection, "HITBOX TRANSP", 0, 100, 70, function(Value)
+    Hitbox_Transparencia = Value / 100
+end)
 
 -- COR DA HITBOX (PALETA MODERNA)
 local HitboxColorSection = Section(CombatPage, "COR DA HITBOX")
@@ -1343,6 +1403,20 @@ Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; Atualiza
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
+
+-- ESP POR TIMES
+local TimesSection = Section(VisualPage, "ESP POR TIMES")
+Toggle(TimesSection, "FILTRAR POR TIMES", false, function(State)
+    ESP_TimesAtivado = State
+    AtualizarESP()
+end)
+local timesNomes = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
+for _, time in ipairs(timesNomes) do
+    Toggle(TimesSection, time, TimesMarcados[time], function(State)
+        TimesMarcados[time] = State
+        AtualizarESP()
+    end)
+end
 
 -- COR DO ESP (PALETA MODERNA)
 local ESPColorSection = Section(VisualPage, "COR DO ESP")
@@ -1519,6 +1593,21 @@ local AdminSection = Section(ConfigPage, "ADMIN")
 Toggle(AdminSection, "ADMIN MODE", false, function(State)
     Admin_Ativado = State
     Notify(State and "Admin ON" or "Admin OFF")
+end)
+Input(AdminSection, "PREFIXO", Admin_Prefixo, function(text)
+    if text ~= "" then
+        Admin_Prefixo = text
+        Notify("Prefixo: " .. text)
+    end
+end)
+Button(AdminSection, "LISTA DE COMANDOS", function()
+    Notify("!to !bring !respawn")
+    task.wait(1.5)
+    Notify("!invis !vis !view !unview")
+    task.wait(1.5)
+    Notify("!sit !jump !hipheight")
+    task.wait(1.5)
+    Notify("!char !skin !cmdbar")
 end)
 
 local ServerSection = Section(ConfigPage, "SERVER")
