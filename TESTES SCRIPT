@@ -61,8 +61,8 @@ local Aimbot_CorFOV = Color3.fromRGB(255, 255, 255)
 local Aimbot_Suavidade = 0.15
 local Aimbot_ParteAlvo = "Head"
 local Aimbot_TeamCheck = false
-local Aimbot_OffsetTelaY = -40
-local Aimbot_OffsetPixels = 40
+local Aimbot_OffsetTelaY = 0
+local Aimbot_OffsetPixels = 0
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
 local Aimbot_SoComItem = false
@@ -977,12 +977,12 @@ local function CriarESP(p)
         tlPatente.TextStrokeTransparency = 0
         tlPatente.Parent = bgPatente
 
-        -- Distância (separada)
+        -- Distância
         local bgDist = head:FindFirstChild("NoahzinDistancia") or Instance.new("BillboardGui")
         bgDist.Name = "NoahzinDistancia"
         bgDist.Size = UDim2.new(0, 100, 0, 20)
         bgDist.AlwaysOnTop = true
-        bgDist.ExtentsOffset = Vector3.new(0, -5, 0)  -- abaixo do nome
+        bgDist.ExtentsOffset = Vector3.new(0, -5, 0)
         bgDist.Enabled = ESP_Distancia
         bgDist.Parent = head
 
@@ -1103,20 +1103,26 @@ local function ColorPicker(Container, Category, DefaultColor)
 end
 
 --========================================================--
--- FUNÇÕES DE APOIO (AIMBOT, VISIBILIDADE, ETC.)
+-- FUNÇÕES DE APOIO DO AIMBOT
 --========================================================--
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
+    if not camera or not alvoPosicao then return 0 end
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
-    local fovVertical = math.rad(camera.FieldOfView)
+    local fovVertical = math.rad(camera.FieldOfView or 70)
     local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
-    return (Aimbot_OffsetPixels / camera.ViewportSize.Y) * alturaTelaStuds
+    return (Aimbot_OffsetPixels / (camera.ViewportSize.Y or 1)) * alturaTelaStuds
 end
 
 local function EstaVisivel(alvoParte)
-    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
-    local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
+    if not alvoParte then return false end
+    local camera = Workspace.CurrentCamera
+    if not camera then return false end
+    local cameraPos = camera.CFrame.Position
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {Player.Character}
+    params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
     if not resultado then return true end
     local alvo = alvoParte.Parent
@@ -1125,59 +1131,108 @@ local function EstaVisivel(alvoParte)
 end
 
 local function SaoDoMesmoTime(jogadorA, jogadorB)
-    local teamA = jogadorA.Team; local teamB = jogadorB.Team
-    if teamA and teamB and teamA == teamB then return true end
-    if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
-        if teamA.TeamColor == teamB.TeamColor then return true end
+    local teamA = jogadorA and jogadorA.Team
+    local teamB = jogadorB and jogadorB.Team
+    if teamA and teamB then
+        if teamA == teamB then return true end
+        if teamA.TeamColor and teamB.TeamColor and teamA.TeamColor == teamB.TeamColor then return true end
     end
     return false
 end
 
 local function TemItemEquipado()
-    if Player.Character then for _, child in pairs(Player.Character:GetChildren()) do if child:IsA("Tool") then return true end end end
+    if Player.Character then
+        for _, child in pairs(Player.Character:GetChildren()) do
+            if child:IsA("Tool") then return true end
+        end
+    end
+    local backpack = Player:FindFirstChild("Backpack")
+    if backpack then
+        for _, child in pairs(backpack:GetChildren()) do
+            if child:IsA("Tool") then return true end
+        end
+    end
     return false
 end
 
 local function ObterJogadorMaisProximoDaMira()
-    if Aimbot_SoComItem and not TemItemEquipado() then return nil end
-    local melhorAlvo = nil; local melhorPontuacao = math.huge
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    if Aimbot_SoComItem and not TemItemEquipado() then
+        return nil
+    end
+
+    local camera = Workspace.CurrentCamera
+    if not camera then return nil end
+    local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
+
+    local melhorAlvo = nil
+    local melhorPontuacao = math.huge
+
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
-            if JogadoresIgnorados[p.Name] then continue end
-            if Aimbot_TeamCheck and SaoDoMesmoTime(Player, p) then continue end
-            local parteBuscada = nil
-            if Aimbot_ParteAlvo == "Head" then parteBuscada = p.Character:FindFirstChild("Head")
-            elseif Aimbot_ParteAlvo == "Torso" then parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
-            elseif Aimbot_ParteAlvo == "Perna" then parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart") end
-            if parteBuscada then
-                if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
-                local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
-                local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
-                local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
-                if visivel then
-                    local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
-                    local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
-                    if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
-                        local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
-                        if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
+        if p ~= Player and p.Character then
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            if hum and root and hum.Health > 0 then
+                if JogadoresIgnorados[p.Name] then
+                    goto continue
+                end
+                if Aimbot_TeamCheck and SaoDoMesmoTime(Player, p) then
+                    goto continue
+                end
+
+                local parteBuscada = nil
+                if Aimbot_ParteAlvo == "Head" then
+                    parteBuscada = p.Character:FindFirstChild("Head") or root
+                elseif Aimbot_ParteAlvo == "Torso" then
+                    parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or root
+                elseif Aimbot_ParteAlvo == "Perna" then
+                    parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or root
+                end
+
+                if parteBuscada then
+                    if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then
+                        goto continue
+                    end
+
+                    local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
+                    local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
+                    local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
+
+                    if visivel then
+                        local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
+                        local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
+
+                        if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
+                            local pontuacao
+                            if Aimbot_PrioridadeDistancia then
+                                pontuacao = (distanciaReal * 0.7) + (distanciaDaMira * 0.3)
+                            else
+                                pontuacao = distanciaDaMira
+                            end
+
+                            if pontuacao < melhorPontuacao then
+                                melhorPontuacao = pontuacao
+                                melhorAlvo = p
+                            end
+                        end
                     end
                 end
             end
         end
+        ::continue::
     end
+
     if melhorAlvo and Aimbot_Prediction then
-        local hum = melhorAlvo.Character and melhorAlvo.Character:FindFirstChildOfClass("Humanoid")
         local root = melhorAlvo.Character and melhorAlvo.Character:FindFirstChild("HumanoidRootPart")
-        if hum and root then
+        if root then
             local velocity = root.AssemblyLinearVelocity or Vector3.zero
             local distance = (root.Position - cameraPos).Magnitude
             local travelTime = distance / 100
             melhorAlvo._predictedOffset = velocity * travelTime
         end
     end
+
     return melhorAlvo
 end
 
@@ -1342,55 +1397,97 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 --========================================================--
 
 RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
-    if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
+    local camera = Workspace.CurrentCamera
+    local viewportTamanho = camera.ViewportSize
+
+    if Aimbot_UsarFOV and FOVCircle then
+        FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
+        FOVCircle.Radius = Aimbot_RaioFOV
+        FOVCircle.Thickness = Aimbot_EspessuraFOV
+    end
+
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
         if alvo and alvo.Character then
             local parteRastrear = nil
-            if Aimbot_ParteAlvo == "Head" then parteRastrear = alvo.Character:FindFirstChild("Head")
-            elseif Aimbot_ParteAlvo == "Torso" then parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
-            elseif Aimbot_ParteAlvo == "Perna" then parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart") end
+            if Aimbot_ParteAlvo == "Head" then
+                parteRastrear = alvo.Character:FindFirstChild("Head") or alvo.Character:FindFirstChild("HumanoidRootPart")
+            elseif Aimbot_ParteAlvo == "Torso" then
+                parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
+            elseif Aimbot_ParteAlvo == "Perna" then
+                parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart")
+            end
+
             if parteRastrear then
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
                 local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
-                if Aimbot_Prediction and alvo._predictedOffset then alvoPos = alvoPos + alvo._predictedOffset end
+                if Aimbot_Prediction and alvo._predictedOffset then
+                    alvoPos = alvoPos + alvo._predictedOffset
+                end
                 camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, alvoPos), Aimbot_Suavidade)
             end
         end
     end
+
+    -- Hitbox
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
-            local root = p.Character:FindFirstChild("HumanoidRootPart"); local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            if hum and root and hum.Health > 0 and Hitbox_Ativado then root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho); root.Transparency = Hitbox_Transparencia; pcall(function() root.Material = Hitbox_Material end); pcall(function() root.Color = Hitbox_Cor end); root.CanCollide = false end
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if hum and root and hum.Health > 0 and Hitbox_Ativado then
+                root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
+                root.Transparency = Hitbox_Transparencia
+                pcall(function() root.Material = Hitbox_Material end)
+                pcall(function() root.Color = Hitbox_Cor end)
+                root.CanCollide = false
+            end
         end
     end
+
+    -- Tracers
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_Tracers and p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local root = p.Character.HumanoidRootPart; local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            local root = p.Character.HumanoidRootPart
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum and hum.Health > 0 then
                 local mostrar = true
-                if ESP_TimesAtivado then local timePlayer = GetPlayerTime(p); if timePlayer then mostrar = TimesMarcados[timePlayer] or false else mostrar = false end end
-                if mostrar then local posTela, visivel = camera:WorldToViewportPoint(root.Position)
-                    if visivel then tracer.From = centroBaseTela; tracer.To = Vector2.new(posTela.X, posTela.Y); tracer.Visible = true else tracer.Visible = false end
-                else tracer.Visible = false end
-            else tracer.Visible = false end
-        else if tracer then tracer.Visible = false end end
+                if ESP_TimesAtivado then
+                    local timePlayer = GetPlayerTime(p)
+                    if timePlayer then mostrar = TimesMarcados[timePlayer] or false else mostrar = false end
+                end
+                if mostrar then
+                    local posTela, visivel = camera:WorldToViewportPoint(root.Position)
+                    if visivel then
+                        tracer.From = centroBaseTela
+                        tracer.To = Vector2.new(posTela.X, posTela.Y)
+                        tracer.Visible = true
+                    else
+                        tracer.Visible = false
+                    end
+                else
+                    tracer.Visible = false
+                end
+            else
+                tracer.Visible = false
+            end
+        elseif tracer then
+            tracer.Visible = false
+        end
     end
+
+    -- ESPs (nome, distância, vida, patente, skeleton)
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
             local head = p.Character:FindFirstChild("Head")
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if head and hum then
-                -- Nome
                 if ESP_Names then
                     local nameGui = head:FindFirstChild("NoahzinName")
                     if nameGui and nameGui:FindFirstChild("TextLabel") then
                         nameGui.TextLabel.Text = p.Name
                     end
                 end
-                -- Distância
                 local distGui = head:FindFirstChild("NoahzinDistancia")
                 if distGui and distGui:FindFirstChild("TextLabel") and ESP_Distancia then
                     local root = p.Character:FindFirstChild("HumanoidRootPart")
@@ -1400,7 +1497,6 @@ RunService.RenderStepped:Connect(function()
                         distGui.TextLabel.Text = string.format("%.0f m", dist)
                     end
                 end
-                -- Vida
                 if ESP_Vida then
                     local vidaGui = head:FindFirstChild("NoahzinVida")
                     if vidaGui then
@@ -1414,7 +1510,6 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
                 end
-                -- Patente
                 if ESP_Patente then
                     local patenteGui = head:FindFirstChild("NoahzinPatente")
                     if patenteGui and patenteGui:FindFirstChild("TextLabel") then
@@ -1427,7 +1522,6 @@ RunService.RenderStepped:Connect(function()
                         patenteGui.TextLabel.Text = patente
                     end
                 end
-                -- Skeleton
                 if ESP_Skeleton then
                     AtualizarSkeleton(p)
                 else
@@ -1438,9 +1532,18 @@ RunService.RenderStepped:Connect(function()
             end
         end
     end
+
+    -- Blocos Parkour
     if BlocosAtivado and Player.Character then
         local hrp = Player.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then local velY = hrp.AssemblyLinearVelocity.Y; for _, part in pairs(Hitboxes) do if part then part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1)) end end end
+        if hrp then
+            local velY = hrp.AssemblyLinearVelocity.Y
+            for _, part in pairs(Hitboxes) do
+                if part then
+                    part.CanCollide = (velY <= 0.5 and hrp.Position.Y > (part.Position.Y + part.Size.Y / 2 - 1))
+                end
+            end
+        end
     end
 end)
 
