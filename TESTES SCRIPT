@@ -449,7 +449,7 @@ local function Section(Page, Text)
     Label.Size = UDim2.new(1, -8, 1, 0)
     Label.Position = UDim2.fromOffset(4, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = "▶ " .. Text
+    Label.Text = "▸ " .. Text
     Label.TextColor3 = Accent
     Label.TextSize = 7
     Label.Font = Enum.Font.GothamBold
@@ -825,6 +825,8 @@ local function AtualizarESP()
                 if vidaGui then vidaGui.Enabled = ESP_Vida and mostrarESP end
                 local patenteGui = head:FindFirstChild("NoahzinPatente")
                 if patenteGui then patenteGui.Enabled = ESP_Patente and mostrarESP end
+                local distanciaGui = head:FindFirstChild("NoahzinDistancia")
+                if distanciaGui then distanciaGui.Enabled = ESP_Distancia and mostrarESP end
             end
             if LinhasTracers[p] then pcall(function() LinhasTracers[p].Color = corUsar end); LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
         end
@@ -975,6 +977,25 @@ local function CriarESP(p)
         tlPatente.TextStrokeTransparency = 0
         tlPatente.Parent = bgPatente
 
+        -- Distância (separada)
+        local bgDist = head:FindFirstChild("NoahzinDistancia") or Instance.new("BillboardGui")
+        bgDist.Name = "NoahzinDistancia"
+        bgDist.Size = UDim2.new(0, 100, 0, 20)
+        bgDist.AlwaysOnTop = true
+        bgDist.ExtentsOffset = Vector3.new(0, -5, 0)  -- abaixo do nome
+        bgDist.Enabled = ESP_Distancia
+        bgDist.Parent = head
+
+        local tlDist = bgDist:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlDist.Size = UDim2.new(1, 0, 1, 0)
+        tlDist.BackgroundTransparency = 1
+        tlDist.Text = ""
+        tlDist.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tlDist.Font = Enum.Font.GothamMedium
+        tlDist.TextSize = 10
+        tlDist.TextStrokeTransparency = 0
+        tlDist.Parent = bgDist
+
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
         box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = CorESP end)
         box.LineThickness = 0.05; box.SurfaceTransparency = 1; box.Visible = ESP_Box; box.Parent = c
@@ -1079,6 +1100,85 @@ local function ColorPicker(Container, Category, DefaultColor)
 
         if col.Color == DefaultColor then updateSelection(btn) end
     end
+end
+
+--========================================================--
+-- FUNÇÕES DE APOIO (AIMBOT, VISIBILIDADE, ETC.)
+--========================================================--
+
+local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
+    local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
+    local fovVertical = math.rad(camera.FieldOfView)
+    local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
+    return (Aimbot_OffsetPixels / camera.ViewportSize.Y) * alturaTelaStuds
+end
+
+local function EstaVisivel(alvoParte)
+    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
+    local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
+    local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
+    if not resultado then return true end
+    local alvo = alvoParte.Parent
+    if alvo and resultado.Instance:IsDescendantOf(alvo) then return true end
+    return false
+end
+
+local function SaoDoMesmoTime(jogadorA, jogadorB)
+    local teamA = jogadorA.Team; local teamB = jogadorB.Team
+    if teamA and teamB and teamA == teamB then return true end
+    if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
+        if teamA.TeamColor == teamB.TeamColor then return true end
+    end
+    return false
+end
+
+local function TemItemEquipado()
+    if Player.Character then for _, child in pairs(Player.Character:GetChildren()) do if child:IsA("Tool") then return true end end end
+    return false
+end
+
+local function ObterJogadorMaisProximoDaMira()
+    if Aimbot_SoComItem and not TemItemEquipado() then return nil end
+    local melhorAlvo = nil; local melhorPontuacao = math.huge
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
+    local cameraPos = camera.CFrame.Position
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+            if JogadoresIgnorados[p.Name] then continue end
+            if Aimbot_TeamCheck and SaoDoMesmoTime(Player, p) then continue end
+            local parteBuscada = nil
+            if Aimbot_ParteAlvo == "Head" then parteBuscada = p.Character:FindFirstChild("Head")
+            elseif Aimbot_ParteAlvo == "Torso" then parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
+            elseif Aimbot_ParteAlvo == "Perna" then parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart") end
+            if parteBuscada then
+                if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
+                local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
+                local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
+                local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
+                if visivel then
+                    local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
+                    local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
+                    if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
+                        local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
+                        if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
+                    end
+                end
+            end
+        end
+    end
+    if melhorAlvo and Aimbot_Prediction then
+        local hum = melhorAlvo.Character and melhorAlvo.Character:FindFirstChildOfClass("Humanoid")
+        local root = melhorAlvo.Character and melhorAlvo.Character:FindFirstChild("HumanoidRootPart")
+        if hum and root then
+            local velocity = root.AssemblyLinearVelocity or Vector3.zero
+            local distance = (root.Position - cameraPos).Magnitude
+            local travelTime = distance / 100
+            melhorAlvo._predictedOffset = velocity * travelTime
+        end
+    end
+    return melhorAlvo
 end
 
 --========================================================--
@@ -1283,21 +1383,24 @@ RunService.RenderStepped:Connect(function()
             local head = p.Character:FindFirstChild("Head")
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if head and hum then
+                -- Nome
                 if ESP_Names then
                     local nameGui = head:FindFirstChild("NoahzinName")
                     if nameGui and nameGui:FindFirstChild("TextLabel") then
-                        local text = p.Name
-                        if ESP_Distancia then
-                            local root = p.Character:FindFirstChild("HumanoidRootPart")
-                            local playerRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-                            if root and playerRoot then
-                                local dist = (root.Position - playerRoot.Position).Magnitude
-                                text = text .. string.format(" [%.0f m]", dist)
-                            end
-                        end
-                        nameGui.TextLabel.Text = text
+                        nameGui.TextLabel.Text = p.Name
                     end
                 end
+                -- Distância
+                local distGui = head:FindFirstChild("NoahzinDistancia")
+                if distGui and distGui:FindFirstChild("TextLabel") and ESP_Distancia then
+                    local root = p.Character:FindFirstChild("HumanoidRootPart")
+                    local playerRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+                    if root and playerRoot then
+                        local dist = (root.Position - playerRoot.Position).Magnitude
+                        distGui.TextLabel.Text = string.format("%.0f m", dist)
+                    end
+                end
+                -- Vida
                 if ESP_Vida then
                     local vidaGui = head:FindFirstChild("NoahzinVida")
                     if vidaGui then
@@ -1311,6 +1414,7 @@ RunService.RenderStepped:Connect(function()
                         end
                     end
                 end
+                -- Patente
                 if ESP_Patente then
                     local patenteGui = head:FindFirstChild("NoahzinPatente")
                     if patenteGui and patenteGui:FindFirstChild("TextLabel") then
@@ -1323,6 +1427,7 @@ RunService.RenderStepped:Connect(function()
                         patenteGui.TextLabel.Text = patente
                     end
                 end
+                -- Skeleton
                 if ESP_Skeleton then
                     AtualizarSkeleton(p)
                 else
@@ -1552,7 +1657,7 @@ Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; Atualiza
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
-Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia = State end)
+Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia = State; AtualizarESP() end)
 Toggle(ESPSection, "ESP PATENTE", false, function(State) ESP_Patente = State; AtualizarESP() end)
 Toggle(ESPSection, "ESP SKELETON", false, function(State) ESP_Skeleton = State; AtualizarESP() end)
 
@@ -1735,18 +1840,7 @@ end)
 
 local ConfigPage = Pages.Config
 
-local SystemSection = Section(ConfigPage, "SYSTEM")
-Toggle(SystemSection, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
-Toggle(SystemSection, "FPS COUNTER", false, function(State)
-    FPS_Counter = State
-    FPSLabel.Visible = State
-end)
-Toggle(SystemSection, "PING DISPLAY", false, function(State)
-    Ping_Display = State
-    PingLabel.Visible = State
-end)
-
--- Criação dos labels FPS e Ping (movida para antes dos toggles)
+-- Criação dos labels FPS e Ping (antes dos toggles para evitar nil)
 local FPSLabel = Instance.new("TextLabel")
 FPSLabel.BackgroundTransparency = 1
 FPSLabel.Position = UDim2.new(0, 10, 0, 10)
@@ -1793,6 +1887,17 @@ RunService.Heartbeat:Connect(function()
             PingLabel.Text = "PING: --"
         end
     end
+end)
+
+local SystemSection = Section(ConfigPage, "SYSTEM")
+Toggle(SystemSection, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
+Toggle(SystemSection, "FPS COUNTER", false, function(State)
+    FPS_Counter = State
+    FPSLabel.Visible = State
+end)
+Toggle(SystemSection, "PING DISPLAY", false, function(State)
+    Ping_Display = State
+    PingLabel.Visible = State
 end)
 
 local AdminSection = Section(ConfigPage, "ADMIN")
@@ -1887,6 +1992,7 @@ Button(ActionsSection, "DESTRUIR", function()
             local n = h:FindFirstChild("NoahzinName") if n then n:Destroy() end
             local v = h:FindFirstChild("NoahzinVida") if v then v:Destroy() end
             local pt = h:FindFirstChild("NoahzinPatente") if pt then pt:Destroy() end
+            local dist = h:FindFirstChild("NoahzinDistancia") if dist then dist:Destroy() end
         end
     end end
     Gui:Destroy()
