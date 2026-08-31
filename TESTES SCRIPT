@@ -80,7 +80,7 @@ local SpeedHack_Conexao = nil
 
 local Underground_Ativado = false
 local Underground_Conexao = nil
-local Underground_yAbaixo = -19
+local Underground_yAbaixo = -90
 local Underground_yCamera = 4.7
 local Underground_Voltando = false
 local Underground_CameraPart = nil
