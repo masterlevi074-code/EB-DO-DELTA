@@ -10,6 +10,7 @@ local Lighting = game:GetService("Lighting")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local TeleportService = game:GetService("TeleportService")
+local Stats = game:GetService("Stats")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
@@ -37,8 +38,12 @@ local ESP_Box = false
 local ESP_Names = false
 local ESP_Tracers = false
 local ESP_Vida = false
+local ESP_Distancia = false
+local ESP_Patente = false
+local ESP_Skeleton = false
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
+local SkeletonLines = {}
 
 local ESP_TimesAtivado = false
 local TimesMarcados = {
@@ -61,6 +66,7 @@ local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
 local Aimbot_SoComItem = false
+local Aimbot_Prediction = false
 
 local Hitbox_Ativado = false
 local Hitbox_Tamanho = 20
@@ -101,6 +107,9 @@ local ChatWindow_Conexoes = nil
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
+
+local FPS_Counter = false
+local Ping_Display = false
 
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = false
@@ -859,6 +868,17 @@ local function GetPlayerTime(player)
     return nil
 end
 
+local function GetTeamColor(player)
+    local team = player.Team
+    if team then
+        local teamColor = team.TeamColor
+        if teamColor and teamColor ~= BrickColor.new("White") then
+            return teamColor.Color
+        end
+    end
+    return nil
+end
+
 local function AtualizarESP()
     if not CorESP then CorESP = Color3.fromRGB(255, 50, 50) end
     for _, p in pairs(Players:GetPlayers()) do
@@ -868,23 +888,28 @@ local function AtualizarESP()
                 local timePlayer = GetPlayerTime(p)
                 if timePlayer then mostrarESP = TimesMarcados[timePlayer] or false else mostrarESP = false end
             end
+            local teamColor = GetTeamColor(p)
+            local corUsar = teamColor or CorESP
             local h = p.Character:FindFirstChild("NoahzinESP")
-            if h then h.Enabled = ESP_Chams and mostrarESP; pcall(function() h.FillColor = CorESP end) end
+            if h then h.Enabled = ESP_Chams and mostrarESP; pcall(function() h.FillColor = corUsar end) end
             local box = p.Character:FindFirstChild("NoahzinBox")
-            if box then box.Visible = ESP_Box and mostrarESP; pcall(function() box.Color3 = CorESP end) end
+            if box then box.Visible = ESP_Box and mostrarESP; pcall(function() box.Color3 = corUsar end) end
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
                 if nameGui then nameGui.Enabled = ESP_Names and mostrarESP
-                    if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = CorESP end) end
+                    if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = corUsar end) end
                 end
-                -- Vida (barra)
                 local vidaGui = head:FindFirstChild("NoahzinVida")
                 if vidaGui then
                     vidaGui.Enabled = ESP_Vida and mostrarESP
                 end
+                local patenteGui = head:FindFirstChild("NoahzinPatente")
+                if patenteGui then
+                    patenteGui.Enabled = ESP_Patente and mostrarESP
+                end
             end
-            if LinhasTracers[p] then pcall(function() LinhasTracers[p].Color = CorESP end); LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
+            if LinhasTracers[p] then pcall(function() LinhasTracers[p].Color = corUsar end); LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
         end
     end
 end
@@ -906,38 +931,57 @@ local function CriarESP(p)
         pcall(function() tl.TextColor3 = CorESP end)
         tl.Font = Enum.Font.GothamBold; tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
 
-        -- Barra de vida (fina e colada)
-local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
-bgVida.Name = "NoahzinVida"
-bgVida.Size = UDim2.new(0, 10, 0, 20)
-bgVida.AlwaysOnTop = true
-bgVida.ExtentsOffset = Vector3.new(-1.5, 0, 0)  -- bem próximo do personagem
-bgVida.Enabled = ESP_Vida
-bgVida.Parent = head
+        -- Barra de vida
+        local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
+        bgVida.Name = "NoahzinVida"
+        bgVida.Size = UDim2.new(0, 10, 0, 20)
+        bgVida.AlwaysOnTop = true
+        bgVida.ExtentsOffset = Vector3.new(-1.5, 0, 0)
+        bgVida.Enabled = ESP_Vida
+        bgVida.Parent = head
 
-local barBg = bgVida:FindFirstChild("BarBg") or Instance.new("Frame")
-barBg.Name = "BarBg"
-barBg.Size = UDim2.new(0, 2, 0, 12)            -- largura 2px, altura 12px
-barBg.Position = UDim2.new(0, 4, 0, 4)
-barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-barBg.BorderSizePixel = 0
-barBg.Parent = bgVida
+        local barBg = bgVida:FindFirstChild("BarBg") or Instance.new("Frame")
+        barBg.Name = "BarBg"
+        barBg.Size = UDim2.new(0, 2, 0, 12)
+        barBg.Position = UDim2.new(0, 4, 0, 4)
+        barBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        barBg.BorderSizePixel = 0
+        barBg.Parent = bgVida
 
-local barBgCorner = Instance.new("UICorner")
-barBgCorner.CornerRadius = UDim.new(0, 1)
-barBgCorner.Parent = barBg
+        local barBgCorner = Instance.new("UICorner")
+        barBgCorner.CornerRadius = UDim.new(0, 1)
+        barBgCorner.Parent = barBg
 
-local barFill = barBg:FindFirstChild("BarFill") or Instance.new("Frame")
-barFill.Name = "BarFill"
-barFill.Size = UDim2.new(1, 0, 1, 0)          -- preenchimento total
-barFill.Position = UDim2.new(0, 0, 0, 0)
-barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-barFill.BorderSizePixel = 0
-barFill.Parent = barBg
+        local barFill = barBg:FindFirstChild("BarFill") or Instance.new("Frame")
+        barFill.Name = "BarFill"
+        barFill.Size = UDim2.new(1, 0, 1, 0)
+        barFill.Position = UDim2.new(0, 0, 0, 0)
+        barFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        barFill.BorderSizePixel = 0
+        barFill.Parent = barBg
 
-local barFillCorner = Instance.new("UICorner")
-barFillCorner.CornerRadius = UDim.new(0, 1)
-barFillCorner.Parent = barFill
+        local barFillCorner = Instance.new("UICorner")
+        barFillCorner.CornerRadius = UDim.new(0, 1)
+        barFillCorner.Parent = barFill
+
+        -- Patente
+        local bgPatente = head:FindFirstChild("NoahzinPatente") or Instance.new("BillboardGui")
+        bgPatente.Name = "NoahzinPatente"
+        bgPatente.Size = UDim2.new(0, 100, 0, 20)
+        bgPatente.AlwaysOnTop = true
+        bgPatente.ExtentsOffset = Vector3.new(0, 8, 0)
+        bgPatente.Enabled = ESP_Patente
+        bgPatente.Parent = head
+
+        local tlPatente = bgPatente:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlPatente.Size = UDim2.new(1, 0, 1, 0)
+        tlPatente.BackgroundTransparency = 1
+        tlPatente.Text = ""
+        tlPatente.TextColor3 = Color3.fromRGB(255, 215, 0)
+        tlPatente.Font = Enum.Font.GothamBold
+        tlPatente.TextSize = 10
+        tlPatente.TextStrokeTransparency = 0
+        tlPatente.Parent = bgPatente
 
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
         box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = CorESP end)
@@ -946,15 +990,110 @@ barFillCorner.Parent = barFill
             local tracer = Drawing.new("Line"); tracer.Visible = false
             pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
         end
+        if not SkeletonLines[p] then
+            CriarSkeleton(p)
+        end
         task.spawn(AtualizarESP)
     end
     if p.Character then AdicionarUI(p.Character) end
     p.CharacterAdded:Connect(AdicionarUI)
 end
 
+--========================================================--
+-- SKELETON ESP
+--========================================================--
+
+local function CriarSkeleton(p)
+    if SkeletonLines[p] then
+        for _, line in pairs(SkeletonLines[p]) do
+            line:Destroy()
+        end
+    end
+    SkeletonLines[p] = {}
+    local char = p.Character
+    if not char then return end
+    local pairsList = {
+        {"Head", "UpperTorso"},
+        {"UpperTorso", "LowerTorso"},
+        {"UpperTorso", "LeftUpperArm"},
+        {"LeftUpperArm", "LeftLowerArm"},
+        {"LeftLowerArm", "LeftHand"},
+        {"UpperTorso", "RightUpperArm"},
+        {"RightUpperArm", "RightLowerArm"},
+        {"RightLowerArm", "RightHand"},
+        {"LowerTorso", "LeftUpperLeg"},
+        {"LeftUpperLeg", "LeftLowerLeg"},
+        {"LeftLowerLeg", "LeftFoot"},
+        {"LowerTorso", "RightUpperLeg"},
+        {"RightUpperLeg", "RightLowerLeg"},
+        {"RightLowerLeg", "RightFoot"},
+    }
+    for _ = 1, #pairsList do
+        local line = Drawing.new("Line")
+        line.Color = CorESP
+        line.Thickness = 1
+        line.Visible = false
+        table.insert(SkeletonLines[p], line)
+    end
+end
+
+local function AtualizarSkeleton(p)
+    if not ESP_Skeleton or not p.Character then
+        return
+    end
+    local char = p.Character
+    local lines = SkeletonLines[p]
+    if not lines then
+        CriarSkeleton(p)
+        lines = SkeletonLines[p]
+    end
+    local pairsList = {
+        {"Head", "UpperTorso"},
+        {"UpperTorso", "LowerTorso"},
+        {"UpperTorso", "LeftUpperArm"},
+        {"LeftUpperArm", "LeftLowerArm"},
+        {"LeftLowerArm", "LeftHand"},
+        {"UpperTorso", "RightUpperArm"},
+        {"RightUpperArm", "RightLowerArm"},
+        {"RightLowerArm", "RightHand"},
+        {"LowerTorso", "LeftUpperLeg"},
+        {"LeftUpperLeg", "LeftLowerLeg"},
+        {"LeftLowerLeg", "LeftFoot"},
+        {"LowerTorso", "RightUpperLeg"},
+        {"RightUpperLeg", "RightLowerLeg"},
+        {"RightLowerLeg", "RightFoot"},
+    }
+    local camera = Workspace.CurrentCamera
+    for i, pair in ipairs(pairsList) do
+        local partA = char:FindFirstChild(pair[1])
+        local partB = char:FindFirstChild(pair[2])
+        local line = lines[i]
+        if partA and partB and line then
+            local posA, visA = camera:WorldToViewportPoint(partA.Position)
+            local posB, visB = camera:WorldToViewportPoint(partB.Position)
+            if visA and visB then
+                line.From = Vector2.new(posA.X, posA.Y)
+                line.To = Vector2.new(posB.X, posB.Y)
+                line.Visible = true
+                line.Color = GetTeamColor(p) or CorESP
+            else
+                line.Visible = false
+            end
+        elseif line then
+            line.Visible = false
+        end
+    end
+end
+
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end end)
+Players.PlayerRemoving:Connect(function(p)
+    if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end
+    if SkeletonLines[p] then
+        for _, line in pairs(SkeletonLines[p]) do line:Destroy() end
+        SkeletonLines[p] = nil
+    end
+end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -1016,6 +1155,16 @@ local function ObterJogadorMaisProximoDaMira()
                     end
                 end
             end
+        end
+    end
+    if melhorAlvo and Aimbot_Prediction then
+        local hum = melhorAlvo.Character and melhorAlvo.Character:FindFirstChildOfClass("Humanoid")
+        local root = melhorAlvo.Character and melhorAlvo.Character:FindFirstChild("HumanoidRootPart")
+        if hum and root then
+            local velocity = root.AssemblyLinearVelocity or Vector3.zero
+            local distance = (root.Position - cameraPos).Magnitude
+            local travelTime = distance / 100
+            melhorAlvo._predictedOffset = velocity * travelTime
         end
     end
     return melhorAlvo
@@ -1191,7 +1340,14 @@ RunService.RenderStepped:Connect(function()
             if Aimbot_ParteAlvo == "Head" then parteRastrear = alvo.Character:FindFirstChild("Head")
             elseif Aimbot_ParteAlvo == "Torso" then parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart") end
-            if parteRastrear then local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position); local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0); camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, alvoPos), Aimbot_Suavidade) end
+            if parteRastrear then
+                local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position)
+                local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0)
+                if Aimbot_Prediction and alvo._predictedOffset then
+                    alvoPos = alvoPos + alvo._predictedOffset
+                end
+                camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, alvoPos), Aimbot_Suavidade)
+            end
         end
     end
     for _, p in pairs(Players:GetPlayers()) do
@@ -1222,7 +1378,16 @@ RunService.RenderStepped:Connect(function()
                 if ESP_Names then
                     local nameGui = head:FindFirstChild("NoahzinName")
                     if nameGui and nameGui:FindFirstChild("TextLabel") then
-                        nameGui.TextLabel.Text = p.Name
+                        local text = p.Name
+                        if ESP_Distancia then
+                            local root = p.Character:FindFirstChild("HumanoidRootPart")
+                            local playerRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+                            if root and playerRoot then
+                                local dist = (root.Position - playerRoot.Position).Magnitude
+                                text = text .. string.format(" [%.0f m]", dist)
+                            end
+                        end
+                        nameGui.TextLabel.Text = text
                     end
                 end
                 -- Atualizar barra de vida
@@ -1233,11 +1398,33 @@ RunService.RenderStepped:Connect(function()
                         if barFill and hum.MaxHealth > 0 then
                             local percent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
                             barFill.Size = UDim2.new(1, 0, percent, 0)
-                            -- Cor: verde -> amarelo -> vermelho
                             local r = math.clamp((1 - percent) * 2, 0, 1)
                             local g = math.clamp(percent * 2, 0, 1)
                             barFill.BackgroundColor3 = Color3.fromRGB(r * 255, g * 255, 0)
                         end
+                    end
+                end
+                -- Atualizar patente
+                if ESP_Patente then
+                    local patenteGui = head:FindFirstChild("NoahzinPatente")
+                    if patenteGui and patenteGui:FindFirstChild("TextLabel") then
+                        local patente = ""
+                        local leaderstats = p:FindFirstChild("leaderstats")
+                        if leaderstats then
+                            local pat = leaderstats:FindFirstChild("Patente") or leaderstats:FindFirstChild("Rank") or leaderstats:FindFirstChild("Posto")
+                            if pat then
+                                patente = tostring(pat.Value)
+                            end
+                        end
+                        patenteGui.TextLabel.Text = patente
+                    end
+                end
+                -- Atualizar skeleton
+                if ESP_Skeleton then
+                    AtualizarSkeleton(p)
+                else
+                    if SkeletonLines[p] then
+                        for _, line in pairs(SkeletonLines[p]) do line.Visible = false end
                     end
                 end
             end
@@ -1410,6 +1597,7 @@ Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = St
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 Toggle(AimbotSection, "DISTANCE CHECK", false, function(State) Aimbot_PrioridadeDistancia = State end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
+Toggle(AimbotSection, "PREDICTION", false, function(State) Aimbot_Prediction = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 1.5, function(Value)
@@ -1460,6 +1648,9 @@ Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; Atualiza
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia = State end)
+Toggle(ESPSection, "ESP PATENTE", false, function(State) ESP_Patente = State; AtualizarESP() end)
+Toggle(ESPSection, "ESP SKELETON", false, function(State) ESP_Skeleton = State; AtualizarESP() end)
 
 local TimesSection = Section(VisualPage, "ESP POR TIMES")
 Toggle(TimesSection, "FILTRAR POR TIMES", false, function(State)
@@ -1642,6 +1833,67 @@ local ConfigPage = Pages.Config
 
 local SystemSection = Section(ConfigPage, "SYSTEM")
 Toggle(SystemSection, "NOTIFICATIONS", Config.Notifications, function(State) Config.Notifications = State end)
+Toggle(SystemSection, "FPS COUNTER", false, function(State)
+    FPS_Counter = State
+    if FPSLabel then
+        FPSLabel.Visible = State
+    end
+end)
+Toggle(SystemSection, "PING DISPLAY", false, function(State)
+    Ping_Display = State
+    if PingLabel then
+        PingLabel.Visible = State
+    end
+end)
+
+-- Criação dos labels FPS e Ping
+local FPSLabel = Instance.new("TextLabel")
+FPSLabel.BackgroundTransparency = 1
+FPSLabel.Position = UDim2.new(0, 10, 0, 10)
+FPSLabel.Size = UDim2.new(0, 100, 0, 20)
+FPSLabel.Text = "FPS: --"
+FPSLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+FPSLabel.TextSize = 12
+FPSLabel.Font = Enum.Font.GothamBold
+FPSLabel.ZIndex = 500
+FPSLabel.Parent = Gui
+
+local PingLabel = Instance.new("TextLabel")
+PingLabel.BackgroundTransparency = 1
+PingLabel.Position = UDim2.new(0, 10, 0, 35)
+PingLabel.Size = UDim2.new(0, 100, 0, 20)
+PingLabel.Text = "PING: --"
+PingLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+PingLabel.TextSize = 12
+PingLabel.Font = Enum.Font.GothamBold
+PingLabel.ZIndex = 500
+PingLabel.Parent = Gui
+PingLabel.Visible = false
+FPSLabel.Visible = false
+
+-- Atualização FPS
+local fpsCount = 0
+local fpsTimer = 0
+RunService.RenderStepped:Connect(function(dt)
+    fpsCount = fpsCount + 1
+    fpsTimer = fpsTimer + dt
+    if fpsTimer >= 1 then
+        FPSLabel.Text = "FPS: " .. fpsCount
+        fpsCount = 0
+        fpsTimer = 0
+    end
+end)
+
+-- Atualização Ping
+RunService.Heartbeat:Connect(function()
+    if Ping_Display then
+        if Stats and Stats.Network and Stats.Network.ServerStatsItem and Stats.Network.ServerStatsItem["Data Ping"] then
+            PingLabel.Text = "PING: " .. math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+        else
+            PingLabel.Text = "PING: --"
+        end
+    end
+end)
 
 local AdminSection = Section(ConfigPage, "ADMIN")
 Toggle(AdminSection, "ADMIN MODE", false, function(State)
@@ -1684,6 +1936,34 @@ Button(ThemeSection, "GREEN THEME", function()
     for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
     Notify("Green theme")
 end)
+Button(ThemeSection, "DESERT THEME", function()
+    Accent = Color3.fromRGB(200, 170, 120)
+    TopLine.BackgroundColor3 = Accent
+    BadgeStroke.Color = Accent
+    for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
+    Notify("Desert theme")
+end)
+Button(ThemeSection, "NIGHT THEME", function()
+    Accent = Color3.fromRGB(70, 100, 160)
+    TopLine.BackgroundColor3 = Accent
+    BadgeStroke.Color = Accent
+    for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
+    Notify("Night theme")
+end)
+Button(ThemeSection, "NEON THEME", function()
+    Accent = Color3.fromRGB(0, 255, 200)
+    TopLine.BackgroundColor3 = Accent
+    BadgeStroke.Color = Accent
+    for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
+    Notify("Neon theme")
+end)
+Button(ThemeSection, "RED THEME", function()
+    Accent = Color3.fromRGB(180, 50, 50)
+    TopLine.BackgroundColor3 = Accent
+    BadgeStroke.Color = Accent
+    for _, Page in pairs(Pages) do Page.ScrollBarImageColor3 = Accent end
+    Notify("Red theme")
+end)
 
 local ActionsSection = Section(ConfigPage, "ACTIONS")
 Button(ActionsSection, "DESTRUIR", function()
@@ -1698,6 +1978,7 @@ Button(ActionsSection, "DESTRUIR", function()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
+    for _, p in pairs(SkeletonLines) do for _, line in pairs(p) do line:Destroy() end end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then
         local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
         local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end
@@ -1705,6 +1986,7 @@ Button(ActionsSection, "DESTRUIR", function()
         if h then
             local n = h:FindFirstChild("NoahzinName") if n then n:Destroy() end
             local v = h:FindFirstChild("NoahzinVida") if v then v:Destroy() end
+            local pt = h:FindFirstChild("NoahzinPatente") if pt then pt:Destroy() end
         end
     end end
     Gui:Destroy()
