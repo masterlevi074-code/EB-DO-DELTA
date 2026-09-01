@@ -254,10 +254,23 @@ local function AdicionarDescricao(object, nome)
     label.TextTruncate = Enum.TextTruncate.AtEnd
     label.ZIndex = (object.ZIndex or 1) + 1
     if isSlider then
-        -- Sibling independente: o UIListLayout coloca esta linha abaixo do slider.
-        label.Position = UDim2.new(0, 10, 0, 0)
-        label.LayoutOrder = object.LayoutOrder + 1
-        label.Parent = object.Parent
+        -- Bloco próprio: o slider e a descrição sempre permanecem juntos.
+        local container = object.Parent
+        local holder = Instance.new("Frame")
+        holder.Name = "SliderWithDescription"
+        holder.Size = UDim2.new(1, 0, 0, 53)
+        holder.BackgroundTransparency = 1
+        holder.BorderSizePixel = 0
+        holder.LayoutOrder = object.LayoutOrder
+
+        object.Parent = holder
+        object.Position = UDim2.fromOffset(0, 0)
+        object.LayoutOrder = 1
+
+        label.Position = UDim2.fromOffset(10, 43)
+        label.LayoutOrder = 2
+        label.Parent = holder
+        holder.Parent = container
     else
         label.Parent = object
     end
