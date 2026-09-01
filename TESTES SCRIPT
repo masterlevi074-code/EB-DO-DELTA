@@ -1115,7 +1115,7 @@ local function ColorPicker(Container, Category, DefaultColor)
                 Hitbox_Cor = col.Color
             elseif Category == "ESP" then
                 CorESP = col.Color
-                AtualizarESP()
+                if AtualizarESP then AtualizarESP() end
             end
             updateSelection(btn)
             Notify(Category .. " cor: " .. col.Name)
@@ -1215,8 +1215,13 @@ function AtualizarESP()
                 if timePlayer then mostrarESP = TimesMarcados[timePlayer] or false else mostrarESP = false end
             end
             local espColor = GetESPColor(p)
-            local headForVisibility = p.Character:FindFirstChild("Head")
-            local alvoVisivel = headForVisibility and EstaVisivel and EstaVisivel(headForVisibility) or true
+            local alvoVisivel = true
+            if IndicadorVisivelESP then
+                local headForVisibility = p.Character:FindFirstChild("Head")
+                if headForVisibility and EstaVisivel then
+                    alvoVisivel = EstaVisivel(headForVisibility)
+                end
+            end
             if IndicadorVisivelESP and not alvoVisivel then espColor = Color3.fromRGB(120, 120, 120) end
             local h = p.Character:FindFirstChild("NoahzinESP")
             if h then h.Enabled = ESP_GlobalAtivado and ESP_Chams and mostrarESP; pcall(function() h.FillColor = espColor end) end
@@ -1251,9 +1256,10 @@ function AtualizarESP()
                 end
                 local visGui = head:FindFirstChild("NoahzinVisibilidade")
                 if visGui then
-                    visGui.Enabled = ESP_GlobalAtivado and IndicadorVisivelESP and mostrarESP
+                    local indicadorAtivo = ESP_GlobalAtivado and IndicadorVisivelESP and mostrarESP
+                    visGui.Enabled = indicadorAtivo
                     local visLabel = visGui:FindFirstChild("TextLabel")
-                    if visLabel then
+                    if visLabel and indicadorAtivo and EstaVisivel then
                         local visivelAgora = EstaVisivel(head)
                         visLabel.Text = visivelAgora and "VISÍVEL" or "OCULTO"
                         visLabel.TextColor3 = visivelAgora and COLORS.Green or Color3.fromRGB(255, 90, 90)
