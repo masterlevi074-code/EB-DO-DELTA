@@ -457,6 +457,7 @@ local SearchOpen = false
 SearchButton.MouseButton1Click:Connect(function()
     SearchOpen = not SearchOpen
     SearchBox.Visible = SearchOpen
+    BrazilFlag.Visible = not SearchOpen
     SearchButton.Text = SearchOpen and "×" or "⌕"
     if SearchOpen then SearchBox:CaptureFocus() else SearchBox.Text = ""; AplicarBusca("") end
 end)
@@ -986,6 +987,7 @@ local function Button(Container, Text, Callback)
 		if Callback then Callback() end
 	end)
 
+    RegistrarBusca(B, Text)
 	return B
 end
 
