@@ -41,6 +41,7 @@ local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
 local ESP_CoresPorTime = false
+local ESP_BoxThickness = 2
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 local CaixasESP2D = {}
@@ -221,7 +222,7 @@ local DescricaoTouchId = 0
 local function AdicionarDescricao(object, nome)
     local descricao = FunctionDescriptions[nome] or ("Configura a função " .. nome .. ".")
     local function MostrarDescricao()
-        DescricaoTouchId += 1
+        DescricaoTouchId = DescricaoTouchId + 1
         local idAtual = DescricaoTouchId
         DescriptionBox.Text = descricao
         DescriptionBox.Visible = true
@@ -1805,6 +1806,9 @@ Toggle(ESPSection, "ATIVAR ESP", false, function(State) ESP_GlobalAtivado = Stat
 Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_CoresPorTime = State; AtualizarESP() end)
 Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
+Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
+    ESP_BoxThickness = Value
+end)
 Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
