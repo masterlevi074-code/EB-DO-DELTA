@@ -501,10 +501,21 @@ local function Section(Page, Text)
     local Container = Instance.new("Frame")
     Container.Size = UDim2.new(1, -4, 0, 0)
     Container.AutomaticSize = Enum.AutomaticSize.Y
-    Container.BackgroundTransparency = 1
+    Container.BackgroundColor3 = COLORS.Panel
+    Container.BackgroundTransparency = 0.08
     Container.BorderSizePixel = 0
     Container.LayoutOrder = SectionOrder
     Container.Parent = Page
+
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(0, 8)
+    ContainerCorner.Parent = Container
+
+    local ContainerStroke = Instance.new("UIStroke")
+    ContainerStroke.Color = COLORS.Stroke
+    ContainerStroke.Thickness = 1
+    ContainerStroke.Transparency = 0.45
+    ContainerStroke.Parent = Container
     
     local ContainerLayout = Instance.new("UIListLayout")
     ContainerLayout.Padding = UDim.new(0, 4)
@@ -513,26 +524,67 @@ local function Section(Page, Text)
     ContainerLayout.Parent = Container
     
     local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1, 0, 0, 20)
+    Header.Size = UDim2.new(1, 0, 0, 28)
     Header.BackgroundColor3 = COLORS.Panel2
     Header.BorderSizePixel = 0
     Header.LayoutOrder = 0
     Header.Parent = Container
+
+    local HeaderGradient = Instance.new("UIGradient")
+    HeaderGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COLORS.Panel2),
+        ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+    })
+    HeaderGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.05),
+        NumberSequenceKeypoint.new(1, 0.45)
+    })
+    HeaderGradient.Parent = Header
+
+    local HeaderAccent = Instance.new("Frame")
+    HeaderAccent.Size = UDim2.fromOffset(3, 16)
+    HeaderAccent.Position = UDim2.fromOffset(7, 6)
+    HeaderAccent.BackgroundColor3 = Accent
+    HeaderAccent.BorderSizePixel = 0
+    HeaderAccent.Parent = Header
+
+    local HeaderAccentCorner = Instance.new("UICorner")
+    HeaderAccentCorner.CornerRadius = UDim.new(1, 0)
+    HeaderAccentCorner.Parent = HeaderAccent
+
+    local HeaderDot = Instance.new("Frame")
+    HeaderDot.Size = UDim2.fromOffset(5, 5)
+    HeaderDot.Position = UDim2.new(1, -14, 0.5, -2)
+    HeaderDot.BackgroundColor3 = Accent
+    HeaderDot.BorderSizePixel = 0
+    HeaderDot.Parent = Header
+
+    local HeaderDotCorner = Instance.new("UICorner")
+    HeaderDotCorner.CornerRadius = UDim.new(1, 0)
+    HeaderDotCorner.Parent = HeaderDot
     
     local HeaderCorner = Instance.new("UICorner")
     HeaderCorner.CornerRadius = UDim.new(0, 4)
     HeaderCorner.Parent = Header
     
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -8, 1, 0)
-    Label.Position = UDim2.fromOffset(4, 0)
+    Label.Size = UDim2.new(1, -34, 1, 0)
+    Label.Position = UDim2.fromOffset(16, 0)
     Label.BackgroundTransparency = 1
-    Label.Text = "▸ " .. Text
-    Label.TextColor3 = Accent
-    Label.TextSize = 7
+    Label.Text = string.upper(Text)
+    Label.TextColor3 = COLORS.Text
+    Label.TextSize = 8
     Label.Font = Enum.Font.GothamBold
     Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.Parent = Header
+
+    local HeaderLine = Instance.new("Frame")
+    HeaderLine.Size = UDim2.new(1, -28, 0, 1)
+    HeaderLine.Position = UDim2.new(0, 16, 1, -3)
+    HeaderLine.BackgroundColor3 = Accent
+    HeaderLine.BackgroundTransparency = 0.55
+    HeaderLine.BorderSizePixel = 0
+    HeaderLine.Parent = Header
     
     table.insert(SectionContainers[PageName], Container)
     
@@ -1987,14 +2039,14 @@ local MiniSize = UDim2.fromOffset(UI_WIDTH, 46)
 
 local MiniButton = Instance.new("TextButton")
 MiniButton.Name = "MiniButton"
-MiniButton.Size = UDim2.fromOffset(52, 52)
+MiniButton.Size = UDim2.fromOffset(58, 58)
 MiniButton.AnchorPoint = Vector2.new(0.5, 0.5)
 MiniButton.Position = UDim2.new(0.5, 0, 0.5, 0)
 MiniButton.BackgroundColor3 = COLORS.Panel
 MiniButton.BorderSizePixel = 0
 MiniButton.Text = "NX"
 MiniButton.TextColor3 = COLORS.Text
-MiniButton.TextSize = 13
+MiniButton.TextSize = 14
 MiniButton.Font = Enum.Font.GothamBlack
 MiniButton.AutoButtonColor = false
 MiniButton.Visible = false
@@ -2002,7 +2054,7 @@ MiniButton.ZIndex = 500
 MiniButton.Parent = Gui
 
 local MiniCorner = Instance.new("UICorner")
-MiniCorner.CornerRadius = UDim.new(1, 0)
+MiniCorner.CornerRadius = UDim.new(0, 12)
 MiniCorner.Parent = MiniButton
 
 local MiniStroke = Instance.new("UIStroke")
@@ -2022,6 +2074,69 @@ MiniGradient.Parent = MiniButton
 local MiniScale = Instance.new("UIScale")
 MiniScale.Scale = 0.7
 MiniScale.Parent = MiniButton
+
+local MiniParticleLayer = Instance.new("Frame")
+MiniParticleLayer.Name = "Particles"
+MiniParticleLayer.Size = UDim2.fromScale(1, 1)
+MiniParticleLayer.BackgroundTransparency = 1
+MiniParticleLayer.ClipsDescendants = false
+MiniParticleLayer.ZIndex = 501
+MiniParticleLayer.Parent = MiniButton
+
+local MiniShine = Instance.new("Frame")
+MiniShine.Size = UDim2.new(0, 2, 1, 16)
+MiniShine.Position = UDim2.new(0, -10, 0.5, -8)
+MiniShine.Rotation = 25
+MiniShine.BackgroundColor3 = COLORS.Text
+MiniShine.BackgroundTransparency = 0.7
+MiniShine.BorderSizePixel = 0
+MiniShine.ZIndex = 502
+MiniShine.Parent = MiniButton
+
+local MiniShineGradient = Instance.new("UIGradient")
+MiniShineGradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0),
+    NumberSequenceKeypoint.new(1, 1)
+})
+MiniShineGradient.Parent = MiniShine
+
+task.spawn(function()
+    while MiniButton and MiniButton.Parent do
+        local shine = TweenService:Create(MiniShine, TweenInfo.new(1.6, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 10, 0.5, -8)})
+        shine:Play()
+        shine.Completed:Wait()
+        MiniShine.Position = UDim2.new(0, -10, 0.5, -8)
+        task.wait(1.2)
+    end
+end)
+
+task.spawn(function()
+    local random = Random.new()
+    while MiniButton and MiniButton.Parent do
+        local particle = Instance.new("Frame")
+        local size = random:NextInteger(2, 4)
+        particle.Size = UDim2.fromOffset(size, size)
+        particle.Position = UDim2.new(random:NextNumber(0.12, 0.88), 0, random:NextNumber(0.65, 0.9), 0)
+        particle.BackgroundColor3 = random:NextNumber() > 0.5 and COLORS.Green or COLORS.Text
+        particle.BackgroundTransparency = 0.15
+        particle.BorderSizePixel = 0
+        particle.ZIndex = 501
+        particle.Parent = MiniParticleLayer
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = particle
+        local rise = TweenService:Create(particle, TweenInfo.new(random:NextNumber(0.8, 1.5), Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = UDim2.new(particle.Position.X.Scale + random:NextNumber(-0.15, 0.15), 0, random:NextNumber(0.02, 0.3), 0),
+            BackgroundTransparency = 1
+        })
+        rise:Play()
+        rise.Completed:Connect(function()
+            if particle then particle:Destroy() end
+        end)
+        task.wait(0.22)
+    end
+end)
 
 local function AnimarEntradaMini()
     MiniButton.Visible = true
