@@ -63,6 +63,8 @@ local Aimbot_TeamCheck = false
 local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
+local IndicadorVisivelESP = false
+local IndicadorVisivelFOV = false
 local Aimbot_PrioridadeDistancia = false
 local Aimbot_SoComItem = false
 
@@ -167,6 +169,67 @@ Gui.IgnoreGuiInset = true
 Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Gui.DisplayOrder = 999
 Gui.Parent = CoreGui
+
+local SearchRegistry = {}
+local SearchQuery = ""
+
+local DescriptionBox = Instance.new("TextLabel")
+DescriptionBox.Name = "DescriptionBox"
+DescriptionBox.Size = UDim2.new(0, 250, 0, 26)
+DescriptionBox.AnchorPoint = Vector2.new(0.5, 1)
+DescriptionBox.Position = UDim2.new(0.5, 0, 1, -8)
+DescriptionBox.BackgroundColor3 = COLORS.Panel2
+DescriptionBox.BackgroundTransparency = 0.05
+DescriptionBox.BorderSizePixel = 0
+DescriptionBox.TextColor3 = COLORS.Text
+DescriptionBox.TextSize = 8
+DescriptionBox.Font = Enum.Font.GothamMedium
+DescriptionBox.TextWrapped = true
+DescriptionBox.Visible = false
+DescriptionBox.ZIndex = 1000
+DescriptionBox.Parent = Gui
+local DescriptionCorner = Instance.new("UICorner")
+DescriptionCorner.CornerRadius = UDim.new(0, 6)
+DescriptionCorner.Parent = DescriptionBox
+local DescriptionStroke = Instance.new("UIStroke")
+DescriptionStroke.Color = Accent
+DescriptionStroke.Transparency = 0.25
+DescriptionStroke.Parent = DescriptionBox
+
+local Descricoes = {
+    ["ATIVAR ESP"] = "Liga ou desliga todos os elementos visuais do ESP.",
+    ["CORES AUTOMÁTICAS POR TIME"] = "Usa automaticamente a cor configurada para cada time.",
+    ["ESP DISTÂNCIA"] = "Mostra a distância entre você e cada jogador.",
+    ["ESP TIMES"] = "Mostra o nome do time acima do jogador.",
+    ["ESP NAMES"] = "Mostra o nome do jogador acima do personagem.",
+    ["ESP BOX"] = "Desenha uma caixa ao redor do personagem.",
+    ["ESP CHAMS"] = "Destaca o personagem através das superfícies.",
+    ["ESP TRACERS"] = "Desenha linhas entre a tela e os jogadores.",
+    ["ESP VIDA"] = "Mostra a vida atual e máxima do jogador.",
+    ["INDICADOR VISIBILIDADE"] = "Indica se o jogador está visível ou atrás de uma parede.",
+    ["VISIBILITY CHECK"] = "Faz o aimbot considerar apenas alvos visíveis.",
+}
+
+local function RegistrarBusca(object, name)
+    table.insert(SearchRegistry, {Object = object, Name = string.lower(name)})
+    local descricao = Descricoes[name] or ("Configura a opção " .. name .. ".")
+    object.MouseEnter:Connect(function()
+        if SearchQuery == "" then
+            DescriptionBox.Text = descricao
+            DescriptionBox.Visible = true
+        end
+    end)
+    object.MouseLeave:Connect(function()
+        DescriptionBox.Visible = false
+    end)
+end
+
+local function AplicarBusca(query)
+    SearchQuery = string.lower(query or "")
+    for _, item in ipairs(SearchRegistry) do
+        item.Object.Visible = SearchQuery == "" or item.Name:find(SearchQuery, 1, true) ~= nil
+    end
+end
 
 --========================================================--
 -- MAIN
@@ -329,6 +392,75 @@ Minimize.Parent = Top
 local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
+
+-- Bandeira do Brasil estilizada no header
+local BrazilFlag = Instance.new("Frame")
+BrazilFlag.Name = "BrazilFlag"
+BrazilFlag.Size = UDim2.fromOffset(26, 18)
+BrazilFlag.Position = UDim2.new(1, -130, 0, 13)
+BrazilFlag.BackgroundColor3 = Color3.fromRGB(0, 156, 59)
+BrazilFlag.BorderSizePixel = 0
+BrazilFlag.Parent = Top
+local BrazilCorner = Instance.new("UICorner")
+BrazilCorner.CornerRadius = UDim.new(0, 4)
+BrazilCorner.Parent = BrazilFlag
+local BrazilDiamond = Instance.new("Frame")
+BrazilDiamond.Size = UDim2.fromOffset(13, 13)
+BrazilDiamond.Position = UDim2.new(0.5, -6, 0.5, -6)
+BrazilDiamond.Rotation = 45
+BrazilDiamond.BackgroundColor3 = Color3.fromRGB(255, 223, 0)
+BrazilDiamond.BorderSizePixel = 0
+BrazilDiamond.Parent = BrazilFlag
+local BrazilCircle = Instance.new("Frame")
+BrazilCircle.Size = UDim2.fromOffset(7, 7)
+BrazilCircle.Position = UDim2.new(0.5, -3, 0.5, -3)
+BrazilCircle.BackgroundColor3 = Color3.fromRGB(35, 74, 175)
+BrazilCircle.BorderSizePixel = 0
+BrazilCircle.Parent = BrazilFlag
+local BrazilCircleCorner = Instance.new("UICorner")
+BrazilCircleCorner.CornerRadius = UDim.new(1, 0)
+BrazilCircleCorner.Parent = BrazilCircle
+
+local SearchButton = Instance.new("TextButton")
+SearchButton.Name = "SearchButton"
+SearchButton.Size = UDim2.fromOffset(24, 24)
+SearchButton.Position = UDim2.new(1, -98, 0, 10)
+SearchButton.BackgroundColor3 = COLORS.Panel2
+SearchButton.BorderSizePixel = 0
+SearchButton.Text = "⌕"
+SearchButton.TextColor3 = COLORS.Text
+SearchButton.TextSize = 16
+SearchButton.Font = Enum.Font.GothamBold
+SearchButton.AutoButtonColor = false
+SearchButton.Parent = Top
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0, 6)
+SearchCorner.Parent = SearchButton
+local SearchBox = Instance.new("TextBox")
+SearchBox.Name = "SearchBox"
+SearchBox.Size = UDim2.fromOffset(82, 24)
+SearchBox.Position = UDim2.new(1, -184, 0, 10)
+SearchBox.BackgroundColor3 = COLORS.Panel2
+SearchBox.BorderSizePixel = 0
+SearchBox.PlaceholderText = "Buscar..."
+SearchBox.PlaceholderColor3 = COLORS.Muted
+SearchBox.TextColor3 = COLORS.Text
+SearchBox.TextSize = 8
+SearchBox.Font = Enum.Font.GothamMedium
+SearchBox.ClearTextOnFocus = false
+SearchBox.Visible = false
+SearchBox.Parent = Top
+local SearchBoxCorner = Instance.new("UICorner")
+SearchBoxCorner.CornerRadius = UDim.new(0, 6)
+SearchBoxCorner.Parent = SearchBox
+local SearchOpen = false
+SearchButton.MouseButton1Click:Connect(function()
+    SearchOpen = not SearchOpen
+    SearchBox.Visible = SearchOpen
+    SearchButton.Text = SearchOpen and "×" or "⌕"
+    if SearchOpen then SearchBox:CaptureFocus() else SearchBox.Text = ""; AplicarBusca("") end
+end)
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function() AplicarBusca(SearchBox.Text) end)
 
 --========================================================--
 -- EFEITOS DECORATIVOS
@@ -559,12 +691,29 @@ local function Section(Page, Text)
     HeaderDotCorner.Parent = HeaderDot
     
     local HeaderCorner = Instance.new("UICorner")
-    HeaderCorner.CornerRadius = UDim.new(0, 4)
+    HeaderCorner.CornerRadius = UDim.new(0, 8)
     HeaderCorner.Parent = Header
     
+    local SectionIcons = {
+        ["Main"] = "⌂", ["Combat"] = "✦", ["Visual"] = "◈", ["Movement"] = "➤", ["Config"] = "⚙",
+        ["AIMBOT"] = "◎", ["CORPO ALVO"] = "◉", ["FOV"] = "◌", ["HITBOX"] = "◇", ["ESP"] = "◈",
+        ["ESP POR TIMES"] = "♟", ["CAMERA"] = "◍", ["SPEED HACK"] = "»", ["DASH"] = "➜", ["SPECIAL"] = "✧",
+        ["AUTO JJ"] = "⚡", ["BLOCOS"] = "▦", ["CHAT WINDOW"] = "✉", ["ADMIN"] = "♛", ["CONFIG"] = "⚙"
+    }
+    local SectionIcon = Instance.new("TextLabel")
+    SectionIcon.Size = UDim2.fromOffset(16, 20)
+    SectionIcon.Position = UDim2.fromOffset(15, 4)
+    SectionIcon.BackgroundTransparency = 1
+    SectionIcon.Text = SectionIcons[string.upper(Text)] or "•"
+    SectionIcon.TextColor3 = Accent
+    SectionIcon.TextSize = 11
+    SectionIcon.Font = Enum.Font.GothamBlack
+    SectionIcon.ZIndex = 3
+    SectionIcon.Parent = Header
+
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -34, 1, 0)
-    Label.Position = UDim2.fromOffset(16, 0)
+    Label.Size = UDim2.new(1, -44, 1, 0)
+    Label.Position = UDim2.fromOffset(34, 0)
     Label.BackgroundTransparency = 1
     Label.Text = string.upper(Text)
     Label.TextColor3 = COLORS.Text
@@ -699,6 +848,7 @@ local function Toggle(Container, Text, Default, Callback)
 	end)
 
 	Update()
+    RegistrarBusca(Button, Text)
 	return {Set = function(Value) State = Value; Update() end}
 end
 
@@ -787,6 +937,7 @@ local function Slider(Container, Text, Min, Max, Default, Callback)
 		if Callback then Callback(Value) end
 	end
 
+    RegistrarBusca(Frame, Text)
 	Bar.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			Dragging = true
@@ -897,6 +1048,7 @@ end
 
 -- Declaração antecipada para os callbacks do seletor de cor
 local AtualizarESP
+local EstaVisivel
 
 local function ColorPicker(Container, Category, DefaultColor)
     local colorList = {
@@ -1061,6 +1213,9 @@ function AtualizarESP()
                 if timePlayer then mostrarESP = TimesMarcados[timePlayer] or false else mostrarESP = false end
             end
             local espColor = GetESPColor(p)
+            local headForVisibility = p.Character:FindFirstChild("Head")
+            local alvoVisivel = headForVisibility and EstaVisivel and EstaVisivel(headForVisibility) or true
+            if IndicadorVisivelESP and not alvoVisivel then espColor = Color3.fromRGB(120, 120, 120) end
             local h = p.Character:FindFirstChild("NoahzinESP")
             if h then h.Enabled = ESP_GlobalAtivado and ESP_Chams and mostrarESP; pcall(function() h.FillColor = espColor end) end
             local box = p.Character:FindFirstChild("NoahzinBox")
@@ -1090,6 +1245,16 @@ function AtualizarESP()
                     if distanciaLabel and meuHead then
                         distanciaLabel.Text = string.format("[%dm]", math.floor((head.Position - meuHead.Position).Magnitude))
                         pcall(function() distanciaLabel.TextColor3 = espColor end)
+                    end
+                end
+                local visGui = head:FindFirstChild("NoahzinVisibilidade")
+                if visGui then
+                    visGui.Enabled = ESP_GlobalAtivado and IndicadorVisivelESP and mostrarESP
+                    local visLabel = visGui:FindFirstChild("TextLabel")
+                    if visLabel then
+                        local visivelAgora = EstaVisivel(head)
+                        visLabel.Text = visivelAgora and "VISÍVEL" or "OCULTO"
+                        visLabel.TextColor3 = visivelAgora and COLORS.Green or Color3.fromRGB(255, 90, 90)
                     end
                 end
                 -- Vida
@@ -1143,6 +1308,23 @@ local function CriarESP(p)
         tlTime.TextSize = 11
         tlTime.TextStrokeTransparency = 0
         tlTime.Parent = bgTime
+        -- Indicador de visibilidade
+        local bgVis = head:FindFirstChild("NoahzinVisibilidade") or Instance.new("BillboardGui")
+        bgVis.Name = "NoahzinVisibilidade"
+        bgVis.Size = UDim2.new(0, 120, 0, 20)
+        bgVis.AlwaysOnTop = true
+        bgVis.ExtentsOffset = Vector3.new(0, 11, 0)
+        bgVis.Enabled = ESP_GlobalAtivado and IndicadorVisivelESP
+        bgVis.Parent = head
+        local tlVis = bgVis:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlVis.Size = UDim2.new(1, 0, 1, 0)
+        tlVis.BackgroundTransparency = 1
+        tlVis.Text = "VISÍVEL"
+        tlVis.TextColor3 = COLORS.Green
+        tlVis.Font = Enum.Font.GothamBold
+        tlVis.TextSize = 10
+        tlVis.TextStrokeTransparency = 0
+        tlVis.Parent = bgVis
         -- Vida
         local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
         bgVida.Name = "NoahzinVida"
@@ -1201,7 +1383,7 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     return (Aimbot_OffsetPixels / camera.ViewportSize.Y) * alturaTelaStuds
 end
 
-local function EstaVisivel(alvoParte)
+function EstaVisivel(alvoParte)
     local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
@@ -1241,7 +1423,7 @@ local function ObterJogadorMaisProximoDaMira()
             elseif Aimbot_ParteAlvo == "Torso" then parteBuscada = p.Character:FindFirstChild("UpperTorso") or p.Character:FindFirstChild("Torso") or p.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then parteBuscada = p.Character:FindFirstChild("RightLowerLeg") or p.Character:FindFirstChild("LeftLowerLeg") or p.Character:FindFirstChild("RightFoot") or p.Character:FindFirstChild("LeftFoot") or p.Character:FindFirstChild("HumanoidRootPart") end
             if parteBuscada then
-                if Aimbot_WallCheck and not EstaVisivel(parteBuscada) then continue end
+                if (Aimbot_WallCheck or IndicadorVisivelFOV) and not EstaVisivel(parteBuscada) then continue end
                 local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteBuscada.Position)
                 local posicaoAlvo3D = parteBuscada.Position + Vector3.new(0, -offsetDinamico, 0)
                 local posicaoTela, visivel = camera:WorldToViewportPoint(posicaoAlvo3D)
@@ -1649,6 +1831,7 @@ Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State en
 Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
+Toggle(AimbotSection, "VISIBILITY CHECK", false, function(State) IndicadorVisivelFOV = State; AtualizarESP() end)
 Toggle(AimbotSection, "DISTANCE CHECK", false, function(State) Aimbot_PrioridadeDistancia = State end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
@@ -1705,6 +1888,7 @@ Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; Atua
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TIMES", false, function(State) ESP_TimesNomes=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia=State; AtualizarESP() end)
+Toggle(ESPSection, "INDICADOR VISIBILIDADE", false, function(State) IndicadorVisivelESP=State; AtualizarESP() end)
 
 local TimesSection = Section(VisualPage, "ESP POR TIMES")
 Toggle(TimesSection, "FILTRAR POR TIMES", false, function(State)
@@ -1943,7 +2127,7 @@ Button(ActionsSection, "DESTRUIR", function()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local vi = plr.Character:FindFirstChild("Head") if vi and vi:FindFirstChild("NoahzinVisibilidade") then vi.NoahzinVisibilidade:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
 
@@ -2127,15 +2311,25 @@ MiniParticleLayer.ClipsDescendants = false
 MiniParticleLayer.ZIndex = 501
 MiniParticleLayer.Parent = MiniButton
 
+local MiniShineLayer = Instance.new("Frame")
+MiniShineLayer.Name = "ShineLayer"
+MiniShineLayer.Size = UDim2.new(1, -8, 1, -8)
+MiniShineLayer.Position = UDim2.fromOffset(4, 4)
+MiniShineLayer.BackgroundTransparency = 1
+MiniShineLayer.BorderSizePixel = 0
+MiniShineLayer.ClipsDescendants = true
+MiniShineLayer.ZIndex = 501
+MiniShineLayer.Parent = MiniButton
+
 local MiniShine = Instance.new("Frame")
 MiniShine.Size = UDim2.new(0, 2, 1, 4)
-MiniShine.Position = UDim2.new(0, -10, 0.5, -2)
+MiniShine.Position = UDim2.new(0, -8, 0.5, -2)
 MiniShine.Rotation = 25
 MiniShine.BackgroundColor3 = COLORS.Text
 MiniShine.BackgroundTransparency = 0.7
 MiniShine.BorderSizePixel = 0
 MiniShine.ZIndex = 502
-MiniShine.Parent = MiniButton
+MiniShine.Parent = MiniShineLayer
 
 local MiniShineGradient = Instance.new("UIGradient")
 MiniShineGradient.Transparency = NumberSequence.new({
@@ -2147,10 +2341,10 @@ MiniShineGradient.Parent = MiniShine
 
 task.spawn(function()
     while MiniButton and MiniButton.Parent do
-        local shine = TweenService:Create(MiniShine, TweenInfo.new(1.6, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 10, 0.5, -2)})
+        local shine = TweenService:Create(MiniShine, TweenInfo.new(1.6, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 8, 0.5, -2)})
         shine:Play()
         shine.Completed:Wait()
-        MiniShine.Position = UDim2.new(0, -10, 0.5, -2)
+        MiniShine.Position = UDim2.new(0, -8, 0.5, -2)
         task.wait(1.2)
     end
 end)
