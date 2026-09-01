@@ -231,7 +231,12 @@ Top.Size = UDim2.new(1, 0, 0, 44)
 Top.Position = UDim2.fromOffset(0, 2)
 Top.BackgroundColor3 = COLORS.Panel
 Top.BorderSizePixel = 0
+Top.ClipsDescendants = true
 Top.Parent = Main
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 10)
+TopCorner.Parent = Top
 
 local Badge = Instance.new("Frame")
 Badge.Size = UDim2.fromOffset(30, 30)
@@ -2136,9 +2141,9 @@ MiniShineLayer.ZIndex = 501
 MiniShineLayer.Parent = MiniButton
 
 local MiniShine = Instance.new("Frame")
-MiniShine.Size = UDim2.new(0, 2, 1, 4)
-MiniShine.Position = UDim2.new(0, -8, 0.5, -2)
-MiniShine.Rotation = 25
+MiniShine.Size = UDim2.new(0, 4, 1, 0)
+MiniShine.Position = UDim2.new(0, -10, 0, 0)
+MiniShine.Rotation = 0
 MiniShine.BackgroundColor3 = COLORS.Text
 MiniShine.BackgroundTransparency = 0.7
 MiniShine.BorderSizePixel = 0
@@ -2155,10 +2160,10 @@ MiniShineGradient.Parent = MiniShine
 
 task.spawn(function()
     while MiniButton and MiniButton.Parent do
-        local shine = TweenService:Create(MiniShine, TweenInfo.new(1.6, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 8, 0.5, -2)})
+        local shine = TweenService:Create(MiniShine, TweenInfo.new(1.6, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 10, 0, 0)})
         shine:Play()
         shine.Completed:Wait()
-        MiniShine.Position = UDim2.new(0, -8, 0.5, -2)
+        MiniShine.Position = UDim2.new(0, -10, 0, 0)
         task.wait(1.2)
     end
 end)
