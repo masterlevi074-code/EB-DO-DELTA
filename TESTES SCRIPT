@@ -41,9 +41,11 @@ local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
 local ESP_CoresPorTime = false
-local ESP_BoxThickness = 0.08
+local ESP_BoxThickness = 2
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
+local CaixasESP2D = {}
+local ESP_BoxMaxDistance = 1500
 
 local ESP_TimesAtivado = false
 local TimesMarcados = {
@@ -1121,14 +1123,6 @@ function AtualizarESP()
             local espColor = GetESPColor(p)
             local h = p.Character:FindFirstChild("NoahzinESP")
             if h then h.Enabled = ESP_GlobalAtivado and ESP_Chams and mostrarESP; pcall(function() h.FillColor = espColor end) end
-            local box = p.Character:FindFirstChild("NoahzinBox")
-            if box then
-                box.Visible = ESP_GlobalAtivado and ESP_Box and mostrarESP
-                pcall(function()
-                    box.Color3 = espColor
-                    box.LineThickness = ESP_BoxThickness
-                end)
-            end
             local head = p.Character:FindFirstChild("Head")
             if head then
                 local nameGui = head:FindFirstChild("NoahzinName")
@@ -1173,8 +1167,69 @@ function AtualizarESP()
     end
 end
 
+local function RemoverCaixaESP2D(player)
+    local box = CaixasESP2D[player]
+    if box then
+        pcall(function()
+            if type(box.Remove) == "function" then box:Remove() elseif type(box.Destroy) == "function" then box:Destroy() end
+        end)
+        CaixasESP2D[player] = nil
+    end
+end
+
+local function CriarCaixaESP2D(player)
+    if player == Player or CaixasESP2D[player] then return end
+    local ok, box = pcall(function() return Drawing.new("Square") end)
+    if not ok or not box then return end
+    box.Visible = false
+    box.Color = CorESP
+    box.Thickness = ESP_BoxThickness
+    box.Filled = false
+    CaixasESP2D[player] = box
+end
+
+local function AtualizarCaixasESP2D(camera)
+    for player, box in pairs(CaixasESP2D) do
+        local character = player.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        local mostrar = ESP_GlobalAtivado and ESP_Box
+        if ESP_TimesAtivado then
+            local timePlayer = character and GetPlayerTime(player)
+            mostrar = mostrar and timePlayer ~= nil and TimesMarcados[timePlayer] == true
+        end
+        if not root or not humanoid or humanoid.Health <= 0 or not mostrar then
+            box.Visible = false
+        else
+            local distance = (camera.CFrame.Position - root.Position).Magnitude
+            if distance > ESP_BoxMaxDistance then
+                box.Visible = false
+            else
+                local cf, size = character:GetBoundingBox()
+                local top = cf.Position + Vector3.new(0, size.Y / 2, 0)
+                local bottom = cf.Position - Vector3.new(0, size.Y / 2, 0)
+                local topPos, topVisible = camera:WorldToViewportPoint(top)
+                local bottomPos, bottomVisible = camera:WorldToViewportPoint(bottom)
+                if topVisible or bottomVisible then
+                    local height = math.max(math.abs(bottomPos.Y - topPos.Y), 2)
+                    local width = height * 0.55
+                    box.Size = Vector2.new(width, height)
+                    box.Position = Vector2.new(topPos.X - width / 2, topPos.Y)
+                    box.Color = GetESPColor(player)
+                    box.Thickness = ESP_BoxThickness
+                    box.Filled = false
+                    box.Visible = true
+                else
+                    box.Visible = false
+                end
+            end
+        end
+    end
+end
+
 local function CriarESP(p)
     if p == Player then return end
+    CriarCaixaESP2D(p)
     local function AdicionarUI(c)
         local head = c:WaitForChild("Head", 5)
         if not head then return end
@@ -1225,10 +1280,6 @@ local function CriarESP(p)
         tlVida.TextSize = 11
         tlVida.TextStrokeTransparency = 0
         tlVida.Parent = bgVida
-        local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
-        box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = GetESPColor(p) end)
-        box.LineThickness = ESP_BoxThickness; box.SurfaceTransparency = 1; box.Visible = ESP_GlobalAtivado and ESP_Box; box.Parent = c
-
         local bgDistancia = head:FindFirstChild("NoahzinDistancia") or Instance.new("BillboardGui")
         bgDistancia.Name = "NoahzinDistancia"
         bgDistancia.Size = UDim2.new(0, 100, 0, 20)
@@ -1257,7 +1308,10 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end end)
+Players.PlayerRemoving:Connect(function(p)
+    if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end
+    RemoverCaixaESP2D(p)
+end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -1486,6 +1540,7 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     if Aimbot_Ativado then
         local alvo = ObterJogadorMaisProximoDaMira()
@@ -1765,7 +1820,7 @@ Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_Cor
 Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
 Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
-    ESP_BoxThickness = Value / 25
+    ESP_BoxThickness = Value
     AtualizarESP()
 end)
 Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
@@ -2012,7 +2067,8 @@ Button(ActionsSection, "DESTRUIR", function()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
+    for player in pairs(CaixasESP2D) do RemoverCaixaESP2D(player) end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
 
