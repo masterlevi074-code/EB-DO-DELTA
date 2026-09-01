@@ -225,8 +225,8 @@ local function AdicionarDescricao(object, nome)
         local bar = object:FindFirstChild("Bar")
         if bar then
             -- O slider ganha uma faixa inferior exclusiva para a descrição.
-            object.Size = UDim2.new(1, 0, 0, 56)
-            bar.Position = UDim2.new(0, 10, 0, 25)
+            object.Size = UDim2.new(1, 0, 0, 64)
+            bar.Position = UDim2.new(0, 10, 0, 24)
         end
     end
 
@@ -239,7 +239,7 @@ local function AdicionarDescricao(object, nome)
         label.Position = UDim2.fromOffset(10, 16)
     elseif object:IsA("Frame") and object:FindFirstChild("Bar") then
         -- No slider, a descrição fica na faixa inferior, abaixo do trilho.
-        label.Position = UDim2.fromOffset(10, 42)
+        label.Position = UDim2.fromOffset(10, 49)
     else
         label.Position = UDim2.fromOffset(10, 28)
     end
