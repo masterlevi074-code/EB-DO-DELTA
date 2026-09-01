@@ -223,7 +223,7 @@ local function AdicionarDescricao(object, nome)
     elseif object:IsA("Frame") then
         -- Slider e input conservam suas alturas originais.
         local bar = object:FindFirstChild("Bar")
-        if bar then bar.Position = UDim2.new(0, 10, 1, -10) end
+        if bar then bar.Position = UDim2.new(0, 10, 0, 26) end
     end
 
     local label = object:FindFirstChild("FunctionDescription") or Instance.new("TextLabel")
@@ -234,14 +234,15 @@ local function AdicionarDescricao(object, nome)
     elseif object:IsA("TextButton") then
         label.Position = UDim2.fromOffset(10, 16)
     elseif object:IsA("Frame") and object:FindFirstChild("Bar") then
-        label.Position = UDim2.fromOffset(10, 17)
+        -- No slider, a descrição fica abaixo do trilho.
+        label.Position = UDim2.fromOffset(10, 33)
     else
         label.Position = UDim2.fromOffset(10, 28)
     end
-    label.Size = UDim2.new(1, -20, 0, 10)
+    label.Size = UDim2.new(1, -20, 0, 8)
     label.Text = descricao
     label.TextColor3 = COLORS.Muted
-    label.TextSize = 6
+    label.TextSize = object:IsA("Frame") and object:FindFirstChild("Bar") and 5 or 6
     label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Center
