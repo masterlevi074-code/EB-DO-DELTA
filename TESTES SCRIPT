@@ -199,45 +199,49 @@ local function AdicionarDescricao(object, nome)
     local descricao = FunctionDescriptions[nome] or ("Configura a função " .. nome .. ".")
     if not object or not object.Parent then return end
 
-    -- A descrição fica dentro do próprio controle, em uma linha discreta.
+    local isToggle = object:IsA("TextButton") and object.Text == ""
     if object:IsA("TextButton") then
-        object.Size = UDim2.new(1, 0, 0, 44)
-        object.TextYAlignment = Enum.TextYAlignment.Top
-        object.TextXAlignment = Enum.TextXAlignment.Left
-        local padding = object:FindFirstChild("DescriptionPadding") or Instance.new("UIPadding")
-        padding.Name = "DescriptionPadding"
-        padding.PaddingTop = UDim.new(0, 5)
-        padding.PaddingLeft = UDim.new(0, 10)
-        padding.Parent = object
-        -- Toggles usam um Label separado; ele fica no topo para não sobrepor a descrição.
-        if object.Text == "" then
+        -- Mantém o tamanho normal do controle.
+        if isToggle then
             local optionLabel = object:FindFirstChildOfClass("TextLabel")
             if optionLabel then
-                optionLabel.Position = UDim2.fromOffset(10, 3)
+                optionLabel.Position = UDim2.fromOffset(10, 1)
                 optionLabel.Size = UDim2.new(1, -55, 0, 16)
                 optionLabel.TextYAlignment = Enum.TextYAlignment.Center
             end
             local switch = object:FindFirstChildOfClass("Frame")
-            if switch then switch.Position = UDim2.new(1, -40, 0, 5) end
+            if switch then switch.Position = UDim2.new(1, -40, 0.5, -8) end
+        else
+            object.TextYAlignment = Enum.TextYAlignment.Top
+            object.TextXAlignment = Enum.TextXAlignment.Left
+            local padding = object:FindFirstChild("DescriptionPadding") or Instance.new("UIPadding")
+            padding.Name = "DescriptionPadding"
+            padding.PaddingTop = UDim.new(0, 3)
+            padding.PaddingLeft = UDim.new(0, 10)
+            padding.Parent = object
         end
     elseif object:IsA("Frame") then
+        -- Slider e input conservam suas alturas originais.
         local bar = object:FindFirstChild("Bar")
-        if bar then
-            object.Size = UDim2.new(1, 0, 0, 58)
-            bar.Position = UDim2.new(0, 10, 1, -10)
-        else
-            object.Size = UDim2.new(1, 0, 0, 56)
-        end
+        if bar then bar.Position = UDim2.new(0, 10, 1, -10) end
     end
 
     local label = object:FindFirstChild("FunctionDescription") or Instance.new("TextLabel")
     label.Name = "FunctionDescription"
     label.BackgroundTransparency = 1
-    label.Position = UDim2.fromOffset(10, object:IsA("Frame") and (object:FindFirstChild("Bar") and 25 or 39) or 27)
-    label.Size = UDim2.new(1, -20, 0, 14)
+    if isToggle then
+        label.Position = UDim2.fromOffset(10, 17)
+    elseif object:IsA("TextButton") then
+        label.Position = UDim2.fromOffset(10, 16)
+    elseif object:IsA("Frame") and object:FindFirstChild("Bar") then
+        label.Position = UDim2.fromOffset(10, 17)
+    else
+        label.Position = UDim2.fromOffset(10, 28)
+    end
+    label.Size = UDim2.new(1, -20, 0, 10)
     label.Text = descricao
     label.TextColor3 = COLORS.Muted
-    label.TextSize = 7
+    label.TextSize = 6
     label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Center
@@ -979,7 +983,6 @@ local function Input(Container, LabelText, Placeholder, Callback)
         end
     end)
 
-    AdicionarDescricao(Frame, LabelText)
     return Box
 end
 
