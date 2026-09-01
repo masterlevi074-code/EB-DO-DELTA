@@ -41,7 +41,6 @@ local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
 local ESP_CoresPorTime = false
-local ESP_BoxThickness = 2
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 local CaixasESP2D = {}
@@ -171,6 +170,74 @@ Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Gui.DisplayOrder = 999
 Gui.Parent = CoreGui
 
+local DescriptionBox = Instance.new("TextLabel")
+DescriptionBox.Name = "FunctionDescription"
+DescriptionBox.Size = UDim2.fromOffset(260, 28)
+DescriptionBox.AnchorPoint = Vector2.new(0.5, 1)
+DescriptionBox.Position = UDim2.new(0.5, 0, 1, -8)
+DescriptionBox.BackgroundColor3 = COLORS.Panel2
+DescriptionBox.BackgroundTransparency = 0.05
+DescriptionBox.BorderSizePixel = 0
+DescriptionBox.TextColor3 = COLORS.Text
+DescriptionBox.TextSize = 8
+DescriptionBox.Font = Enum.Font.GothamMedium
+DescriptionBox.TextWrapped = true
+DescriptionBox.Visible = false
+DescriptionBox.ZIndex = 1000
+DescriptionBox.Parent = Gui
+local DescriptionCorner = Instance.new("UICorner")
+DescriptionCorner.CornerRadius = UDim.new(0, 6)
+DescriptionCorner.Parent = DescriptionBox
+local DescriptionStroke = Instance.new("UIStroke")
+DescriptionStroke.Color = Accent
+DescriptionStroke.Transparency = 0.25
+DescriptionStroke.Parent = DescriptionBox
+
+local FunctionDescriptions = {
+    ["ATIVAR ESP"] = "Liga ou desliga todos os recursos visuais do ESP.",
+    ["ESP BOX"] = "Mostra uma caixa 2D ao redor dos jogadores.",
+    ["ESP BOX THICKNESS"] = "Ajusta a espessura da linha da caixa 2D.",
+    ["ESP NAMES"] = "Mostra o nome dos jogadores.",
+    ["ESP TIMES"] = "Mostra o nome do time acima do jogador.",
+    ["ESP DISTÂNCIA"] = "Mostra a distância até cada jogador.",
+    ["ESP VIDA"] = "Mostra a vida atual e máxima do jogador.",
+    ["ESP TRACERS"] = "Mostra linhas entre a tela e os jogadores.",
+    ["ESP CHAMS"] = "Destaca o personagem visualmente.",
+    ["CORES AUTOMÁTICAS POR TIME"] = "Usa a cor do time para identificar cada jogador.",
+    ["AIMBOT"] = "Ativa ou desativa o auxílio de mira.",
+    ["SHOW FOV"] = "Exibe o círculo de alcance da mira.",
+    ["FOV RADIUS"] = "Altera o raio do círculo de FOV.",
+    ["FOV THICKNESS"] = "Altera a espessura do círculo de FOV.",
+    ["SMOOTHNESS"] = "Controla a suavidade do movimento da câmera.",
+    ["WALL CHECK"] = "Ignora alvos que estejam atrás de paredes.",
+    ["TEAM CHECK"] = "Evita selecionar jogadores do mesmo time.",
+    ["HITBOX"] = "Ativa o recurso de hitbox do hub.",
+    ["SPEED HACK"] = "Controla a velocidade do personagem.",
+    ["DASH"] = "Move o personagem rapidamente para frente.",
+    ["DESTRUIR"] = "Fecha o hub e remove seus recursos ativos.",
+}
+
+local DescricaoTouchId = 0
+local function AdicionarDescricao(object, nome)
+    local descricao = FunctionDescriptions[nome] or ("Configura a função " .. nome .. ".")
+    local function MostrarDescricao()
+        DescricaoTouchId += 1
+        local idAtual = DescricaoTouchId
+        DescriptionBox.Text = descricao
+        DescriptionBox.Visible = true
+        task.delay(2.5, function()
+            if idAtual == DescricaoTouchId then DescriptionBox.Visible = false end
+        end)
+    end
+    object.MouseEnter:Connect(MostrarDescricao)
+    object.MouseLeave:Connect(function()
+        if not UserInputService.TouchEnabled then DescriptionBox.Visible = false end
+    end)
+    object.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then MostrarDescricao() end
+    end)
+end
+
 --========================================================--
 -- MAIN
 --========================================================--
@@ -196,64 +263,16 @@ MainStroke.Thickness = 1
 MainStroke.Transparency = 0.1
 MainStroke.Parent = Main
 
--- Efeitos internos do painel, todos recortados pelos cantos arredondados
-local PanelEffects = Instance.new("Frame")
-PanelEffects.Name = "PanelEffects"
-PanelEffects.Size = UDim2.fromScale(1, 1)
-PanelEffects.BackgroundTransparency = 1
-PanelEffects.BorderSizePixel = 0
-PanelEffects.ClipsDescendants = true
-PanelEffects.ZIndex = 2
-PanelEffects.Parent = Main
-
-local PanelSweep = Instance.new("Frame")
-PanelSweep.Name = "PanelSweep"
-PanelSweep.Size = UDim2.new(0, 90, 1, 0)
-PanelSweep.Position = UDim2.new(0, -110, 0, 0)
-PanelSweep.Rotation = 8
-PanelSweep.BackgroundColor3 = COLORS.Text
-PanelSweep.BackgroundTransparency = 0.97
-PanelSweep.BorderSizePixel = 0
-PanelSweep.ZIndex = 2
-PanelSweep.Parent = PanelEffects
-local PanelSweepGradient = Instance.new("UIGradient")
-PanelSweepGradient.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 1),
-    NumberSequenceKeypoint.new(0.5, 0.2),
-    NumberSequenceKeypoint.new(1, 1)
-})
-PanelSweepGradient.Parent = PanelSweep
-
-task.spawn(function()
-    while PanelSweep and PanelSweep.Parent do
-        local sweep = TweenService:Create(PanelSweep, TweenInfo.new(3.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = UDim2.new(1, 20, 0, 0)})
-        sweep:Play()
-        sweep.Completed:Wait()
-        PanelSweep.Position = UDim2.new(0, -110, 0, 0)
-        task.wait(1.8)
-    end
-end)
-
-local PanelGlow = Instance.new("UIStroke")
-PanelGlow.Name = "PanelGlow"
-PanelGlow.Color = Accent
-PanelGlow.Thickness = 1
-PanelGlow.Transparency = 0.72
-PanelGlow.Parent = Main
-local GlowUp = TweenService:Create(PanelGlow, TweenInfo.new(1.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.45})
-GlowUp:Play()
-
 --========================================================--
 -- LINHA SUPERIOR
 --========================================================--
 
 local TopLine = Instance.new("Frame")
-TopLine.Size = UDim2.new(1, -16, 0, 3)
-TopLine.Position = UDim2.fromOffset(8, 1)
+TopLine.Size = UDim2.new(1, -8, 0, 2)
+TopLine.Position = UDim2.fromOffset(4, 2)
 TopLine.BackgroundColor3 = Accent
 TopLine.BorderSizePixel = 0
 TopLine.ClipsDescendants = true
-TopLine.ZIndex = 10
 TopLine.Parent = Main
 
 local TopLineCorner = Instance.new("UICorner")
@@ -263,9 +282,9 @@ TopLineCorner.Parent = TopLine
 -- Efeito visual: brilho animado na linha superior
 local TopGradient = Instance.new("UIGradient")
 TopGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, COLORS.Green),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 0)),
-    ColorSequenceKeypoint.new(1, COLORS.Green)
+    ColorSequenceKeypoint.new(0, COLORS.OliveDark),
+    ColorSequenceKeypoint.new(0.5, COLORS.Green),
+    ColorSequenceKeypoint.new(1, COLORS.OliveDark)
 })
 TopGradient.Offset = Vector2.new(-1, 0)
 TopGradient.Parent = TopLine
@@ -761,6 +780,7 @@ local function Toggle(Container, Text, Default, Callback)
 	end)
 
 	Update()
+    AdicionarDescricao(Button, Text)
 	return {Set = function(Value) State = Value; Update() end}
 end
 
@@ -849,6 +869,7 @@ local function Slider(Container, Text, Min, Max, Default, Callback)
 		if Callback then Callback(Value) end
 	end
 
+    AdicionarDescricao(Frame, Text)
 	Bar.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			Dragging = true
@@ -897,6 +918,7 @@ local function Button(Container, Text, Callback)
 		if Callback then Callback() end
 	end)
 
+    AdicionarDescricao(B, Text)
 	return B
 end
 
@@ -950,6 +972,7 @@ local function Input(Container, LabelText, Placeholder, Callback)
         end
     end)
 
+    AdicionarDescricao(Frame, LabelText)
     return Box
 end
 
@@ -957,7 +980,6 @@ end
 -- COLOR PICKER (MODERNO)
 --========================================================--
 
--- Declaração antecipada para os callbacks do seletor de cor
 local function ColorPicker(Container, Category, DefaultColor)
     local colorList = {
         {Name = "Branco", Color = Color3.fromRGB(255,255,255)},
@@ -1013,6 +1035,7 @@ local function ColorPicker(Container, Category, DefaultColor)
         stroke.Transparency = 1
         stroke.Parent = btn
 
+        AdicionarDescricao(btn, Category .. " - " .. col.Name)
         btn.MouseButton1Click:Connect(function()
             if Category == "FOV" then
                 Aimbot_CorFOV = col.Color
@@ -1111,7 +1134,7 @@ local function GetESPColor(player)
     return CorESP
 end
 
-function AtualizarESP()
+local function AtualizarESP()
     if not CorESP then CorESP = Color3.fromRGB(255, 50, 50) end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
@@ -1167,62 +1190,28 @@ function AtualizarESP()
     end
 end
 
-local function RemoverCaixaESP2D(player)
-    local box = CaixasESP2D[player]
-    if box then
-        pcall(function()
-            if type(box.Remove) == "function" then box:Remove() elseif type(box.Destroy) == "function" then box:Destroy() end
-        end)
-        CaixasESP2D[player] = nil
+local function CriarCaixaESP2D(p)
+    if p == Player or CaixasESP2D[p] then return end
+    local ok, box = pcall(function() return Drawing.new("Square") end)
+    if ok and box then
+        box.Visible = false; box.Color = CorESP; box.Thickness = ESP_BoxThickness; box.Filled = false
+        CaixasESP2D[p] = box
     end
 end
-
-local function CriarCaixaESP2D(player)
-    if player == Player or CaixasESP2D[player] then return end
-    local ok, box = pcall(function() return Drawing.new("Square") end)
-    if not ok or not box then return end
-    box.Visible = false
-    box.Color = CorESP
-    box.Thickness = ESP_BoxThickness
-    box.Filled = false
-    CaixasESP2D[player] = box
+local function RemoverCaixaESP2D(p)
+    local box = CaixasESP2D[p]
+    if box then pcall(function() if type(box.Remove) == "function" then box:Remove() elseif type(box.Destroy) == "function" then box:Destroy() end end); CaixasESP2D[p] = nil end
 end
-
 local function AtualizarCaixasESP2D(camera)
-    for player, box in pairs(CaixasESP2D) do
-        local character = player.Character
-        local root = character and character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        local mostrar = ESP_GlobalAtivado and ESP_Box
-        if ESP_TimesAtivado then
-            local timePlayer = character and GetPlayerTime(player)
-            mostrar = mostrar and timePlayer ~= nil and TimesMarcados[timePlayer] == true
-        end
-        if not root or not humanoid or humanoid.Health <= 0 or not mostrar then
-            box.Visible = false
+    for p, box in pairs(CaixasESP2D) do
+        local c=p.Character; local root=c and c:FindFirstChild("HumanoidRootPart"); local hum=c and c:FindFirstChildOfClass("Humanoid")
+        local mostrar=ESP_GlobalAtivado and ESP_Box
+        if ESP_TimesAtivado then local t=c and GetPlayerTime(p); mostrar=mostrar and t ~= nil and TimesMarcados[t] == true end
+        if not root or not hum or hum.Health <= 0 or not mostrar or (camera.CFrame.Position-root.Position).Magnitude > ESP_BoxMaxDistance then box.Visible=false
         else
-            local distance = (camera.CFrame.Position - root.Position).Magnitude
-            if distance > ESP_BoxMaxDistance then
-                box.Visible = false
-            else
-                local cf, size = character:GetBoundingBox()
-                local top = cf.Position + Vector3.new(0, size.Y / 2, 0)
-                local bottom = cf.Position - Vector3.new(0, size.Y / 2, 0)
-                local topPos, topVisible = camera:WorldToViewportPoint(top)
-                local bottomPos, bottomVisible = camera:WorldToViewportPoint(bottom)
-                if topVisible or bottomVisible then
-                    local height = math.max(math.abs(bottomPos.Y - topPos.Y), 2)
-                    local width = height * 0.55
-                    box.Size = Vector2.new(width, height)
-                    box.Position = Vector2.new(topPos.X - width / 2, topPos.Y)
-                    box.Color = GetESPColor(player)
-                    box.Thickness = ESP_BoxThickness
-                    box.Filled = false
-                    box.Visible = true
-                else
-                    box.Visible = false
-                end
-            end
+            local cf,size=c:GetBoundingBox(); local a=cf.Position+Vector3.new(0,size.Y/2,0); local b=cf.Position-Vector3.new(0,size.Y/2,0)
+            local ap,av=camera:WorldToViewportPoint(a); local bp,bv=camera:WorldToViewportPoint(b)
+            if av or bv then local h=math.max(math.abs(bp.Y-ap.Y),2); local w=h*0.55; box.Size=Vector2.new(w,h); box.Position=Vector2.new(ap.X-w/2,ap.Y); box.Color=GetESPColor(p); box.Thickness=ESP_BoxThickness; box.Visible=true else box.Visible=false end
         end
     end
 end
@@ -1308,10 +1297,7 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p)
-    if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end
-    RemoverCaixaESP2D(p)
-end)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -1320,7 +1306,7 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     return (Aimbot_OffsetPixels / camera.ViewportSize.Y) * alturaTelaStuds
 end
 
-function EstaVisivel(alvoParte)
+local function EstaVisivel(alvoParte)
     local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
@@ -1819,10 +1805,6 @@ Toggle(ESPSection, "ATIVAR ESP", false, function(State) ESP_GlobalAtivado = Stat
 Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_CoresPorTime = State; AtualizarESP() end)
 Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
-Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
-    ESP_BoxThickness = Value
-    AtualizarESP()
-end)
 Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
@@ -2067,8 +2049,8 @@ Button(ActionsSection, "DESTRUIR", function()
     if FOVCircle then FOVCircle:Destroy() end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for player in pairs(CaixasESP2D) do RemoverCaixaESP2D(player) end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
+    for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
 
