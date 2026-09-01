@@ -198,10 +198,16 @@ MainStroke.Parent = Main
 --========================================================--
 
 local TopLine = Instance.new("Frame")
-TopLine.Size = UDim2.new(1, 0, 0, 2)
+TopLine.Size = UDim2.new(1, -8, 0, 2)
+TopLine.Position = UDim2.fromOffset(4, 2)
 TopLine.BackgroundColor3 = Accent
 TopLine.BorderSizePixel = 0
+TopLine.ClipsDescendants = true
 TopLine.Parent = Main
+
+local TopLineCorner = Instance.new("UICorner")
+TopLineCorner.CornerRadius = UDim.new(1, 0)
+TopLineCorner.Parent = TopLine
 
 -- Efeito visual: brilho animado na linha superior
 local TopGradient = Instance.new("UIGradient")
