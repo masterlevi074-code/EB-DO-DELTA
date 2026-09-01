@@ -263,11 +263,17 @@ local function AdicionarDescricao(object, nome)
         holder.BorderSizePixel = 0
         holder.LayoutOrder = object.LayoutOrder
 
+        local holderLayout = Instance.new("UIListLayout")
+        holderLayout.FillDirection = Enum.FillDirection.Vertical
+        holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        holderLayout.Padding = UDim.new(0, 0)
+        holderLayout.Parent = holder
+
         object.Parent = holder
         object.Position = UDim2.fromOffset(0, 0)
         object.LayoutOrder = 1
 
-        label.Position = UDim2.fromOffset(10, 43)
+        label.Position = UDim2.fromOffset(0, 0)
         label.LayoutOrder = 2
         label.Parent = holder
         holder.Parent = container
