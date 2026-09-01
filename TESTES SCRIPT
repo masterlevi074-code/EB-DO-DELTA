@@ -40,10 +40,9 @@ local ESP_Tracers = false
 local ESP_Vida = false
 local ESP_Distancia = false
 local ESP_Patente = false
-local ESP_Skeleton = false
+local ESP_Time = false  -- NOVO: ESP de Time
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
-local SkeletonLines = {}
 
 local ESP_TimesAtivado = false
 local TimesMarcados = {
@@ -111,7 +110,7 @@ local FPS_Counter = false
 local Ping_Display = false
 
 --========================================================--
--- DRAWING (COM VERIFICAÇÃO)
+-- DRAWING (COM PROTEÇÃO)
 --========================================================--
 
 local FOVCircle = nil
@@ -788,9 +787,7 @@ local function ColorPicker(Container, Category, DefaultColor)
         btn.MouseButton1Click:Connect(function()
             if Category == "FOV" then
                 Aimbot_CorFOV = col.Color
-                if FOVCircle then
-                    FOVCircle.Color = col.Color
-                end
+                if FOVCircle then FOVCircle.Color = col.Color end
             elseif Category == "Hitbox" then
                 Hitbox_Cor = col.Color
             elseif Category == "ESP" then
@@ -897,70 +894,26 @@ local function AtualizarESP()
                 if nameGui then nameGui.Enabled = ESP_Names and mostrarESP
                     if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = CorESP end) end
                 end
+                -- Vida
                 local vidaGui = head:FindFirstChild("NoahzinVida")
                 if vidaGui then vidaGui.Enabled = ESP_Vida and mostrarESP end
+                -- Distância
                 local distGui = head:FindFirstChild("NoahzinDistancia")
                 if distGui then distGui.Enabled = ESP_Distancia and mostrarESP end
+                -- Patente
                 local patenteGui = head:FindFirstChild("NoahzinPatente")
                 if patenteGui then patenteGui.Enabled = ESP_Patente and mostrarESP end
+                -- Time (NOVO)
+                local timeGui = head:FindFirstChild("NoahzinTime")
+                if timeGui then
+                    timeGui.Enabled = ESP_Time and mostrarESP
+                    if timeGui:FindFirstChild("TextLabel") then
+                        local timeNome = GetPlayerTime(p) or ""
+                        timeGui.TextLabel.Text = timeNome
+                    end
+                end
             end
             if LinhasTracers[p] then pcall(function() LinhasTracers[p].Color = CorESP end); LinhasTracers[p].Visible = ESP_Tracers and mostrarESP end
-        end
-    end
-end
-
-local function CriarSkeleton(p)
-    if SkeletonLines[p] then
-        for _, line in pairs(SkeletonLines[p]) do line:Destroy() end
-    end
-    SkeletonLines[p] = {}
-    if not Drawing then return end
-    local pairsList = {
-        {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
-        {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
-        {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
-        {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
-        {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"},
-    }
-    for _ = 1, #pairsList do
-        local line = Drawing.new("Line")
-        line.Color = CorESP
-        line.Thickness = 1
-        line.Visible = false
-        table.insert(SkeletonLines[p], line)
-    end
-end
-
-local function AtualizarSkeleton(p)
-    if not ESP_Skeleton or not p.Character or not Drawing then return end
-    local char = p.Character
-    local lines = SkeletonLines[p]
-    if not lines then CriarSkeleton(p); lines = SkeletonLines[p] end
-    local pairsList = {
-        {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
-        {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
-        {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
-        {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
-        {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"},
-    }
-    local camera = Workspace.CurrentCamera
-    for i, pair in ipairs(pairsList) do
-        local partA = char:FindFirstChild(pair[1])
-        local partB = char:FindFirstChild(pair[2])
-        local line = lines[i]
-        if partA and partB and line then
-            local posA, visA = camera:WorldToViewportPoint(partA.Position)
-            local posB, visB = camera:WorldToViewportPoint(partB.Position)
-            if visA and visB then
-                line.From = Vector2.new(posA.X, posA.Y)
-                line.To = Vector2.new(posB.X, posB.Y)
-                line.Visible = true
-                line.Color = CorESP
-            else
-                line.Visible = false
-            end
-        elseif line then
-            line.Visible = false
         end
     end
 end
@@ -1039,6 +992,25 @@ local function CriarESP(p)
         tlPatente.TextStrokeTransparency = 0
         tlPatente.Parent = bgPatente
 
+        -- Time (NOVO)
+        local bgTime = head:FindFirstChild("NoahzinTime") or Instance.new("BillboardGui")
+        bgTime.Name = "NoahzinTime"
+        bgTime.Size = UDim2.new(0, 100, 0, 20)
+        bgTime.AlwaysOnTop = true
+        bgTime.ExtentsOffset = Vector3.new(0, 1, 0)  -- posição intermediária
+        bgTime.Enabled = ESP_Time
+        bgTime.Parent = head
+
+        local tlTime = bgTime:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlTime.Size = UDim2.new(1, 0, 1, 0)
+        tlTime.BackgroundTransparency = 1
+        tlTime.Text = ""
+        tlTime.TextColor3 = Color3.fromRGB(255, 255, 0)  -- amarelo
+        tlTime.Font = Enum.Font.GothamBold
+        tlTime.TextSize = 10
+        tlTime.TextStrokeTransparency = 0
+        tlTime.Parent = bgTime
+
         local box = c:FindFirstChild("NoahzinBox") or Instance.new("SelectionBox")
         box.Name = "NoahzinBox"; box.Adornee = c; pcall(function() box.Color3 = CorESP end)
         box.LineThickness = 0.05; box.SurfaceTransparency = 1; box.Visible = ESP_Box; box.Parent = c
@@ -1047,29 +1019,17 @@ local function CriarESP(p)
             local tracer = Drawing.new("Line"); tracer.Visible = false
             pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
         end
-        if not SkeletonLines[p] then
-            CriarSkeleton(p)
-        end
+
         task.spawn(AtualizarESP)
     end
     if p.Character then AdicionarUI(p.Character) end
-    p.CharacterAdded:Connect(function(char)
-        if SkeletonLines[p] then
-            for _, line in pairs(SkeletonLines[p]) do line:Destroy() end
-            SkeletonLines[p] = nil
-        end
-        AdicionarUI(char)
-    end)
+    p.CharacterAdded:Connect(AdicionarUI)
 end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
 Players.PlayerRemoving:Connect(function(p)
     if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end
-    if SkeletonLines[p] then
-        for _, line in pairs(SkeletonLines[p]) do line:Destroy() end
-        SkeletonLines[p] = nil
-    end
 end)
 
 --========================================================--
@@ -1449,7 +1409,7 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- ESP updates (Nome, Vida, Distância, Patente)
+    -- ESP updates (Nome, Vida, Distância, Patente, Time)
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -1490,11 +1450,11 @@ RunService.RenderStepped:Connect(function()
                         patenteGui.TextLabel.Text = patente
                     end
                 end
-                if ESP_Skeleton then
-                    AtualizarSkeleton(p)
-                else
-                    if SkeletonLines[p] then
-                        for _, line in pairs(SkeletonLines[p]) do line.Visible = false end
+                if ESP_Time then
+                    local timeGui = head:FindFirstChild("NoahzinTime")
+                    if timeGui and timeGui:FindFirstChild("TextLabel") then
+                        local timeNome = GetPlayerTime(p) or ""
+                        timeGui.TextLabel.Text = timeNome
                     end
                 end
             end
@@ -1735,7 +1695,7 @@ Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; Atua
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia = State; AtualizarESP() end)
 Toggle(ESPSection, "ESP PATENTE", false, function(State) ESP_Patente = State; AtualizarESP() end)
-Toggle(ESPSection, "ESP SKELETON", false, function(State) ESP_Skeleton = State; AtualizarESP() end)
+Toggle(ESPSection, "ESP TIME", false, function(State) ESP_Time = State; AtualizarESP() end) -- NOVO TOGGLE
 
 local TimesSection = Section(VisualPage, "ESP POR TIMES")
 Toggle(TimesSection, "FILTRAR POR TIMES", false, function(State)
@@ -2057,7 +2017,6 @@ Button(ActionsSection, "DESTRUIR", function()
     FPSLabel.Visible = false; PingLabel.Visible = false
     if FOVCircle then FOVCircle:Destroy() end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
-    for _, p in pairs(SkeletonLines) do for _, line in pairs(p) do line:Destroy() end end
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then
         local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end
@@ -2068,6 +2027,7 @@ Button(ActionsSection, "DESTRUIR", function()
             local v = h:FindFirstChild("NoahzinVida") if v then v:Destroy() end
             local d = h:FindFirstChild("NoahzinDistancia") if d then d:Destroy() end
             local pt = h:FindFirstChild("NoahzinPatente") if pt then pt:Destroy() end
+            local tm = h:FindFirstChild("NoahzinTime") if tm then tm:Destroy() end
         end
     end end
     Gui:Destroy()
