@@ -240,28 +240,6 @@ PanelGlow.Parent = Main
 local GlowUp = TweenService:Create(PanelGlow, TweenInfo.new(1.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.45})
 GlowUp:Play()
 
-local function CriarLuzPainel(nome, posicao)
-    local luz = Instance.new("Frame")
-    luz.Name = nome
-    luz.Size = UDim2.fromOffset(4, 4)
-    luz.Position = posicao
-    luz.BackgroundColor3 = COLORS.Green
-    luz.BackgroundTransparency = 0.1
-    luz.BorderSizePixel = 0
-    luz.ZIndex = 3
-    luz.Parent = PanelEffects
-    local canto = Instance.new("UICorner")
-    canto.CornerRadius = UDim.new(1, 0)
-    canto.Parent = luz
-    local escala = Instance.new("UIScale")
-    escala.Parent = luz
-    TweenService:Create(escala, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Scale = 1.8}):Play()
-    TweenService:Create(luz, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.75}):Play()
-end
-CriarLuzPainel("GlowTopLeft", UDim2.fromOffset(12, 8))
-CriarLuzPainel("GlowTopRight", UDim2.new(1, -16, 0, 8))
-CriarLuzPainel("GlowBottomRight", UDim2.new(1, -16, 1, -12))
-
 --========================================================--
 -- LINHA SUPERIOR
 --========================================================--
@@ -281,9 +259,9 @@ TopLineCorner.Parent = TopLine
 -- Efeito visual: brilho animado na linha superior
 local TopGradient = Instance.new("UIGradient")
 TopGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, COLORS.OliveDark),
-    ColorSequenceKeypoint.new(0.5, COLORS.Green),
-    ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+    ColorSequenceKeypoint.new(0, COLORS.Green),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 0, 0)),
+    ColorSequenceKeypoint.new(1, COLORS.Green)
 })
 TopGradient.Offset = Vector2.new(-1, 0)
 TopGradient.Parent = TopLine
