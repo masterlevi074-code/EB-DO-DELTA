@@ -108,7 +108,26 @@ local ChatWindow_Conexoes = nil
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 
-local FOVCircle = Drawing.new("Circle")
+-- Compatibilidade: alguns ambientes não disponibilizam a API Drawing
+local function NovoDrawingSeguro(tipo)
+    if Drawing and type(Drawing.new) == "function" then
+        local sucesso, objeto = pcall(function() return Drawing.new(tipo) end)
+        if sucesso and objeto then return objeto end
+    end
+    return {
+        Visible = false,
+        Color = Color3.fromRGB(255, 255, 255),
+        Thickness = 1,
+        Radius = 0,
+        Filled = false,
+        Position = Vector2.new(0, 0),
+        From = Vector2.new(0, 0),
+        To = Vector2.new(0, 0),
+        Destroy = function() end
+    }
+end
+
+local FOVCircle = NovoDrawingSeguro("Circle")
 FOVCircle.Visible = false
 FOVCircle.Color = Aimbot_CorFOV
 FOVCircle.Thickness = Aimbot_EspessuraFOV
@@ -1371,7 +1390,7 @@ local function CriarESP(p)
         tlDistancia.TextStrokeTransparency = 0
         tlDistancia.Parent = bgDistancia
         if not LinhasTracers[p] then
-            local tracer = Drawing.new("Line"); tracer.Visible = false
+            local tracer = NovoDrawingSeguro("Line"); tracer.Visible = false
             pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
         end
         task.spawn(AtualizarESP)
