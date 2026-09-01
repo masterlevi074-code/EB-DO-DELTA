@@ -203,6 +203,25 @@ TopLine.BackgroundColor3 = Accent
 TopLine.BorderSizePixel = 0
 TopLine.Parent = Main
 
+-- Efeito visual: brilho animado na linha superior
+local TopGradient = Instance.new("UIGradient")
+TopGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, COLORS.OliveDark),
+    ColorSequenceKeypoint.new(0.5, COLORS.Green),
+    ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+})
+TopGradient.Offset = Vector2.new(-1, 0)
+TopGradient.Parent = TopLine
+
+task.spawn(function()
+    while TopLine and TopLine.Parent do
+        local tween = TweenService:Create(TopGradient, TweenInfo.new(2.4, Enum.EasingStyle.Linear), {Offset = Vector2.new(1, 0)})
+        tween:Play()
+        tween.Completed:Wait()
+        TopGradient.Offset = Vector2.new(-1, 0)
+    end
+end)
+
 --========================================================--
 -- HEADER
 --========================================================--
@@ -261,6 +280,19 @@ local StatusCorner = Instance.new("UICorner")
 StatusCorner.CornerRadius = UDim.new(1, 0)
 StatusCorner.Parent = StatusDot
 
+-- Pulso suave do indicador online
+local StatusScale = Instance.new("UIScale")
+StatusScale.Scale = 1
+StatusScale.Parent = StatusDot
+task.spawn(function()
+    while StatusDot and StatusDot.Parent do
+        local pulseUp = TweenService:Create(StatusScale, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Scale = 1.35})
+        local pulseDown = TweenService:Create(StatusScale, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Scale = 1})
+        pulseUp:Play(); pulseUp.Completed:Wait()
+        pulseDown:Play(); pulseDown.Completed:Wait()
+    end
+end)
+
 local StatusText = Instance.new("TextLabel")
 StatusText.BackgroundTransparency = 1
 StatusText.Position = UDim2.fromOffset(138, 5)
@@ -297,6 +329,57 @@ Minimize.Parent = Top
 local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
+
+--========================================================--
+-- EFEITOS DECORATIVOS
+--========================================================--
+
+local ParticleLayer = Instance.new("Frame")
+ParticleLayer.Name = "ParticleLayer"
+ParticleLayer.Size = UDim2.fromScale(1, 1)
+ParticleLayer.BackgroundTransparency = 1
+ParticleLayer.ClipsDescendants = true
+ParticleLayer.ZIndex = 1
+ParticleLayer.Parent = Main
+
+local ParticleRandom = Random.new()
+local function CriarParticula()
+    if not ParticleLayer or not ParticleLayer.Parent then return end
+    local particle = Instance.new("Frame")
+    local size = ParticleRandom:NextInteger(1, 3)
+    particle.Size = UDim2.fromOffset(size, size)
+    particle.Position = UDim2.new(ParticleRandom:NextNumber(0.02, 0.98), 0, 1.05, 0)
+    particle.BackgroundColor3 = ParticleRandom:NextNumber() > 0.5 and COLORS.Olive or COLORS.Green
+    particle.BackgroundTransparency = 0.45
+    particle.BorderSizePixel = 0
+    particle.ZIndex = 1
+    particle.Parent = ParticleLayer
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = particle
+
+    local destino = UDim2.new(
+        particle.Position.X.Scale + ParticleRandom:NextNumber(-0.08, 0.08), 0,
+        -0.08, 0
+    )
+    local duracao = ParticleRandom:NextNumber(4, 7)
+    local tween = TweenService:Create(particle, TweenInfo.new(duracao, Enum.EasingStyle.Linear), {
+        Position = destino,
+        BackgroundTransparency = 1
+    })
+    tween:Play()
+    tween.Completed:Connect(function()
+        if particle then particle:Destroy() end
+    end)
+end
+
+task.spawn(function()
+    while ParticleLayer and ParticleLayer.Parent do
+        CriarParticula()
+        task.wait(0.35)
+    end
+end)
 
 --========================================================--
 -- ABAS
@@ -1765,6 +1848,40 @@ Button(ActionsSection, "DESTRUIR", function()
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
+
+--========================================================--
+-- ANIMAÇÕES DOS BOTÕES
+--========================================================--
+
+local function AnimarBotao(button)
+    if not button:IsA("TextButton") then return end
+    local escala = Instance.new("UIScale")
+    escala.Scale = 1
+    escala.Parent = button
+    local corOriginal = button.BackgroundColor3
+    local conectado = false
+
+    button.MouseEnter:Connect(function()
+        conectado = true
+        TweenService:Create(escala, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1.035}):Play()
+        TweenService:Create(button, TweenInfo.new(0.12, Enum.EasingStyle.Quad), {BackgroundColor3 = button.BackgroundColor3:Lerp(Color3.new(1, 1, 1), 0.08)}):Play()
+    end)
+    button.MouseLeave:Connect(function()
+        conectado = false
+        TweenService:Create(escala, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Scale = 1}):Play()
+        TweenService:Create(button, TweenInfo.new(0.16, Enum.EasingStyle.Quad), {BackgroundColor3 = corOriginal}):Play()
+    end)
+    button.MouseButton1Down:Connect(function()
+        TweenService:Create(escala, TweenInfo.new(0.06, Enum.EasingStyle.Quad), {Scale = 0.96}):Play()
+    end)
+    button.MouseButton1Up:Connect(function()
+        TweenService:Create(escala, TweenInfo.new(0.1, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = conectado and 1.035 or 1}):Play()
+    end)
+end
+
+for _, object in ipairs(Gui:GetDescendants()) do
+    AnimarBotao(object)
+end
 
 --========================================================--
 -- DRAG DA UI
