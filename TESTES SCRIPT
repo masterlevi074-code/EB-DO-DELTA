@@ -225,8 +225,8 @@ local function AdicionarDescricao(object, nome)
         local bar = object:FindFirstChild("Bar")
         if bar then
             -- O slider ganha uma faixa inferior exclusiva para a descrição.
-            object.Size = UDim2.new(1, 0, 0, 64)
-            bar.Position = UDim2.new(0, 10, 0, 24)
+            object.Size = UDim2.new(1, 0, 0, 42)
+            bar.Position = UDim2.new(0, 10, 1, -10)
         end
     end
 
@@ -243,16 +243,24 @@ local function AdicionarDescricao(object, nome)
     else
         label.Position = UDim2.fromOffset(10, 28)
     end
-    label.Size = UDim2.new(1, -20, 0, 8)
+    local isSlider = object:IsA("Frame") and object:FindFirstChild("Bar") ~= nil
+    label.Size = isSlider and UDim2.new(1, -20, 0, 9) or UDim2.new(1, -20, 0, 8)
     label.Text = descricao
     label.TextColor3 = COLORS.Muted
-    label.TextSize = object:IsA("Frame") and object:FindFirstChild("Bar") and 5 or 6
+    label.TextSize = isSlider and 5 or 6
     label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Center
     label.TextTruncate = Enum.TextTruncate.AtEnd
     label.ZIndex = (object.ZIndex or 1) + 1
-    label.Parent = object
+    if isSlider then
+        -- Sibling independente: o UIListLayout coloca esta linha abaixo do slider.
+        label.Position = UDim2.new(0, 10, 0, 0)
+        label.LayoutOrder = object.LayoutOrder + 1
+        label.Parent = object.Parent
+    else
+        label.Parent = object
+    end
 end
 --========================================================--
 -- MAIN
