@@ -246,10 +246,11 @@ GlowUp:Play()
 
 local TopLine = Instance.new("Frame")
 TopLine.Size = UDim2.new(1, -16, 0, 3)
-TopLine.Position = UDim2.fromOffset(8, 2)
+TopLine.Position = UDim2.fromOffset(8, 1)
 TopLine.BackgroundColor3 = Accent
 TopLine.BorderSizePixel = 0
 TopLine.ClipsDescendants = true
+TopLine.ZIndex = 10
 TopLine.Parent = Main
 
 local TopLineCorner = Instance.new("UICorner")
