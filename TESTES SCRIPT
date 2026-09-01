@@ -171,29 +171,6 @@ Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Gui.DisplayOrder = 999
 Gui.Parent = CoreGui
 
-local DescriptionBox = Instance.new("TextLabel")
-DescriptionBox.Name = "FunctionDescription"
-DescriptionBox.Size = UDim2.fromOffset(260, 28)
-DescriptionBox.AnchorPoint = Vector2.new(0.5, 1)
-DescriptionBox.Position = UDim2.new(0.5, 0, 1, -8)
-DescriptionBox.BackgroundColor3 = COLORS.Panel2
-DescriptionBox.BackgroundTransparency = 0.05
-DescriptionBox.BorderSizePixel = 0
-DescriptionBox.TextColor3 = COLORS.Text
-DescriptionBox.TextSize = 8
-DescriptionBox.Font = Enum.Font.GothamMedium
-DescriptionBox.TextWrapped = true
-DescriptionBox.Visible = false
-DescriptionBox.ZIndex = 1000
-DescriptionBox.Parent = Gui
-local DescriptionCorner = Instance.new("UICorner")
-DescriptionCorner.CornerRadius = UDim.new(0, 6)
-DescriptionCorner.Parent = DescriptionBox
-local DescriptionStroke = Instance.new("UIStroke")
-DescriptionStroke.Color = Accent
-DescriptionStroke.Transparency = 0.25
-DescriptionStroke.Parent = DescriptionBox
-
 local FunctionDescriptions = {
     ["ATIVAR ESP"] = "Liga ou desliga todos os recursos visuais do ESP.",
     ["ESP BOX"] = "Mostra uma caixa 2D ao redor dos jogadores.",
@@ -218,27 +195,56 @@ local FunctionDescriptions = {
     ["DESTRUIR"] = "Fecha o hub e remove seus recursos ativos.",
 }
 
-local DescricaoTouchId = 0
 local function AdicionarDescricao(object, nome)
     local descricao = FunctionDescriptions[nome] or ("Configura a função " .. nome .. ".")
-    local function MostrarDescricao()
-        DescricaoTouchId = DescricaoTouchId + 1
-        local idAtual = DescricaoTouchId
-        DescriptionBox.Text = descricao
-        DescriptionBox.Visible = true
-        task.delay(2.5, function()
-            if idAtual == DescricaoTouchId then DescriptionBox.Visible = false end
-        end)
-    end
-    object.MouseEnter:Connect(MostrarDescricao)
-    object.MouseLeave:Connect(function()
-        if not UserInputService.TouchEnabled then DescriptionBox.Visible = false end
-    end)
-    object.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then MostrarDescricao() end
-    end)
-end
+    if not object or not object.Parent then return end
 
+    -- A descrição fica dentro do próprio controle, em uma linha discreta.
+    if object:IsA("TextButton") then
+        object.Size = UDim2.new(1, 0, 0, 44)
+        object.TextYAlignment = Enum.TextYAlignment.Top
+        object.TextXAlignment = Enum.TextXAlignment.Left
+        local padding = object:FindFirstChild("DescriptionPadding") or Instance.new("UIPadding")
+        padding.Name = "DescriptionPadding"
+        padding.PaddingTop = UDim.new(0, 5)
+        padding.PaddingLeft = UDim.new(0, 10)
+        padding.Parent = object
+        -- Toggles usam um Label separado; ele fica no topo para não sobrepor a descrição.
+        if object.Text == "" then
+            local optionLabel = object:FindFirstChildOfClass("TextLabel")
+            if optionLabel then
+                optionLabel.Position = UDim2.fromOffset(10, 3)
+                optionLabel.Size = UDim2.new(1, -55, 0, 16)
+                optionLabel.TextYAlignment = Enum.TextYAlignment.Center
+            end
+            local switch = object:FindFirstChildOfClass("Frame")
+            if switch then switch.Position = UDim2.new(1, -40, 0, 5) end
+        end
+    elseif object:IsA("Frame") then
+        local bar = object:FindFirstChild("Bar")
+        if bar then
+            object.Size = UDim2.new(1, 0, 0, 58)
+            bar.Position = UDim2.new(0, 10, 1, -10)
+        else
+            object.Size = UDim2.new(1, 0, 0, 56)
+        end
+    end
+
+    local label = object:FindFirstChild("FunctionDescription") or Instance.new("TextLabel")
+    label.Name = "FunctionDescription"
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.fromOffset(10, object:IsA("Frame") and (object:FindFirstChild("Bar") and 25 or 39) or 27)
+    label.Size = UDim2.new(1, -20, 0, 14)
+    label.Text = descricao
+    label.TextColor3 = COLORS.Muted
+    label.TextSize = 7
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    label.TextTruncate = Enum.TextTruncate.AtEnd
+    label.ZIndex = (object.ZIndex or 1) + 1
+    label.Parent = object
+end
 --========================================================--
 -- MAIN
 --========================================================--
@@ -1036,7 +1042,6 @@ local function ColorPicker(Container, Category, DefaultColor)
         stroke.Transparency = 1
         stroke.Parent = btn
 
-        AdicionarDescricao(btn, Category .. " - " .. col.Name)
         btn.MouseButton1Click:Connect(function()
             if Category == "FOV" then
                 Aimbot_CorFOV = col.Color
