@@ -193,13 +193,82 @@ MainStroke.Thickness = 1
 MainStroke.Transparency = 0.1
 MainStroke.Parent = Main
 
+-- Efeitos internos do painel, todos recortados pelos cantos arredondados
+local PanelEffects = Instance.new("Frame")
+PanelEffects.Name = "PanelEffects"
+PanelEffects.Size = UDim2.fromScale(1, 1)
+PanelEffects.BackgroundTransparency = 1
+PanelEffects.BorderSizePixel = 0
+PanelEffects.ClipsDescendants = true
+PanelEffects.ZIndex = 2
+PanelEffects.Parent = Main
+
+local PanelSweep = Instance.new("Frame")
+PanelSweep.Name = "PanelSweep"
+PanelSweep.Size = UDim2.new(0, 90, 1, 0)
+PanelSweep.Position = UDim2.new(0, -110, 0, 0)
+PanelSweep.Rotation = 8
+PanelSweep.BackgroundColor3 = COLORS.Text
+PanelSweep.BackgroundTransparency = 0.97
+PanelSweep.BorderSizePixel = 0
+PanelSweep.ZIndex = 2
+PanelSweep.Parent = PanelEffects
+local PanelSweepGradient = Instance.new("UIGradient")
+PanelSweepGradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0.2),
+    NumberSequenceKeypoint.new(1, 1)
+})
+PanelSweepGradient.Parent = PanelSweep
+
+task.spawn(function()
+    while PanelSweep and PanelSweep.Parent do
+        local sweep = TweenService:Create(PanelSweep, TweenInfo.new(3.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = UDim2.new(1, 20, 0, 0)})
+        sweep:Play()
+        sweep.Completed:Wait()
+        PanelSweep.Position = UDim2.new(0, -110, 0, 0)
+        task.wait(1.8)
+    end
+end)
+
+local PanelGlow = Instance.new("UIStroke")
+PanelGlow.Name = "PanelGlow"
+PanelGlow.Color = Accent
+PanelGlow.Thickness = 1
+PanelGlow.Transparency = 0.72
+PanelGlow.Parent = Main
+local GlowUp = TweenService:Create(PanelGlow, TweenInfo.new(1.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Transparency = 0.45})
+GlowUp:Play()
+
+local function CriarLuzPainel(nome, posicao)
+    local luz = Instance.new("Frame")
+    luz.Name = nome
+    luz.Size = UDim2.fromOffset(4, 4)
+    luz.Position = posicao
+    luz.BackgroundColor3 = COLORS.Green
+    luz.BackgroundTransparency = 0.1
+    luz.BorderSizePixel = 0
+    luz.ZIndex = 3
+    luz.Parent = PanelEffects
+    local canto = Instance.new("UICorner")
+    canto.CornerRadius = UDim.new(1, 0)
+    canto.Parent = luz
+    local escala = Instance.new("UIScale")
+    escala.Parent = luz
+    TweenService:Create(escala, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {Scale = 1.8}):Play()
+    TweenService:Create(luz, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {BackgroundTransparency = 0.75}):Play()
+end
+CriarLuzPainel("GlowTopLeft", UDim2.fromOffset(12, 8))
+CriarLuzPainel("GlowTopRight", UDim2.new(1, -16, 0, 8))
+CriarLuzPainel("GlowBottomRight", UDim2.new(1, -16, 1, -12))
+
 --========================================================--
 -- LINHA SUPERIOR
 --========================================================--
 
 local TopLine = Instance.new("Frame")
-TopLine.Size = UDim2.new(1, -8, 0, 2)
-TopLine.Position = UDim2.fromOffset(4, 2)
+TopLine.Size = UDim2.new(1, -16, 0, 3)
+TopLine.Position = UDim2.fromOffset(8, 2)
 TopLine.BackgroundColor3 = Accent
 TopLine.BorderSizePixel = 0
 TopLine.ClipsDescendants = true
