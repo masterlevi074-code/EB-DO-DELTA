@@ -2508,4 +2508,4 @@ task.delay(0.5, function()
     Notify("NOXYS HUB ONLINE")
 end)
 
-print("[NOXYS HUB] Tactical Mobile Edition carregada.")
+print("[NOXYS HUB] Tactical Mobile Edition online.")
