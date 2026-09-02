@@ -37,7 +37,6 @@ local ESP_Chams = false
 local ESP_Box = false
 local ESP_Names = false
 local ESP_Tracers = false
-local ESP_Skeleton = false
 local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
@@ -67,7 +66,11 @@ local Aimbot_TeamCheck = false
 local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
-local Aimbot_PrioridadeDistancia = false
+local Aimbot_Prioridades = {
+    ["Perto da mira"] = true,
+    ["Distância"] = false,
+    ["Menor vida"] = false,
+}
 local Aimbot_DestacarAlvo = false
 local AimbotAlvoAtual = nil
 local AimbotAlvoHighlight = nil
@@ -183,7 +186,6 @@ local FunctionDescriptions = {
     ["ESP DISTÂNCIA"] = "Mostra a distância até cada jogador.",
     ["ESP VIDA"] = "Mostra a vida atual e máxima do jogador.",
     ["ESP TRACERS"] = "Mostra linhas entre a tela e os jogadores.",
-    ["ESP SKELETON"] = "Mostra as articulações e os membros dos jogadores.",
     ["ESP CHAMS"] = "Destaca o personagem visualmente.",
     ["CORES AUTOMÁTICAS POR TIME"] = "Usa a cor do time para identificar cada jogador.",
     ["AIMBOT"] = "Ativa ou desativa o auxílio de mira.",
@@ -193,7 +195,7 @@ local FunctionDescriptions = {
     ["SMOOTHNESS"] = "Controla a suavidade do movimento da câmera.",
     ["WALL CHECK"] = "Ignora alvos que estejam atrás de paredes.",
     ["TEAM CHECK"] = "Evita selecionar jogadores do mesmo time.",
-    ["PRIORIDADE DISTÂNCIA"] = "Prioriza o alvo mais próximo da mira em relação à distância.",
+    ["PRIORIZAR ALVO"] = "Selecione um ou vários critérios para calcular a prioridade do alvo.",
     ["DESTACAR ALVO"] = "Destaca com Highlight o jogador escolhido pelo aimbot.",
     ["HITBOX"] = "Ativa o recurso de hitbox do hub.",
     ["SPEED HACK"] = "Controla a velocidade do personagem.",
@@ -787,6 +789,106 @@ local function Toggle(Container, Text, Default, Callback)
 end
 
 --========================================================--
+-- DROPDOWN MULTI-SELEÇÃO
+--========================================================--
+local function MultiDropdown(Container, Text, Options, Defaults, Callback)
+    local selected = {}
+    for _, option in ipairs(Options) do selected[option] = Defaults[option] == true end
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1, 0, 0, 32)
+    Frame.BackgroundColor3 = COLORS.Panel
+    Frame.BorderSizePixel = 0
+    Frame.LayoutOrder = 1
+    Frame.ZIndex = 10
+    Frame.Parent = Container
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Frame
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 0, 32)
+    Button.BackgroundTransparency = 1
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.ZIndex = 11
+    Button.Parent = Frame
+    local Label = Instance.new("TextLabel")
+    Label.BackgroundTransparency = 1
+    Label.Position = UDim2.fromOffset(10, 0)
+    Label.Size = UDim2.new(1, -42, 1, 0)
+    Label.TextColor3 = COLORS.Text
+    Label.TextSize = 9
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.ZIndex = 12
+    Label.Parent = Button
+    local Arrow = Instance.new("TextLabel")
+    Arrow.BackgroundTransparency = 1
+    Arrow.Position = UDim2.new(1, -28, 0, 0)
+    Arrow.Size = UDim2.fromOffset(20, 32)
+    Arrow.Text = "▼"
+    Arrow.TextColor3 = COLORS.Muted
+    Arrow.TextSize = 9
+    Arrow.ZIndex = 12
+    Arrow.Parent = Button
+    local Popup = Instance.new("Frame")
+    Popup.Position = UDim2.new(0, 0, 0, 34)
+    Popup.Size = UDim2.new(1, 0, 0, #Options * 27 + 8)
+    Popup.BackgroundColor3 = COLORS.Panel2
+    Popup.BorderSizePixel = 0
+    Popup.Visible = false
+    Popup.ZIndex = 30
+    Popup.Parent = Frame
+    local PopupCorner = Instance.new("UICorner")
+    PopupCorner.CornerRadius = UDim.new(0, 6)
+    PopupCorner.Parent = Popup
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 2)
+    Layout.Parent = Popup
+    local function Refresh()
+        local names = {}
+        for _, option in ipairs(Options) do
+            if selected[option] then table.insert(names, option) end
+        end
+        Label.Text = Text .. (#names > 0 and (": " .. table.concat(names, ", ")) or ": nenhum")
+        if Callback then Callback(selected) end
+    end
+    for _, option in ipairs(Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Size = UDim2.new(1, -8, 0, 25)
+        OptionButton.Position = UDim2.fromOffset(4, 0)
+        OptionButton.BackgroundColor3 = COLORS.Panel
+        OptionButton.BorderSizePixel = 0
+        OptionButton.TextColor3 = COLORS.Text
+        OptionButton.TextSize = 8
+        OptionButton.Font = Enum.Font.GothamMedium
+        OptionButton.TextXAlignment = Enum.TextXAlignment.Left
+        OptionButton.Text = ""
+        OptionButton.ZIndex = 31
+        OptionButton.Parent = Popup
+        local OptionCorner = Instance.new("UICorner")
+        OptionCorner.CornerRadius = UDim.new(0, 4)
+        OptionCorner.Parent = OptionButton
+        local function UpdateOption()
+            OptionButton.Text = (selected[option] and "✓  " or "     ") .. option
+            OptionButton.TextColor3 = selected[option] and Accent or COLORS.Muted
+        end
+        OptionButton.MouseButton1Click:Connect(function()
+            selected[option] = not selected[option]
+            UpdateOption()
+            Refresh()
+        end)
+        UpdateOption()
+    end
+    Button.MouseButton1Click:Connect(function()
+        Popup.Visible = not Popup.Visible
+        Arrow.Text = Popup.Visible and "▲" or "▼"
+    end)
+    Refresh()
+    return {Get = function() return selected end}
+end
+
+--========================================================--
 -- SLIDER (DENTRO DO CONTAINER)
 --========================================================--
 
@@ -1215,119 +1317,12 @@ local function AtualizarCaixasESP2D(camera)
     end
 end
 
-local SkeletonESP = {}
-local SkeletonR6 = {
-    {"Head", "Torso"},
-    {"Torso", "Left Arm"},
-    {"Torso", "Right Arm"},
-    {"Torso", "Left Leg"},
-    {"Torso", "Right Leg"},
-}
-local SkeletonR15 = {
-    {"Head", "UpperTorso"},
-    {"UpperTorso", "LowerTorso"},
-    {"UpperTorso", "LeftUpperArm"},
-    {"LeftUpperArm", "LeftLowerArm"},
-    {"LeftLowerArm", "LeftHand"},
-    {"UpperTorso", "RightUpperArm"},
-    {"RightUpperArm", "RightLowerArm"},
-    {"RightLowerArm", "RightHand"},
-    {"LowerTorso", "LeftUpperLeg"},
-    {"LeftUpperLeg", "LeftLowerLeg"},
-    {"LeftLowerLeg", "LeftFoot"},
-    {"LowerTorso", "RightUpperLeg"},
-    {"RightUpperLeg", "RightLowerLeg"},
-    {"RightLowerLeg", "RightFoot"},
-}
-
-local function RemoverSkeleton(player)
-    local lines = SkeletonESP[player]
-    if not lines then return end
-    for _, line in ipairs(lines) do
-        pcall(function() line:Remove() end)
-    end
-    SkeletonESP[player] = nil
-end
-
-local function CriarSkeleton(player, character)
-    RemoverSkeleton(player)
-    if not character or not Drawing or type(Drawing.new) ~= "function" then return end
-    local connections
-    if character:FindFirstChild("UpperTorso") then
-        connections = SkeletonR15
-    elseif character:FindFirstChild("Torso") then
-        connections = SkeletonR6
-    else
-        return
-    end
-    local lines = {}
-    for _, pair in ipairs(connections) do
-        local ok, line = pcall(function()
-            local drawingLine = Drawing.new("Line")
-            drawingLine.Visible = false
-            drawingLine.Color = CorESP
-            drawingLine.Thickness = 1.5
-            drawingLine.Transparency = 1
-            return drawingLine
-        end)
-        if ok and line then
-            lines[#lines + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
-        end
-    end
-    SkeletonESP[player] = lines
-end
-
-local function AtualizarSkeleton(camera)
-    for player, lines in pairs(SkeletonESP) do
-        local character = player.Character
-        local root = character and character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-        local mostrar = ESP_GlobalAtivado and ESP_Skeleton
-        if ESP_TimesAtivado then
-            local timePlayer = character and GetPlayerTime(player)
-            mostrar = mostrar and timePlayer ~= nil and TimesMarcados[timePlayer] == true
-        end
-        local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-        local distance = (myRoot and root) and (myRoot.Position - root.Position).Magnitude or math.huge
-        local valid = mostrar and character and root and humanoid and humanoid.Health > 0 and distance <= ESP_BoxMaxDistance
-        for _, data in ipairs(lines) do
-            local line = data.Drawing
-            if not valid then
-                pcall(function() line.Visible = false end)
-            else
-                local part0 = character:FindFirstChild(data.Part0)
-                local part1 = character:FindFirstChild(data.Part1)
-                if not part0 or not part1 then
-                    pcall(function() line.Visible = false end)
-                else
-                    local ok = pcall(function()
-                        local pos0, visible0 = camera:WorldToViewportPoint(part0.Position)
-                        local pos1, visible1 = camera:WorldToViewportPoint(part1.Position)
-                        if visible0 and visible1 and pos0.Z > 0 and pos1.Z > 0 then
-                            line.From = Vector2.new(pos0.X, pos0.Y)
-                            line.To = Vector2.new(pos1.X, pos1.Y)
-                            line.Color = GetESPColor(player)
-                            line.Thickness = 1.5
-                            line.Transparency = 1
-                            line.Visible = true
-                        else
-                            line.Visible = false
-                        end
-                    end)
-                    if not ok then pcall(function() line.Visible = false end) end
-                end
-            end
-        end
-    end
-end
-
 local function CriarESP(p)
     if p == Player then return end
     CriarCaixaESP2D(p)
     local function AdicionarUI(c)
         local head = c:WaitForChild("Head", 5)
         if not head then return end
-        if ESP_Skeleton then pcall(function() CriarSkeleton(p, c) end) end
         local h = c:FindFirstChild("NoahzinESP") or Instance.new("Highlight")
         h.Name = "NoahzinESP"; pcall(function() h.FillColor = GetESPColor(p) end)
         h.OutlineColor = Color3.new(1,1,1); h.FillTransparency = 0.5; h.Enabled = ESP_GlobalAtivado and ESP_Chams; h.Parent = c
@@ -1403,7 +1398,7 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p); RemoverSkeleton(p) end)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -1480,7 +1475,16 @@ local function ObterJogadorMaisProximoDaMira()
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
                     if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
-                        local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
+                        local criterios = 0
+                        local pontuacao = 0
+                        if Aimbot_Prioridades["Perto da mira"] then pontuacao = pontuacao + distanciaDaMira / math.max(Aimbot_RaioFOV, 1); criterios = criterios + 1 end
+                        if Aimbot_Prioridades["Distância"] then pontuacao = pontuacao + distanciaReal / math.max(ESP_BoxMaxDistance, 1); criterios = criterios + 1 end
+                        if Aimbot_Prioridades["Menor vida"] then
+                            local alvoHumanoid = p.Character:FindFirstChildOfClass("Humanoid")
+                            pontuacao = pontuacao + (alvoHumanoid and alvoHumanoid.Health / math.max(alvoHumanoid.MaxHealth, 1) or 1)
+                            criterios = criterios + 1
+                        end
+                        if criterios == 0 then pontuacao = distanciaDaMira else pontuacao = pontuacao / criterios end
                         if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
                     end
                 end
@@ -1674,7 +1678,6 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
-    AtualizarSkeleton(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
     if Aimbot_Ativado then
@@ -1908,7 +1911,9 @@ Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State en
 Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
-Toggle(AimbotSection, "PRIORIDADE DISTÂNCIA", false, function(State) Aimbot_PrioridadeDistancia = State end)
+MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
+    Aimbot_Prioridades = Selected
+end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
@@ -1965,16 +1970,6 @@ end)
 Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
-Toggle(ESPSection, "ESP SKELETON", false, function(State)
-    ESP_Skeleton = State
-    if State then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= Player and p.Character then pcall(function() CriarSkeleton(p, p.Character) end) end
-        end
-    else
-        for p in pairs(SkeletonESP) do RemoverSkeleton(p) end
-    end
-end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TIMES", false, function(State) ESP_TimesNomes=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia=State; AtualizarESP() end)
@@ -2218,7 +2213,6 @@ Button(ActionsSection, "DESTRUIR", function()
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
-    for p in pairs(SkeletonESP) do RemoverSkeleton(p) end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
