@@ -1251,7 +1251,7 @@ end
 
 local function CriarSkeleton(player, character)
     RemoverSkeleton(player)
-    if not character then return end
+    if not character or not Drawing or type(Drawing.new) ~= "function" then return end
     local connections
     if character:FindFirstChild("UpperTorso") then
         connections = SkeletonR15
@@ -1262,12 +1262,17 @@ local function CriarSkeleton(player, character)
     end
     local lines = {}
     for _, pair in ipairs(connections) do
-        local line = Drawing.new("Line")
-        line.Visible = false
-        line.Color = CorESP
-        line.Thickness = 1.5
-        line.Transparency = 1
-        lines[#lines + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
+        local ok, line = pcall(function()
+            local drawingLine = Drawing.new("Line")
+            drawingLine.Visible = false
+            drawingLine.Color = CorESP
+            drawingLine.Thickness = 1.5
+            drawingLine.Transparency = 1
+            return drawingLine
+        end)
+        if ok and line then
+            lines[#lines + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
+        end
     end
     SkeletonESP[player] = lines
 end
@@ -1288,25 +1293,28 @@ local function AtualizarSkeleton(camera)
         for _, data in ipairs(lines) do
             local line = data.Drawing
             if not valid then
-                line.Visible = false
+                pcall(function() line.Visible = false end)
             else
                 local part0 = character:FindFirstChild(data.Part0)
                 local part1 = character:FindFirstChild(data.Part1)
                 if not part0 or not part1 then
-                    line.Visible = false
+                    pcall(function() line.Visible = false end)
                 else
-                    local pos0, visible0 = camera:WorldToViewportPoint(part0.Position)
-                    local pos1, visible1 = camera:WorldToViewportPoint(part1.Position)
-                    if visible0 and visible1 and pos0.Z > 0 and pos1.Z > 0 then
-                        line.From = Vector2.new(pos0.X, pos0.Y)
-                        line.To = Vector2.new(pos1.X, pos1.Y)
-                        line.Color = GetESPColor(player)
-                        line.Thickness = 1.5
-                        line.Transparency = 1
-                        line.Visible = true
-                    else
-                        line.Visible = false
-                    end
+                    local ok = pcall(function()
+                        local pos0, visible0 = camera:WorldToViewportPoint(part0.Position)
+                        local pos1, visible1 = camera:WorldToViewportPoint(part1.Position)
+                        if visible0 and visible1 and pos0.Z > 0 and pos1.Z > 0 then
+                            line.From = Vector2.new(pos0.X, pos0.Y)
+                            line.To = Vector2.new(pos1.X, pos1.Y)
+                            line.Color = GetESPColor(player)
+                            line.Thickness = 1.5
+                            line.Transparency = 1
+                            line.Visible = true
+                        else
+                            line.Visible = false
+                        end
+                    end)
+                    if not ok then pcall(function() line.Visible = false end) end
                 end
             end
         end
@@ -1319,7 +1327,7 @@ local function CriarESP(p)
     local function AdicionarUI(c)
         local head = c:WaitForChild("Head", 5)
         if not head then return end
-        if ESP_Skeleton then CriarSkeleton(p, c) end
+        if ESP_Skeleton then pcall(function() CriarSkeleton(p, c) end) end
         local h = c:FindFirstChild("NoahzinESP") or Instance.new("Highlight")
         h.Name = "NoahzinESP"; pcall(function() h.FillColor = GetESPColor(p) end)
         h.OutlineColor = Color3.new(1,1,1); h.FillTransparency = 0.5; h.Enabled = ESP_GlobalAtivado and ESP_Chams; h.Parent = c
@@ -1961,7 +1969,7 @@ Toggle(ESPSection, "ESP SKELETON", false, function(State)
     ESP_Skeleton = State
     if State then
         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= Player and p.Character then CriarSkeleton(p, p.Character) end
+            if p ~= Player and p.Character then pcall(function() CriarSkeleton(p, p.Character) end) end
         end
     else
         for p in pairs(SkeletonESP) do RemoverSkeleton(p) end
