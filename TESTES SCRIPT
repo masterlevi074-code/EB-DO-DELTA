@@ -1083,80 +1083,204 @@ end
 --========================================================--
 
 local function ColorPicker(Container, Category, DefaultColor)
-    local colorList = {
-        {Name = "Branco", Color = Color3.fromRGB(255,255,255)},
-        {Name = "Vermelho", Color = Color3.fromRGB(255,50,50)},
-        {Name = "Azul", Color = Color3.fromRGB(50,150,255)},
-        {Name = "Verde", Color = Color3.fromRGB(50,255,100)},
-        {Name = "Amarelo", Color = Color3.fromRGB(255,220,50)},
-        {Name = "Roxo", Color = Color3.fromRGB(170,0,255)},
-        {Name = "Ciano", Color = Color3.fromRGB(0,255,255)},
-        {Name = "Rosa", Color = Color3.fromRGB(255,0,180)},
-    }
-
     local Holder = Instance.new("Frame")
-    Holder.Size = UDim2.new(1, 0, 0, 28)
+    Holder.Size = UDim2.new(1, 0, 0, 36)
     Holder.BackgroundTransparency = 1
     Holder.BorderSizePixel = 0
     Holder.LayoutOrder = 1
+    Holder.ZIndex = 20
     Holder.Parent = Container
 
-    local Layout = Instance.new("UIListLayout")
-    Layout.FillDirection = Enum.FillDirection.Horizontal
-    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    Layout.VerticalAlignment = Enum.VerticalAlignment.Center
-    Layout.Padding = UDim.new(0, 6)
-    Layout.Parent = Holder
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 0, 30)
+    Button.BackgroundColor3 = COLORS.Panel
+    Button.BorderSizePixel = 0
+    Button.AutoButtonColor = false
+    Button.Text = ""
+    Button.ZIndex = 21
+    Button.Parent = Holder
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 6)
+    ButtonCorner.Parent = Button
 
-    local selectedButton = nil
+    local Label = Instance.new("TextLabel")
+    Label.BackgroundTransparency = 1
+    Label.Position = UDim2.fromOffset(10, 0)
+    Label.Size = UDim2.new(1, -58, 1, 0)
+    Label.Text = "COR " .. string.upper(Category)
+    Label.TextColor3 = COLORS.Text
+    Label.TextSize = 8
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.ZIndex = 22
+    Label.Parent = Button
 
-    local function updateSelection(button)
-        if selectedButton then
-            selectedButton.UIStroke.Transparency = 1
+    local Preview = Instance.new("Frame")
+    Preview.Size = UDim2.fromOffset(20, 20)
+    Preview.Position = UDim2.new(1, -30, 0.5, -10)
+    Preview.BackgroundColor3 = DefaultColor
+    Preview.BorderSizePixel = 0
+    Preview.ZIndex = 22
+    Preview.Parent = Button
+    local PreviewCorner = Instance.new("UICorner")
+    PreviewCorner.CornerRadius = UDim.new(1, 0)
+    PreviewCorner.Parent = Preview
+    local PreviewStroke = Instance.new("UIStroke")
+    PreviewStroke.Color = COLORS.Text
+    PreviewStroke.Transparency = 0.35
+    PreviewStroke.Parent = Preview
+
+    local Popup = Instance.new("Frame")
+    Popup.Size = UDim2.new(1, -4, 0, 180)
+    Popup.Position = UDim2.fromOffset(2, 34)
+    Popup.BackgroundColor3 = COLORS.Panel2
+    Popup.BorderSizePixel = 0
+    Popup.Visible = false
+    Popup.ZIndex = 50
+    Popup.Parent = Holder
+    local PopupCorner = Instance.new("UICorner")
+    PopupCorner.CornerRadius = UDim.new(0, 8)
+    PopupCorner.Parent = Popup
+    local PopupStroke = Instance.new("UIStroke")
+    PopupStroke.Color = Accent
+    PopupStroke.Transparency = 0.35
+    PopupStroke.Parent = Popup
+
+    local h, s, v = DefaultColor:ToHSV()
+    local draggingSV = false
+    local draggingHue = false
+
+    local SV = Instance.new("Frame")
+    SV.Size = UDim2.new(1, -16, 0, 108)
+    SV.Position = UDim2.fromOffset(8, 32)
+    SV.BorderSizePixel = 0
+    SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+    SV.ZIndex = 51
+    SV.Parent = Popup
+    local SVCorner = Instance.new("UICorner")
+    SVCorner.CornerRadius = UDim.new(0, 5)
+    SVCorner.Parent = SV
+    local WhiteGradient = Instance.new("UIGradient")
+    WhiteGradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.new(1,1,1))
+    WhiteGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
+    WhiteGradient.Parent = SV
+    local Black = Instance.new("Frame")
+    Black.Size = UDim2.fromScale(1, 1)
+    Black.BackgroundColor3 = Color3.new(0, 0, 0)
+    Black.BackgroundTransparency = 1
+    Black.BorderSizePixel = 0
+    Black.ZIndex = 52
+    Black.Parent = SV
+    local BlackGradient = Instance.new("UIGradient")
+    BlackGradient.Rotation = 90
+    BlackGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+    BlackGradient.Parent = Black
+    local SVMarker = Instance.new("Frame")
+    SVMarker.Size = UDim2.fromOffset(10, 10)
+    SVMarker.AnchorPoint = Vector2.new(0.5, 0.5)
+    SVMarker.BackgroundColor3 = Color3.new(1,1,1)
+    SVMarker.BorderSizePixel = 0
+    SVMarker.ZIndex = 54
+    SVMarker.Parent = SV
+    local SVMarkerCorner = Instance.new("UICorner")
+    SVMarkerCorner.CornerRadius = UDim.new(1, 0)
+    SVMarkerCorner.Parent = SVMarker
+    local SVMarkerStroke = Instance.new("UIStroke")
+    SVMarkerStroke.Color = Color3.new(0,0,0)
+    SVMarkerStroke.Thickness = 1
+    SVMarkerStroke.Parent = SVMarker
+
+    local Hue = Instance.new("Frame")
+    Hue.Size = UDim2.new(1, -16, 0, 14)
+    Hue.Position = UDim2.fromOffset(8, 148)
+    Hue.BorderSizePixel = 0
+    Hue.ZIndex = 51
+    Hue.Parent = Popup
+    local HueCorner = Instance.new("UICorner")
+    HueCorner.CornerRadius = UDim.new(1, 0)
+    HueCorner.Parent = Hue
+    local HueGradient = Instance.new("UIGradient")
+    HueGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromHSV(0,1,1)),
+        ColorSequenceKeypoint.new(0.17, Color3.fromHSV(0.17,1,1)),
+        ColorSequenceKeypoint.new(0.34, Color3.fromHSV(0.34,1,1)),
+        ColorSequenceKeypoint.new(0.51, Color3.fromHSV(0.51,1,1)),
+        ColorSequenceKeypoint.new(0.68, Color3.fromHSV(0.68,1,1)),
+        ColorSequenceKeypoint.new(0.85, Color3.fromHSV(0.85,1,1)),
+        ColorSequenceKeypoint.new(1, Color3.fromHSV(1,1,1)),
+    })
+    HueGradient.Parent = Hue
+    local HueMarker = Instance.new("Frame")
+    HueMarker.Size = UDim2.fromOffset(6, 18)
+    HueMarker.AnchorPoint = Vector2.new(0.5, 0.5)
+    HueMarker.BackgroundColor3 = Color3.new(1,1,1)
+    HueMarker.BorderSizePixel = 0
+    HueMarker.ZIndex = 53
+    HueMarker.Parent = Hue
+    local HueMarkerCorner = Instance.new("UICorner")
+    HueMarkerCorner.CornerRadius = UDim.new(1, 0)
+    HueMarkerCorner.Parent = HueMarker
+    local ValueText = Instance.new("TextLabel")
+    ValueText.BackgroundTransparency = 1
+    ValueText.Position = UDim2.fromOffset(8, 8)
+    ValueText.Size = UDim2.new(1, -16, 0, 16)
+    ValueText.TextColor3 = COLORS.Muted
+    ValueText.TextSize = 7
+    ValueText.Font = Enum.Font.Code
+    ValueText.TextXAlignment = Enum.TextXAlignment.Right
+    ValueText.ZIndex = 51
+    ValueText.Parent = Popup
+
+    local function ApplyColor(color)
+        Preview.BackgroundColor3 = color
+        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+        SVMarker.Position = UDim2.new(s, 0, 1 - v, 0)
+        HueMarker.Position = UDim2.new(h, 0, 0.5, 0)
+        ValueText.Text = string.format("H %.0f°   S %.0f%%   V %.0f%%", h * 360, s * 100, v * 100)
+        if Category == "FOV" then
+            Aimbot_CorFOV = color
+            FOVCircle.Color = color
+        elseif Category == "Hitbox" then
+            Hitbox_Cor = color
+        elseif Category == "ESP" then
+            CorESP = color
+            AtualizarESP()
         end
-        selectedButton = button
-        button.UIStroke.Transparency = 0
     end
-
-    for _, col in ipairs(colorList) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.fromOffset(22, 22)
-        btn.BackgroundColor3 = col.Color
-        btn.BorderSizePixel = 0
-        btn.AutoButtonColor = false
-        btn.Text = ""
-        btn.Parent = Holder
-
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(1, 0)
-        corner.Parent = btn
-
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = Color3.fromRGB(255,255,255)
-        stroke.Thickness = 2
-        stroke.Transparency = 1
-        stroke.Parent = btn
-
-        btn.MouseButton1Click:Connect(function()
-            if Category == "FOV" then
-                Aimbot_CorFOV = col.Color
-                FOVCircle.Color = col.Color
-            elseif Category == "Hitbox" then
-                Hitbox_Cor = col.Color
-            elseif Category == "ESP" then
-                CorESP = col.Color
-                AtualizarESP()
-            end
-            updateSelection(btn)
-            Notify(Category .. " cor: " .. col.Name)
-        end)
-
-        if col.Color == DefaultColor then
-            updateSelection(btn)
+    local function SetSV(position)
+        local x = math.clamp((position.X - SV.AbsolutePosition.X) / SV.AbsoluteSize.X, 0, 1)
+        local y = math.clamp((position.Y - SV.AbsolutePosition.Y) / SV.AbsoluteSize.Y, 0, 1)
+        s, v = x, 1 - y
+        ApplyColor(Color3.fromHSV(h, s, v))
+    end
+    local function SetHue(position)
+        h = math.clamp((position.X - Hue.AbsolutePosition.X) / Hue.AbsoluteSize.X, 0, 1)
+        ApplyColor(Color3.fromHSV(h, s, v))
+    end
+    SV.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSV = true; SetSV(input.Position)
         end
-    end
+    end)
+    Hue.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingHue = true; SetHue(input.Position)
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then SetSV(input.Position) end
+        if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then SetHue(input.Position) end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false; draggingHue = false end
+    end)
+    Button.MouseButton1Click:Connect(function()
+        Popup.Visible = not Popup.Visible
+        ApplyColor(Color3.fromHSV(h, s, v))
+    end)
+    ApplyColor(DefaultColor)
+    return Holder
 end
-
 --========================================================--
 -- NOTIFICAÇÕES
 --========================================================--
