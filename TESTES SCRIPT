@@ -1262,12 +1262,17 @@ local function CriarSkeleton(p, character)
     end
     local linhas = {}
     for _, pair in ipairs(conexoes) do
-        local line = Drawing.new("Line")
-        line.Visible = false
-        line.Color = CorESP
-        line.Thickness = 1.5
-        line.Transparency = 1
-        linhas[#linhas + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
+        local ok, line = pcall(function()
+            local drawingLine = Drawing.new("Line")
+            drawingLine.Visible = false
+            drawingLine.Color = CorESP
+            drawingLine.Thickness = 1.5
+            drawingLine.Transparency = 1
+            return drawingLine
+        end)
+        if ok and line then
+            linhas[#linhas + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
+        end
     end
     EsqueletosESP[p] = linhas
 end
@@ -1319,7 +1324,7 @@ local function CriarESP(p)
     local function AdicionarUI(c)
         local head = c:WaitForChild("Head", 5)
         if not head then return end
-        CriarSkeleton(p, c)
+        pcall(function() CriarSkeleton(p, c) end)
         local h = c:FindFirstChild("NoahzinESP") or Instance.new("Highlight")
         h.Name = "NoahzinESP"; pcall(function() h.FillColor = GetESPColor(p) end)
         h.OutlineColor = Color3.new(1,1,1); h.FillTransparency = 0.5; h.Enabled = ESP_GlobalAtivado and ESP_Chams; h.Parent = c
