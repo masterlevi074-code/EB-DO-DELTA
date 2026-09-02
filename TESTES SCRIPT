@@ -41,6 +41,9 @@ local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
 local ESP_CoresPorTime = false
+local ESP_CoresAliadoInimigo = false
+local ESP_CorAliado = Color3.fromRGB(50, 255, 100)
+local ESP_CorInimigo = Color3.fromRGB(255, 60, 60)
 local ESP_BoxThickness = 2
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
@@ -189,6 +192,7 @@ local FunctionDescriptions = {
     ["ESP TRACERS"] = "Mostra linhas entre a tela e os jogadores.",
     ["ESP CHAMS"] = "Destaca o personagem visualmente.",
     ["CORES AUTOMÁTICAS POR TIME"] = "Usa a cor do time para identificar cada jogador.",
+    ["CORES ALIADO / INIMIGO"] = "Usa verde para aliados e vermelho para inimigos.",
     ["AIMBOT"] = "Ativa ou desativa o auxílio de mira.",
     ["SHOW FOV"] = "Exibe o círculo de alcance da mira.",
     ["FOV RADIUS"] = "Altera o raio do círculo de FOV.",
@@ -415,68 +419,6 @@ Minimize.Parent = Top
 local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
-
--- Detalhes decorativos do header principal
-local HeaderGlow = Instance.new("Frame")
-HeaderGlow.Name = "HeaderGlow"
-HeaderGlow.Size = UDim2.new(1, -24, 0, 2)
-HeaderGlow.Position = UDim2.new(0, 12, 1, -3)
-HeaderGlow.BackgroundColor3 = Accent
-HeaderGlow.BorderSizePixel = 0
-HeaderGlow.ZIndex = 6
-HeaderGlow.Parent = Top
-local HeaderGlowCorner = Instance.new("UICorner")
-HeaderGlowCorner.CornerRadius = UDim.new(1, 0)
-HeaderGlowCorner.Parent = HeaderGlow
-local HeaderGlowGradient = Instance.new("UIGradient")
-HeaderGlowGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, COLORS.OliveDark),
-    ColorSequenceKeypoint.new(0.5, COLORS.Green),
-    ColorSequenceKeypoint.new(1, COLORS.OliveDark)
-})
-HeaderGlowGradient.Parent = HeaderGlow
-
-local HeaderShine = Instance.new("Frame")
-HeaderShine.Name = "HeaderShine"
-HeaderShine.Size = UDim2.fromOffset(34, 1)
-HeaderShine.Position = UDim2.new(0, -40, 0, 41)
-HeaderShine.BackgroundColor3 = COLORS.Text
-HeaderShine.BackgroundTransparency = 0.2
-HeaderShine.BorderSizePixel = 0
-HeaderShine.Rotation = -5
-HeaderShine.ZIndex = 7
-HeaderShine.Parent = Top
-local HeaderShineCorner = Instance.new("UICorner")
-HeaderShineCorner.CornerRadius = UDim.new(1, 0)
-HeaderShineCorner.Parent = HeaderShine
-
-task.spawn(function()
-    while HeaderShine and HeaderShine.Parent do
-        local tween = TweenService:Create(HeaderShine, TweenInfo.new(2.2, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 10, 0, 41)})
-        tween:Play()
-        tween.Completed:Wait()
-        HeaderShine.Position = UDim2.new(0, -40, 0, 41)
-        task.wait(1.2)
-    end
-end)
-
-local HeaderTicks = Instance.new("Frame")
-HeaderTicks.Name = "HeaderTicks"
-HeaderTicks.Size = UDim2.fromOffset(42, 12)
-HeaderTicks.Position = UDim2.new(1, -84, 0, 15)
-HeaderTicks.BackgroundTransparency = 1
-HeaderTicks.ZIndex = 6
-HeaderTicks.Parent = Top
-for i = 1, 4 do
-    local tick = Instance.new("Frame")
-    tick.Size = UDim2.fromOffset(i == 4 and 10 or 5, 1)
-    tick.Position = UDim2.fromOffset((i - 1) * 9, 3 + (i % 2) * 4)
-    tick.BackgroundColor3 = i == 4 and Accent or COLORS.Muted
-    tick.BackgroundTransparency = i == 4 and 0.05 or 0.35
-    tick.BorderSizePixel = 0
-    tick.ZIndex = 7
-    tick.Parent = HeaderTicks
-end
 
 --========================================================--
 -- EFEITOS DECORATIVOS
@@ -1465,6 +1407,7 @@ end
 --========================================================--
 -- FUNÇÕES ESP
 --========================================================--
+local SaoDoMesmoTime
 
 local function GetPlayerTime(player)
     if player.Team then
@@ -1477,6 +1420,12 @@ local function GetPlayerTime(player)
 end
 
 local function GetESPColor(player)
+    if ESP_CoresAliadoInimigo then
+        if SaoDoMesmoTime and SaoDoMesmoTime(Player, player) then
+            return ESP_CorAliado
+        end
+        return ESP_CorInimigo
+    end
     if ESP_CoresPorTime and player.Team and player.Team.TeamColor then
         return player.Team.TeamColor.Color
     end
@@ -1666,7 +1615,7 @@ local function EstaVisivel(alvoParte)
     return false
 end
 
-local function SaoDoMesmoTime(jogadorA, jogadorB)
+SaoDoMesmoTime = function(jogadorA, jogadorB)
     local teamA = jogadorA.Team; local teamB = jogadorB.Team
     if teamA and teamB and teamA == teamB then return true end
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
@@ -2210,6 +2159,7 @@ local VisualPage = Pages.Visual
 local ESPSection = Section(VisualPage, "ESP")
 Toggle(ESPSection, "ATIVAR ESP", false, function(State) ESP_GlobalAtivado = State; AtualizarESP() end)
 Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_CoresPorTime = State; AtualizarESP() end)
+Toggle(ESPSection, "CORES ALIADO / INIMIGO", false, function(State) ESP_CoresAliadoInimigo = State; AtualizarESP() end)
 Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
 Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
