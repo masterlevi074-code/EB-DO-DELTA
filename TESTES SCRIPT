@@ -1434,26 +1434,18 @@ local function GetPlayerTime(player)
 end
 
 local function GetESPColor(player)
-    if typeof(CorESP) ~= "Color3" then CorESP = Color3.fromRGB(255, 50, 50) end
+    if not CorESP then return Color3.fromRGB(255, 50, 50) end
     if not player then return CorESP end
     if ESP_CoresAliadoInimigo then
         local meuTime = Player and Player.Team
         local timeAlvo = player.Team
-        if meuTime and timeAlvo then
-            local mesmoTime = meuTime == timeAlvo
-            if not mesmoTime then
-                local ok, coresIguais = pcall(function()
-                    return meuTime.TeamColor == timeAlvo.TeamColor
-                end)
-                mesmoTime = ok and coresIguais == true
-            end
-            if mesmoTime then return ESP_CorAliado end
+        if meuTime and timeAlvo and meuTime == timeAlvo then
+            return ESP_CorAliado
         end
         return ESP_CorInimigo
     end
     if ESP_CoresPorTime and player.Team then
-        local ok, cor = pcall(function() return player.Team.TeamColor.Color end)
-        if ok and typeof(cor) == "Color3" then return cor end
+        return player.Team.TeamColor.Color
     end
     return CorESP
 end
@@ -2192,7 +2184,10 @@ local VisualPage = Pages.Visual
 local ESPSection = Section(VisualPage, "ESP")
 Toggle(ESPSection, "ATIVAR ESP", false, function(State) ESP_GlobalAtivado = State; AtualizarESP() end)
 Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_CoresPorTime = State; AtualizarESP() end)
-Toggle(ESPSection, "CORES ALIADO / INIMIGO", false, function(State) ESP_CoresAliadoInimigo = State; AtualizarESP() end)
+Toggle(ESPSection, "CORES ALIADO / INIMIGO", false, function(State)
+    ESP_CoresAliadoInimigo = State
+    pcall(function() AtualizarESP() end)
+end)
 Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
 Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
