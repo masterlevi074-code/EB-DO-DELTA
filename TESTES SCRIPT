@@ -174,7 +174,6 @@ Gui.Parent = CoreGui
 local FunctionDescriptions = {
     ["ATIVAR ESP"] = "Liga ou desliga todos os recursos visuais do ESP.",
     ["ESP BOX"] = "Mostra uma caixa 2D ao redor dos jogadores.",
-    ["ESP BOX THICKNESS"] = "Ajusta a espessura da linha da caixa 2D.",
     ["ESP NAMES"] = "Mostra o nome dos jogadores.",
     ["ESP TIMES"] = "Mostra o nome do time acima do jogador.",
     ["ESP DISTÂNCIA"] = "Mostra a distância até cada jogador.",
@@ -200,86 +199,39 @@ local function AdicionarDescricao(object, nome)
     if not object or not object.Parent then return end
 
     local isToggle = object:IsA("TextButton") and object.Text == ""
-    if object:IsA("TextButton") then
-        -- Mantém o tamanho normal do controle.
-        if isToggle then
-            local optionLabel = object:FindFirstChildOfClass("TextLabel")
-            if optionLabel then
-                optionLabel.Position = UDim2.fromOffset(10, 1)
-                optionLabel.Size = UDim2.new(1, -55, 0, 16)
-                optionLabel.TextYAlignment = Enum.TextYAlignment.Center
-            end
-            local switch = object:FindFirstChildOfClass("Frame")
-            if switch then switch.Position = UDim2.new(1, -40, 0.5, -8) end
-        else
-            object.TextYAlignment = Enum.TextYAlignment.Top
-            object.TextXAlignment = Enum.TextXAlignment.Left
-            local padding = object:FindFirstChild("DescriptionPadding") or Instance.new("UIPadding")
-            padding.Name = "DescriptionPadding"
-            padding.PaddingTop = UDim.new(0, 3)
-            padding.PaddingLeft = UDim.new(0, 10)
-            padding.Parent = object
+    if isToggle then
+        local optionLabel = object:FindFirstChildOfClass("TextLabel")
+        if optionLabel then
+            optionLabel.Position = UDim2.fromOffset(10, 1)
+            optionLabel.Size = UDim2.new(1, -55, 0, 16)
+            optionLabel.TextYAlignment = Enum.TextYAlignment.Center
         end
-    elseif object:IsA("Frame") then
-        -- Slider e input conservam suas alturas originais.
-        local bar = object:FindFirstChild("Bar")
-        if bar then
-            -- O slider ganha uma faixa inferior exclusiva para a descrição.
-            object.Size = UDim2.new(1, 0, 0, 42)
-            bar.Position = UDim2.new(0, 10, 1, -10)
-        end
+        local switch = object:FindFirstChildOfClass("Frame")
+        if switch then switch.Position = UDim2.new(1, -40, 0.5, -8) end
+    elseif object:IsA("TextButton") then
+        object.TextYAlignment = Enum.TextYAlignment.Top
+        object.TextXAlignment = Enum.TextXAlignment.Left
+        local padding = object:FindFirstChild("DescriptionPadding") or Instance.new("UIPadding")
+        padding.Name = "DescriptionPadding"
+        padding.PaddingTop = UDim.new(0, 3)
+        padding.PaddingLeft = UDim.new(0, 10)
+        padding.Parent = object
     end
 
     local label = object:FindFirstChild("FunctionDescription") or Instance.new("TextLabel")
     label.Name = "FunctionDescription"
     label.BackgroundTransparency = 1
-    if isToggle then
-        label.Position = UDim2.fromOffset(10, 17)
-    elseif object:IsA("TextButton") then
-        label.Position = UDim2.fromOffset(10, 16)
-    elseif object:IsA("Frame") and object:FindFirstChild("Bar") then
-        -- No slider, a descrição fica na faixa inferior, abaixo do trilho.
-        label.Position = UDim2.fromOffset(10, 49)
-    else
-        label.Position = UDim2.fromOffset(10, 28)
-    end
-    local isSlider = object:IsA("Frame") and object:FindFirstChild("Bar") ~= nil
-    label.Size = isSlider and UDim2.new(1, -20, 0, 9) or UDim2.new(1, -20, 0, 8)
+    label.Position = isToggle and UDim2.fromOffset(10, 17) or UDim2.fromOffset(10, 16)
+    label.Size = UDim2.new(1, -20, 0, 8)
     label.Text = descricao
     label.TextColor3 = COLORS.Muted
-    label.TextSize = isSlider and 5 or 6
+    label.TextSize = 6
     label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextYAlignment = Enum.TextYAlignment.Center
     label.TextTruncate = Enum.TextTruncate.AtEnd
     label.ZIndex = (object.ZIndex or 1) + 1
-    if isSlider then
-        -- Bloco próprio: o slider e a descrição sempre permanecem juntos.
-        local container = object.Parent
-        local holder = Instance.new("Frame")
-        holder.Name = "SliderWithDescription"
-        holder.Size = UDim2.new(1, 0, 0, 53)
-        holder.BackgroundTransparency = 1
-        holder.BorderSizePixel = 0
-        holder.LayoutOrder = object.LayoutOrder
-
-        local holderLayout = Instance.new("UIListLayout")
-        holderLayout.FillDirection = Enum.FillDirection.Vertical
-        holderLayout.SortOrder = Enum.SortOrder.LayoutOrder
-        holderLayout.Padding = UDim.new(0, 0)
-        holderLayout.Parent = holder
-
-        object.Parent = holder
-        object.Position = UDim2.fromOffset(0, 0)
-        object.LayoutOrder = 1
-
-        label.Position = UDim2.fromOffset(0, 0)
-        label.LayoutOrder = 2
-        label.Parent = holder
-        holder.Parent = container
-    else
-        label.Parent = object
-    end
+    label.Parent = object
 end
 --========================================================--
 -- MAIN
@@ -912,7 +864,6 @@ local function Slider(Container, Text, Min, Max, Default, Callback)
 		if Callback then Callback(Value) end
 	end
 
-    AdicionarDescricao(Frame, Text)
 	Bar.InputBegan:Connect(function(Input)
 		if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			Dragging = true
