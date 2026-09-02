@@ -120,12 +120,25 @@ local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 local AtualizarESP
 
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
-FOVCircle.Color = Aimbot_CorFOV
-FOVCircle.Thickness = Aimbot_EspessuraFOV
-FOVCircle.Radius = Aimbot_RaioFOV
-FOVCircle.Filled = false
+local FOVCircle = nil
+pcall(function()
+    if Drawing and type(Drawing.new) == "function" then
+        FOVCircle = Drawing.new("Circle")
+        FOVCircle.Visible = false
+        FOVCircle.Color = Aimbot_CorFOV
+        FOVCircle.Thickness = Aimbot_EspessuraFOV
+        FOVCircle.Radius = Aimbot_RaioFOV
+        FOVCircle.Filled = false
+    end
+end)
+
+local function RemoverDrawing(obj)
+    if not obj then return end
+    pcall(function()
+        if type(obj.Remove) == "function" then obj:Remove()
+        elseif type(obj.Destroy) == "function" then obj:Destroy() end
+    end)
+end
 
 --========================================================--
 -- TAMANHO
@@ -1154,6 +1167,7 @@ local function ColorPicker(Container, Category, DefaultColor)
     local Modal = nil
     local ModalInputConnection = nil
 
+    if typeof(DefaultColor) ~= "Color3" then DefaultColor = Color3.new(1, 1, 1) end
     local h, s, v = DefaultColor:ToHSV()
     local draggingSV = false
     local draggingHue = false
@@ -1501,6 +1515,7 @@ local function RemoverCaixaESP2D(p)
     if box then pcall(function() if type(box.Remove) == "function" then box:Remove() elseif type(box.Destroy) == "function" then box:Destroy() end end); CaixasESP2D[p] = nil end
 end
 local function AtualizarCaixasESP2D(camera)
+    if not camera then return end
     for p, box in pairs(CaixasESP2D) do
         local c=p.Character; local root=c and c:FindFirstChild("HumanoidRootPart"); local hum=c and c:FindFirstChildOfClass("Humanoid")
         local mostrar=ESP_GlobalAtivado and ESP_Box
@@ -1595,7 +1610,7 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then RemoverDrawing(LinhasTracers[p]); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -1605,7 +1620,9 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
 end
 
 local function EstaVisivel(alvoParte)
-    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
+    local camera = Workspace.CurrentCamera
+    if not camera or not alvoParte then return false end
+    local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
@@ -1652,7 +1669,9 @@ end
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil; local melhorPontuacao = math.huge
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera
+    if not camera then return nil end
+    local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
@@ -1873,7 +1892,9 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 --========================================================--
 
 RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera
+    if not camera then return end
+    local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
@@ -2105,7 +2126,7 @@ local CombatPage = Pages.Combat
 
 local AimbotSection = Section(CombatPage, "AIMBOT")
 Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
-Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
+Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; if FOVCircle then FOVCircle.Visible = State end end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
@@ -2113,11 +2134,11 @@ MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "
 end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
-Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
+Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; if FOVCircle then FOVCircle.Radius = Value end end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 2, function(Value)
     Aimbot_EspessuraFOV = Value
-    FOVCircle.Thickness = Value
+    if FOVCircle then FOVCircle.Thickness = Value end
 end)
 
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
@@ -2406,10 +2427,10 @@ Button(ActionsSection, "DESTRUIR", function()
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
-    if FOVCircle then FOVCircle:Destroy() end
+    RemoverDrawing(FOVCircle)
     AtualizarHighlightAlvo(nil)
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
-    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
+    for _, t in pairs(LinhasTracers) do RemoverDrawing(t) end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
