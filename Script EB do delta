@@ -1323,8 +1323,28 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
+local ArmasPermitidasAIM = {
+    ["M4A1"] = true,
+    ["DEAGLE"] = true,
+    ["Remington 870"] = true,
+    ["MP40"] = true,
+    ["AK-47"] = true,
+    ["MP5"] = true,
+    ["Sawed-Off"] = true,
+    ["P90"] = true,
+    ["Revolver"] = true,
+    ["G36C"] = true,
+    ["BERETTA"] = true,
+    ["HK416"] = true,
+}
+
 local function TemItemEquipado()
-    if Player.Character then for _, child in pairs(Player.Character:GetChildren()) do if child:IsA("Tool") then return true end end end
+    if not Player.Character then return false end
+    for _, child in pairs(Player.Character:GetChildren()) do
+        if child:IsA("Tool") and ArmasPermitidasAIM[child.Name] then
+            return true
+        end
+    end
     return false
 end
 
