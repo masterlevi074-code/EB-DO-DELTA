@@ -1223,24 +1223,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     local HueMarkerCorner = Instance.new("UICorner")
     HueMarkerCorner.CornerRadius = UDim.new(1, 0)
     HueMarkerCorner.Parent = HueMarker
-    local CloseButton = Instance.new("TextButton")
-    CloseButton.Name = "CloseColorPicker"
-    CloseButton.Size = UDim2.fromOffset(24, 24)
-    CloseButton.Position = UDim2.new(1, -30, 0, 4)
-    CloseButton.BackgroundColor3 = COLORS.Panel
-    CloseButton.BackgroundTransparency = 0.15
-    CloseButton.BorderSizePixel = 0
-    CloseButton.AutoButtonColor = false
-    CloseButton.Text = "×"
-    CloseButton.TextColor3 = COLORS.Text
-    CloseButton.TextSize = 18
-    CloseButton.Font = Enum.Font.GothamBold
-    CloseButton.ZIndex = 105
-    CloseButton.Parent = Popup
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(1, 0)
-    CloseCorner.Parent = CloseButton
-
     local ValueText = Instance.new("TextLabel")
     ValueText.BackgroundTransparency = 1
     ValueText.Position = UDim2.fromOffset(8, 8)
@@ -1307,23 +1289,28 @@ local function ColorPicker(Container, Category, DefaultColor)
             if Modal then Modal:Destroy(); Modal = nil end
         end)
     end
-    CloseButton.MouseButton1Click:Connect(FecharPaleta)
-    CloseButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then FecharPaleta() end
-    end)
     local function AbrirPaleta()
         if Modal then return end
-        Modal = Instance.new("TextButton")
+        Modal = Instance.new("Frame")
         Modal.Name = "ColorPickerModal"
         Modal.Size = UDim2.fromScale(1, 1)
         Modal.Position = UDim2.fromScale(0, 0)
-        Modal.BackgroundColor3 = Color3.new(0, 0, 0)
-        Modal.BackgroundTransparency = 0.38
+        Modal.BackgroundTransparency = 1
         Modal.BorderSizePixel = 0
-        Modal.Text = ""
-        Modal.AutoButtonColor = false
         Modal.ZIndex = 100
         Modal.Parent = Gui
+        local Backdrop = Instance.new("TextButton")
+        Backdrop.Name = "ColorPickerBackdrop"
+        Backdrop.Size = UDim2.fromScale(1, 1)
+        Backdrop.Position = UDim2.fromScale(0, 0)
+        Backdrop.BackgroundColor3 = Color3.new(0, 0, 0)
+        Backdrop.BackgroundTransparency = 0.38
+        Backdrop.BorderSizePixel = 0
+        Backdrop.Text = ""
+        Backdrop.AutoButtonColor = false
+        Backdrop.ZIndex = 100
+        Backdrop.Parent = Modal
+        Backdrop.MouseButton1Click:Connect(FecharPaleta)
         Popup.Parent = Modal
         Popup.Visible = true
         Popup.Size = UDim2.fromOffset(260, 0)
