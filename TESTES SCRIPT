@@ -1434,14 +1434,26 @@ local function GetPlayerTime(player)
 end
 
 local function GetESPColor(player)
+    if typeof(CorESP) ~= "Color3" then CorESP = Color3.fromRGB(255, 50, 50) end
+    if not player then return CorESP end
     if ESP_CoresAliadoInimigo then
-        if SaoDoMesmoTime and SaoDoMesmoTime(Player, player) then
-            return ESP_CorAliado
+        local meuTime = Player and Player.Team
+        local timeAlvo = player.Team
+        if meuTime and timeAlvo then
+            local mesmoTime = meuTime == timeAlvo
+            if not mesmoTime then
+                local ok, coresIguais = pcall(function()
+                    return meuTime.TeamColor == timeAlvo.TeamColor
+                end)
+                mesmoTime = ok and coresIguais == true
+            end
+            if mesmoTime then return ESP_CorAliado end
         end
         return ESP_CorInimigo
     end
-    if ESP_CoresPorTime and player.Team and player.Team.TeamColor then
-        return player.Team.TeamColor.Color
+    if ESP_CoresPorTime and player.Team then
+        local ok, cor = pcall(function() return player.Team.TeamColor.Color end)
+        if ok and typeof(cor) == "Color3" then return cor end
     end
     return CorESP
 end
