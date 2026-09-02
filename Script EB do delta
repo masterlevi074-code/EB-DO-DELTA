@@ -66,7 +66,11 @@ local Aimbot_TeamCheck = false
 local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
-local Aimbot_PrioridadeDistancia = false
+local Aimbot_Prioridades = {
+    ["Perto da mira"] = true,
+    ["Distância"] = false,
+    ["Menor vida"] = false,
+}
 local Aimbot_DestacarAlvo = false
 local AimbotAlvoAtual = nil
 local AimbotAlvoHighlight = nil
@@ -191,7 +195,7 @@ local FunctionDescriptions = {
     ["SMOOTHNESS"] = "Controla a suavidade do movimento da câmera.",
     ["WALL CHECK"] = "Ignora alvos que estejam atrás de paredes.",
     ["TEAM CHECK"] = "Evita selecionar jogadores do mesmo time.",
-    ["PRIORIDADE DISTÂNCIA"] = "Prioriza o alvo mais próximo da mira em relação à distância.",
+    ["PRIORIZAR ALVO"] = "Selecione um ou vários critérios para calcular a prioridade do alvo.",
     ["DESTACAR ALVO"] = "Destaca com Highlight o jogador escolhido pelo aimbot.",
     ["HITBOX"] = "Ativa o recurso de hitbox do hub.",
     ["SPEED HACK"] = "Controla a velocidade do personagem.",
@@ -785,6 +789,106 @@ local function Toggle(Container, Text, Default, Callback)
 end
 
 --========================================================--
+-- DROPDOWN MULTI-SELEÇÃO
+--========================================================--
+local function MultiDropdown(Container, Text, Options, Defaults, Callback)
+    local selected = {}
+    for _, option in ipairs(Options) do selected[option] = Defaults[option] == true end
+    local Frame = Instance.new("Frame")
+    Frame.Size = UDim2.new(1, 0, 0, 32)
+    Frame.BackgroundColor3 = COLORS.Panel
+    Frame.BorderSizePixel = 0
+    Frame.LayoutOrder = 1
+    Frame.ZIndex = 10
+    Frame.Parent = Container
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Frame
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(1, 0, 0, 32)
+    Button.BackgroundTransparency = 1
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.ZIndex = 11
+    Button.Parent = Frame
+    local Label = Instance.new("TextLabel")
+    Label.BackgroundTransparency = 1
+    Label.Position = UDim2.fromOffset(10, 0)
+    Label.Size = UDim2.new(1, -42, 1, 0)
+    Label.TextColor3 = COLORS.Text
+    Label.TextSize = 9
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.ZIndex = 12
+    Label.Parent = Button
+    local Arrow = Instance.new("TextLabel")
+    Arrow.BackgroundTransparency = 1
+    Arrow.Position = UDim2.new(1, -28, 0, 0)
+    Arrow.Size = UDim2.fromOffset(20, 32)
+    Arrow.Text = "▼"
+    Arrow.TextColor3 = COLORS.Muted
+    Arrow.TextSize = 9
+    Arrow.ZIndex = 12
+    Arrow.Parent = Button
+    local Popup = Instance.new("Frame")
+    Popup.Position = UDim2.new(0, 0, 0, 34)
+    Popup.Size = UDim2.new(1, 0, 0, #Options * 27 + 8)
+    Popup.BackgroundColor3 = COLORS.Panel2
+    Popup.BorderSizePixel = 0
+    Popup.Visible = false
+    Popup.ZIndex = 30
+    Popup.Parent = Frame
+    local PopupCorner = Instance.new("UICorner")
+    PopupCorner.CornerRadius = UDim.new(0, 6)
+    PopupCorner.Parent = Popup
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 2)
+    Layout.Parent = Popup
+    local function Refresh()
+        local names = {}
+        for _, option in ipairs(Options) do
+            if selected[option] then table.insert(names, option) end
+        end
+        Label.Text = Text .. (#names > 0 and (": " .. table.concat(names, ", ")) or ": nenhum")
+        if Callback then Callback(selected) end
+    end
+    for _, option in ipairs(Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Size = UDim2.new(1, -8, 0, 25)
+        OptionButton.Position = UDim2.fromOffset(4, 0)
+        OptionButton.BackgroundColor3 = COLORS.Panel
+        OptionButton.BorderSizePixel = 0
+        OptionButton.TextColor3 = COLORS.Text
+        OptionButton.TextSize = 8
+        OptionButton.Font = Enum.Font.GothamMedium
+        OptionButton.TextXAlignment = Enum.TextXAlignment.Left
+        OptionButton.Text = ""
+        OptionButton.ZIndex = 31
+        OptionButton.Parent = Popup
+        local OptionCorner = Instance.new("UICorner")
+        OptionCorner.CornerRadius = UDim.new(0, 4)
+        OptionCorner.Parent = OptionButton
+        local function UpdateOption()
+            OptionButton.Text = (selected[option] and "✓  " or "     ") .. option
+            OptionButton.TextColor3 = selected[option] and Accent or COLORS.Muted
+        end
+        OptionButton.MouseButton1Click:Connect(function()
+            selected[option] = not selected[option]
+            UpdateOption()
+            Refresh()
+        end)
+        UpdateOption()
+    end
+    Button.MouseButton1Click:Connect(function()
+        Popup.Visible = not Popup.Visible
+        Arrow.Text = Popup.Visible and "▲" or "▼"
+    end)
+    Refresh()
+    return {Get = function() return selected end}
+end
+
+--========================================================--
 -- SLIDER (DENTRO DO CONTAINER)
 --========================================================--
 
@@ -1371,7 +1475,16 @@ local function ObterJogadorMaisProximoDaMira()
                     local distanciaReal = (parteBuscada.Position - cameraPos).Magnitude
                     local distanciaDaMira = (Vector2.new(posicaoTela.X, posicaoTela.Y) - pontoMiraTela).Magnitude
                     if not Aimbot_UsarFOV or distanciaDaMira <= Aimbot_RaioFOV then
-                        local pontuacao = Aimbot_PrioridadeDistancia and (distanciaReal * 0.7 + distanciaDaMira * 0.3) or distanciaDaMira
+                        local criterios = 0
+                        local pontuacao = 0
+                        if Aimbot_Prioridades["Perto da mira"] then pontuacao = pontuacao + distanciaDaMira / math.max(Aimbot_RaioFOV, 1); criterios = criterios + 1 end
+                        if Aimbot_Prioridades["Distância"] then pontuacao = pontuacao + distanciaReal / math.max(ESP_BoxMaxDistance, 1); criterios = criterios + 1 end
+                        if Aimbot_Prioridades["Menor vida"] then
+                            local alvoHumanoid = p.Character:FindFirstChildOfClass("Humanoid")
+                            pontuacao = pontuacao + (alvoHumanoid and alvoHumanoid.Health / math.max(alvoHumanoid.MaxHealth, 1) or 1)
+                            criterios = criterios + 1
+                        end
+                        if criterios == 0 then pontuacao = distanciaDaMira else pontuacao = pontuacao / criterios end
                         if pontuacao < melhorPontuacao then melhorPontuacao = pontuacao; melhorAlvo = p end
                     end
                 end
@@ -1798,7 +1911,9 @@ Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State en
 Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
-Toggle(AimbotSection, "PRIORIDADE DISTÂNCIA", false, function(State) Aimbot_PrioridadeDistancia = State end)
+MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
+    Aimbot_Prioridades = Selected
+end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
