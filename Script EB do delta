@@ -67,6 +67,9 @@ local Aimbot_OffsetTelaY = -40
 local Aimbot_OffsetPixels = 40
 local Aimbot_WallCheck = false
 local Aimbot_PrioridadeDistancia = false
+local Aimbot_DestacarAlvo = false
+local AimbotAlvoAtual = nil
+local AimbotAlvoHighlight = nil
 local Aimbot_SoComItem = false
 
 local Hitbox_Ativado = false
@@ -188,6 +191,8 @@ local FunctionDescriptions = {
     ["SMOOTHNESS"] = "Controla a suavidade do movimento da câmera.",
     ["WALL CHECK"] = "Ignora alvos que estejam atrás de paredes.",
     ["TEAM CHECK"] = "Evita selecionar jogadores do mesmo time.",
+    ["PRIORIDADE DISTÂNCIA"] = "Prioriza o alvo mais próximo da mira em relação à distância.",
+    ["DESTACAR ALVO"] = "Destaca com Highlight o jogador escolhido pelo aimbot.",
     ["HITBOX"] = "Ativa o recurso de hitbox do hub.",
     ["SPEED HACK"] = "Controla a velocidade do personagem.",
     ["DASH"] = "Move o personagem rapidamente para frente.",
@@ -1356,6 +1361,27 @@ local function ObterJogadorMaisProximoDaMira()
     return melhorAlvo
 end
 
+local function AtualizarHighlightAlvo(alvo)
+    if AimbotAlvoHighlight and (not alvo or AimbotAlvoAtual ~= alvo) then
+        pcall(function() AimbotAlvoHighlight:Destroy() end)
+        AimbotAlvoHighlight = nil
+    end
+    AimbotAlvoAtual = alvo
+    if not Aimbot_DestacarAlvo or not alvo or not alvo.Character then return end
+    if not AimbotAlvoHighlight or AimbotAlvoHighlight.Parent ~= alvo.Character then
+        local highlight = Instance.new("Highlight")
+        highlight.Name = "NoxysAimbotTarget"
+        highlight.Adornee = alvo.Character
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        highlight.FillColor = Color3.fromRGB(255, 220, 70)
+        highlight.FillTransparency = 0.72
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.OutlineTransparency = 0
+        highlight.Parent = alvo.Character
+        AimbotAlvoHighlight = highlight
+    end
+end
+
 --========================================================--
 -- AUTO JJ
 --========================================================--
@@ -1520,15 +1546,20 @@ RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
+    local alvoAimbot = nil
     if Aimbot_Ativado then
-        local alvo = ObterJogadorMaisProximoDaMira()
-        if alvo and alvo.Character then
+        alvoAimbot = ObterJogadorMaisProximoDaMira()
+        AtualizarHighlightAlvo(alvoAimbot)
+        if alvoAimbot and alvoAimbot.Character then
+            local alvo = alvoAimbot
             local parteRastrear = nil
             if Aimbot_ParteAlvo == "Head" then parteRastrear = alvo.Character:FindFirstChild("Head")
             elseif Aimbot_ParteAlvo == "Torso" then parteRastrear = alvo.Character:FindFirstChild("UpperTorso") or alvo.Character:FindFirstChild("Torso") or alvo.Character:FindFirstChild("HumanoidRootPart")
             elseif Aimbot_ParteAlvo == "Perna" then parteRastrear = alvo.Character:FindFirstChild("RightLowerLeg") or alvo.Character:FindFirstChild("LeftLowerLeg") or alvo.Character:FindFirstChild("RightFoot") or alvo.Character:FindFirstChild("LeftFoot") or alvo.Character:FindFirstChild("HumanoidRootPart") end
             if parteRastrear then local offsetDinamico = CalcularOffset3D_Dinamico(camera, parteRastrear.Position); local alvoPos = parteRastrear.Position + Vector3.new(0, -offsetDinamico, 0); camera.CFrame = camera.CFrame:Lerp(CFrame.new(camera.CFrame.Position, alvoPos), Aimbot_Suavidade) end
         end
+    else
+        AtualizarHighlightAlvo(nil)
     end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
@@ -1747,7 +1778,8 @@ Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State en
 Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
-Toggle(AimbotSection, "DISTANCE CHECK", false, function(State) Aimbot_PrioridadeDistancia = State end)
+Toggle(AimbotSection, "PRIORIDADE DISTÂNCIA", false, function(State) Aimbot_PrioridadeDistancia = State end)
+Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
@@ -2042,6 +2074,7 @@ Button(ActionsSection, "DESTRUIR", function()
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
+    AtualizarHighlightAlvo(nil)
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
