@@ -416,6 +416,68 @@ local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
+-- Detalhes decorativos do header principal
+local HeaderGlow = Instance.new("Frame")
+HeaderGlow.Name = "HeaderGlow"
+HeaderGlow.Size = UDim2.new(1, -24, 0, 2)
+HeaderGlow.Position = UDim2.new(0, 12, 1, -3)
+HeaderGlow.BackgroundColor3 = Accent
+HeaderGlow.BorderSizePixel = 0
+HeaderGlow.ZIndex = 6
+HeaderGlow.Parent = Top
+local HeaderGlowCorner = Instance.new("UICorner")
+HeaderGlowCorner.CornerRadius = UDim.new(1, 0)
+HeaderGlowCorner.Parent = HeaderGlow
+local HeaderGlowGradient = Instance.new("UIGradient")
+HeaderGlowGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, COLORS.OliveDark),
+    ColorSequenceKeypoint.new(0.5, COLORS.Green),
+    ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+})
+HeaderGlowGradient.Parent = HeaderGlow
+
+local HeaderShine = Instance.new("Frame")
+HeaderShine.Name = "HeaderShine"
+HeaderShine.Size = UDim2.fromOffset(34, 1)
+HeaderShine.Position = UDim2.new(0, -40, 0, 41)
+HeaderShine.BackgroundColor3 = COLORS.Text
+HeaderShine.BackgroundTransparency = 0.2
+HeaderShine.BorderSizePixel = 0
+HeaderShine.Rotation = -5
+HeaderShine.ZIndex = 7
+HeaderShine.Parent = Top
+local HeaderShineCorner = Instance.new("UICorner")
+HeaderShineCorner.CornerRadius = UDim.new(1, 0)
+HeaderShineCorner.Parent = HeaderShine
+
+task.spawn(function()
+    while HeaderShine and HeaderShine.Parent do
+        local tween = TweenService:Create(HeaderShine, TweenInfo.new(2.2, Enum.EasingStyle.Linear), {Position = UDim2.new(1, 10, 0, 41)})
+        tween:Play()
+        tween.Completed:Wait()
+        HeaderShine.Position = UDim2.new(0, -40, 0, 41)
+        task.wait(1.2)
+    end
+end)
+
+local HeaderTicks = Instance.new("Frame")
+HeaderTicks.Name = "HeaderTicks"
+HeaderTicks.Size = UDim2.fromOffset(42, 12)
+HeaderTicks.Position = UDim2.new(1, -84, 0, 15)
+HeaderTicks.BackgroundTransparency = 1
+HeaderTicks.ZIndex = 6
+HeaderTicks.Parent = Top
+for i = 1, 4 do
+    local tick = Instance.new("Frame")
+    tick.Size = UDim2.fromOffset(i == 4 and 10 or 5, 1)
+    tick.Position = UDim2.fromOffset((i - 1) * 9, 3 + (i % 2) * 4)
+    tick.BackgroundColor3 = i == 4 and Accent or COLORS.Muted
+    tick.BackgroundTransparency = i == 4 and 0.05 or 0.35
+    tick.BorderSizePixel = 0
+    tick.ZIndex = 7
+    tick.Parent = HeaderTicks
+end
+
 --========================================================--
 -- EFEITOS DECORATIVOS
 --========================================================--
