@@ -1215,98 +1215,101 @@ local function AtualizarCaixasESP2D(camera)
     end
 end
 
-local EsqueletosESP = {}
+local SkeletonESP = {}
 local SkeletonR6 = {
-    {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"},
-    {"Torso", "Left Leg"}, {"Torso", "Right Leg"},
+    {"Head", "Torso"},
+    {"Torso", "Left Arm"},
+    {"Torso", "Right Arm"},
+    {"Torso", "Left Leg"},
+    {"Torso", "Right Leg"},
 }
 local SkeletonR15 = {
-    {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
-    {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
-    {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
-    {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
-    {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"},
+    {"Head", "UpperTorso"},
+    {"UpperTorso", "LowerTorso"},
+    {"UpperTorso", "LeftUpperArm"},
+    {"LeftUpperArm", "LeftLowerArm"},
+    {"LeftLowerArm", "LeftHand"},
+    {"UpperTorso", "RightUpperArm"},
+    {"RightUpperArm", "RightLowerArm"},
+    {"RightLowerArm", "RightHand"},
+    {"LowerTorso", "LeftUpperLeg"},
+    {"LeftUpperLeg", "LeftLowerLeg"},
+    {"LeftLowerLeg", "LeftFoot"},
+    {"LowerTorso", "RightUpperLeg"},
+    {"RightUpperLeg", "RightLowerLeg"},
+    {"RightLowerLeg", "RightFoot"},
 }
 
-local function RemoverSkeleton(p)
-    local linhas = EsqueletosESP[p]
-    if not linhas then return end
-    for _, item in ipairs(linhas) do
-        local line = item.Drawing
-        if line then
-            pcall(function()
-                if type(line.Remove) == "function" then line:Remove()
-                elseif type(line.Destroy) == "function" then line:Destroy() end
-            end)
-        end
+local function RemoverSkeleton(player)
+    local lines = SkeletonESP[player]
+    if not lines then return end
+    for _, line in ipairs(lines) do
+        pcall(function() line:Remove() end)
     end
-    EsqueletosESP[p] = nil
+    SkeletonESP[player] = nil
 end
 
-local function CriarSkeleton(p, character)
-    RemoverSkeleton(p)
-    if not character or not Drawing or type(Drawing.new) ~= "function" then return end
-    local conexoes = character:FindFirstChild("UpperTorso") and SkeletonR15 or character:FindFirstChild("Torso") and SkeletonR6
-    if not conexoes then return end
-    local linhas = {}
-    for _, pair in ipairs(conexoes) do
-        local ok, line = pcall(function() return Drawing.new("Line") end)
-        if ok and line then
-            pcall(function()
-                line.Visible = false
-                line.Color = CorESP
-                line.Thickness = 1.5
-                line.Transparency = 1
-            end)
-            linhas[#linhas + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
-        end
+local function CriarSkeleton(player, character)
+    RemoverSkeleton(player)
+    if not character then return end
+    local connections
+    if character:FindFirstChild("UpperTorso") then
+        connections = SkeletonR15
+    elseif character:FindFirstChild("Torso") then
+        connections = SkeletonR6
+    else
+        return
     end
-    if #linhas > 0 then EsqueletosESP[p] = linhas end
+    local lines = {}
+    for _, pair in ipairs(connections) do
+        local line = Drawing.new("Line")
+        line.Visible = false
+        line.Color = CorESP
+        line.Thickness = 1.5
+        line.Transparency = 1
+        lines[#lines + 1] = {Drawing = line, Part0 = pair[1], Part1 = pair[2]}
+    end
+    SkeletonESP[player] = lines
 end
 
 local function AtualizarSkeleton(camera)
-    if not camera then return end
-    for p, linhas in pairs(EsqueletosESP) do
-        pcall(function()
-            local character = p.Character
-            local root = character and character:FindFirstChild("HumanoidRootPart")
-            local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-            local mostrar = ESP_GlobalAtivado and ESP_Skeleton
-            if ESP_TimesAtivado then
-                local timePlayer = character and GetPlayerTime(p)
-                mostrar = mostrar and timePlayer ~= nil and TimesMarcados[timePlayer] == true
-            end
-            local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-            local distance = (myRoot and root) and (myRoot.Position - root.Position).Magnitude or math.huge
-            local valido = mostrar and character and root and humanoid and humanoid.Health > 0 and distance <= ESP_BoxMaxDistance
-            for _, item in ipairs(linhas) do
-                local line = item.Drawing
-                if line then
-                    if not valido then
-                        line.Visible = false
+    for player, lines in pairs(SkeletonESP) do
+        local character = player.Character
+        local root = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        local mostrar = ESP_GlobalAtivado and ESP_Skeleton
+        if ESP_TimesAtivado then
+            local timePlayer = character and GetPlayerTime(player)
+            mostrar = mostrar and timePlayer ~= nil and TimesMarcados[timePlayer] == true
+        end
+        local myRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+        local distance = (myRoot and root) and (myRoot.Position - root.Position).Magnitude or math.huge
+        local valid = mostrar and character and root and humanoid and humanoid.Health > 0 and distance <= ESP_BoxMaxDistance
+        for _, data in ipairs(lines) do
+            local line = data.Drawing
+            if not valid then
+                line.Visible = false
+            else
+                local part0 = character:FindFirstChild(data.Part0)
+                local part1 = character:FindFirstChild(data.Part1)
+                if not part0 or not part1 then
+                    line.Visible = false
+                else
+                    local pos0, visible0 = camera:WorldToViewportPoint(part0.Position)
+                    local pos1, visible1 = camera:WorldToViewportPoint(part1.Position)
+                    if visible0 and visible1 and pos0.Z > 0 and pos1.Z > 0 then
+                        line.From = Vector2.new(pos0.X, pos0.Y)
+                        line.To = Vector2.new(pos1.X, pos1.Y)
+                        line.Color = GetESPColor(player)
+                        line.Thickness = 1.5
+                        line.Transparency = 1
+                        line.Visible = true
                     else
-                        local part0 = character:FindFirstChild(item.Part0)
-                        local part1 = character:FindFirstChild(item.Part1)
-                        if not part0 or not part1 then
-                            line.Visible = false
-                        else
-                            local pos0, visible0 = camera:WorldToViewportPoint(part0.Position)
-                            local pos1, visible1 = camera:WorldToViewportPoint(part1.Position)
-                            if visible0 and visible1 and pos0.Z > 0 and pos1.Z > 0 then
-                                line.From = Vector2.new(pos0.X, pos0.Y)
-                                line.To = Vector2.new(pos1.X, pos1.Y)
-                                line.Color = GetESPColor(p)
-                                line.Thickness = 1.5
-                                line.Transparency = 1
-                                line.Visible = true
-                            else
-                                line.Visible = false
-                            end
-                        end
+                        line.Visible = false
                     end
                 end
             end
-        end)
+        end
     end
 end
 
@@ -1316,7 +1319,7 @@ local function CriarESP(p)
     local function AdicionarUI(c)
         local head = c:WaitForChild("Head", 5)
         if not head then return end
-        if ESP_Skeleton then pcall(function() CriarSkeleton(p, c) end) end
+        if ESP_Skeleton then CriarSkeleton(p, c) end
         local h = c:FindFirstChild("NoahzinESP") or Instance.new("Highlight")
         h.Name = "NoahzinESP"; pcall(function() h.FillColor = GetESPColor(p) end)
         h.OutlineColor = Color3.new(1,1,1); h.FillTransparency = 0.5; h.Enabled = ESP_GlobalAtivado and ESP_Chams; h.Parent = c
@@ -1663,7 +1666,7 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
-    pcall(function() AtualizarSkeleton(camera) end)
+    AtualizarSkeleton(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
     if Aimbot_Ativado then
@@ -1946,17 +1949,7 @@ local VisualPage = Pages.Visual
 local ESPSection = Section(VisualPage, "ESP")
 Toggle(ESPSection, "ATIVAR ESP", false, function(State) ESP_GlobalAtivado = State; AtualizarESP() end)
 Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_CoresPorTime = State; AtualizarESP() end)
-Toggle(ESPSection, "ESP COMPLETO", false, function(State)
-    ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; ESP_Skeleton=State
-    if State then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= Player and p.Character then pcall(function() CriarSkeleton(p, p.Character) end) end
-        end
-    else
-        for p in pairs(EsqueletosESP) do RemoverSkeleton(p) end
-    end
-    AtualizarESP()
-end)
+Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
 Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
     ESP_BoxThickness = Value
@@ -1968,13 +1961,11 @@ Toggle(ESPSection, "ESP SKELETON", false, function(State)
     ESP_Skeleton = State
     if State then
         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= Player and p.Character then pcall(function() CriarSkeleton(p, p.Character) end) end
+            if p ~= Player and p.Character then CriarSkeleton(p, p.Character) end
         end
     else
-        for p in pairs(EsqueletosESP) do RemoverSkeleton(p) end
+        for p in pairs(SkeletonESP) do RemoverSkeleton(p) end
     end
-    local camera = Workspace.CurrentCamera
-    if camera then pcall(function() AtualizarSkeleton(camera) end) end
 end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TIMES", false, function(State) ESP_TimesNomes=State; AtualizarESP() end)
@@ -2219,7 +2210,7 @@ Button(ActionsSection, "DESTRUIR", function()
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
-    for p in pairs(EsqueletosESP) do RemoverSkeleton(p) end
+    for p in pairs(SkeletonESP) do RemoverSkeleton(p) end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
     Gui:Destroy()
 end)
