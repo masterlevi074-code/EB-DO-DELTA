@@ -115,6 +115,7 @@ local ChatWindow_Conexoes = nil
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
+local AtualizarESP
 
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = false
@@ -1241,12 +1242,12 @@ local function ColorPicker(Container, Category, DefaultColor)
         ValueText.Text = string.format("H %.0f°   S %.0f%%   V %.0f%%", h * 360, s * 100, v * 100)
         if Category == "FOV" then
             Aimbot_CorFOV = color
-            FOVCircle.Color = color
+            if FOVCircle then FOVCircle.Color = color end
         elseif Category == "Hitbox" then
             Hitbox_Cor = color
         elseif Category == "ESP" then
             CorESP = color
-            AtualizarESP()
+            if type(AtualizarESP) == "function" then AtualizarESP() end
         end
     end
     local function SetSV(position)
@@ -1400,7 +1401,7 @@ local function GetESPColor(player)
     return CorESP
 end
 
-local function AtualizarESP()
+AtualizarESP = function()
     if not CorESP then CorESP = Color3.fromRGB(255, 50, 50) end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
