@@ -1223,6 +1223,24 @@ local function ColorPicker(Container, Category, DefaultColor)
     local HueMarkerCorner = Instance.new("UICorner")
     HueMarkerCorner.CornerRadius = UDim.new(1, 0)
     HueMarkerCorner.Parent = HueMarker
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Name = "CloseColorPicker"
+    CloseButton.Size = UDim2.fromOffset(24, 24)
+    CloseButton.Position = UDim2.new(1, -30, 0, 4)
+    CloseButton.BackgroundColor3 = COLORS.Panel
+    CloseButton.BackgroundTransparency = 0.15
+    CloseButton.BorderSizePixel = 0
+    CloseButton.AutoButtonColor = false
+    CloseButton.Text = "×"
+    CloseButton.TextColor3 = COLORS.Text
+    CloseButton.TextSize = 18
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.ZIndex = 105
+    CloseButton.Parent = Popup
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(1, 0)
+    CloseCorner.Parent = CloseButton
+
     local ValueText = Instance.new("TextLabel")
     ValueText.BackgroundTransparency = 1
     ValueText.Position = UDim2.fromOffset(8, 8)
@@ -1289,6 +1307,10 @@ local function ColorPicker(Container, Category, DefaultColor)
             if Modal then Modal:Destroy(); Modal = nil end
         end)
     end
+    CloseButton.MouseButton1Click:Connect(FecharPaleta)
+    CloseButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then FecharPaleta() end
+    end)
     local function AbrirPaleta()
         if Modal then return end
         Modal = Instance.new("TextButton")
@@ -1302,7 +1324,6 @@ local function ColorPicker(Container, Category, DefaultColor)
         Modal.AutoButtonColor = false
         Modal.ZIndex = 100
         Modal.Parent = Gui
-        Modal.MouseButton1Click:Connect(FecharPaleta)
         Popup.Parent = Modal
         Popup.Visible = true
         Popup.Size = UDim2.fromOffset(260, 0)
