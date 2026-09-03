@@ -40,6 +40,7 @@ local ESP_Tracers = false
 local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
+local ESP_Arma = false
 local ESP_CoresPorTime = false
 local ESP_BoxThickness = 2
 local CorESP = Color3.fromRGB(255, 50, 50)
@@ -185,6 +186,7 @@ local FunctionDescriptions = {
     ["ESP NAMES"] = "Mostra o nome dos jogadores.",
     ["ESP TIMES"] = "Mostra o nome do time acima do jogador.",
     ["ESP DISTÂNCIA"] = "Mostra a distância até cada jogador.",
+    ["ESP ARMA"] = "Mostra a arma atualmente equipada pelo jogador.",
     ["ESP VIDA"] = "Mostra a vida atual e máxima do jogador.",
     ["ESP TRACERS"] = "Mostra linhas entre a tela e os jogadores.",
     ["ESP CHAMS"] = "Destaca o personagem visualmente.",
@@ -1421,6 +1423,14 @@ local function GetESPColor(player)
     return CorESP
 end
 
+local function ObterNomeArma(character)
+    if not character then return "SEM ARMA" end
+    for _, item in pairs(character:GetChildren()) do
+        if item:IsA("Tool") then return item.Name end
+    end
+    return "SEM ARMA"
+end
+
 AtualizarESP = function()
     if not CorESP then CorESP = Color3.fromRGB(255, 50, 50) end
     for _, p in pairs(Players:GetPlayers()) do
@@ -1458,6 +1468,16 @@ AtualizarESP = function()
                     if distanciaLabel and meuHead then
                         distanciaLabel.Text = string.format("[%dm]", math.floor((head.Position - meuHead.Position).Magnitude))
                         pcall(function() distanciaLabel.TextColor3 = espColor end)
+                    end
+                end
+                -- Arma equipada
+                local armaGui = head:FindFirstChild("NoahzinArma")
+                if armaGui then
+                    armaGui.Enabled = ESP_GlobalAtivado and ESP_Arma and mostrarESP
+                    local armaLabel = armaGui:FindFirstChild("TextLabel")
+                    if armaLabel then
+                        armaLabel.Text = ObterNomeArma(p.Character)
+                        pcall(function() armaLabel.TextColor3 = espColor end)
                     end
                 end
                 -- Vida
@@ -1538,6 +1558,24 @@ local function CriarESP(p)
         tlTime.TextSize = 11
         tlTime.TextStrokeTransparency = 0
         tlTime.Parent = bgTime
+        -- Arma equipada
+        local bgArma = head:FindFirstChild("NoahzinArma") or Instance.new("BillboardGui")
+        bgArma.Name = "NoahzinArma"
+        bgArma.Size = UDim2.new(0, 130, 0, 20)
+        bgArma.AlwaysOnTop = true
+        bgArma.ExtentsOffset = Vector3.new(0, 11, 0)
+        bgArma.Enabled = ESP_GlobalAtivado and ESP_Arma
+        bgArma.Parent = head
+
+        local tlArma = bgArma:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlArma.Size = UDim2.new(1, 0, 1, 0)
+        tlArma.BackgroundTransparency = 1
+        tlArma.Text = ObterNomeArma(p.Character)
+        tlArma.TextColor3 = GetESPColor(p)
+        tlArma.Font = Enum.Font.GothamBold
+        tlArma.TextSize = 10
+        tlArma.TextStrokeTransparency = 0
+        tlArma.Parent = bgArma
         -- Vida
         local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
         bgVida.Name = "NoahzinVida"
@@ -1615,6 +1653,7 @@ end
 
 local ArmasPermitidasAIM = {
     ["M4A1"] = true,
+    ["FAL"] = true,
     ["DEAGLE"] = true,
     ["Remington 870"] = true,
     ["MP40"] = true,
@@ -2157,6 +2196,7 @@ Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; Atualiza
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP ARMA", false, function(State) ESP_Arma=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TIMES", false, function(State) ESP_TimesNomes=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia=State; AtualizarESP() end)
 
@@ -2399,7 +2439,7 @@ Button(ActionsSection, "DESTRUIR", function()
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end end end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
     Gui:Destroy()
 end)
 
