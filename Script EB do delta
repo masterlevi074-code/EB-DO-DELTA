@@ -118,6 +118,22 @@ local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 local AtualizarESP
 
+local ArmasPermitidasAIM = {
+    ["M4A1"] = true,
+    ["FAL"] = true,
+    ["DEAGLE"] = true,
+    ["Remington 870"] = true,
+    ["MP40"] = true,
+    ["AK-47"] = true,
+    ["MP5"] = true,
+    ["Sawed-Off"] = true,
+    ["P90"] = true,
+    ["Revolver"] = true,
+    ["G36C"] = true,
+    ["BERETTA"] = true,
+    ["HK416"] = true,
+}
+
 local FOVCircle = Drawing.new("Circle")
 FOVCircle.Visible = false
 FOVCircle.Color = Aimbot_CorFOV
@@ -1424,11 +1440,13 @@ local function GetESPColor(player)
 end
 
 local function ObterNomeArma(character)
-    if not character then return "SEM ARMA" end
+    if not character then return "" end
     for _, item in pairs(character:GetChildren()) do
-        if item:IsA("Tool") then return item.Name end
+        if item:IsA("Tool") and ArmasPermitidasAIM[item.Name] then
+            return item.Name
+        end
     end
-    return "SEM ARMA"
+    return ""
 end
 
 AtualizarESP = function()
@@ -1473,10 +1491,11 @@ AtualizarESP = function()
                 -- Arma equipada
                 local armaGui = head:FindFirstChild("NoahzinArma")
                 if armaGui then
-                    armaGui.Enabled = ESP_GlobalAtivado and ESP_Arma and mostrarESP
+                    local nomeArma = ObterNomeArma(p.Character)
+                    armaGui.Enabled = ESP_GlobalAtivado and ESP_Arma and mostrarESP and nomeArma ~= ""
                     local armaLabel = armaGui:FindFirstChild("TextLabel")
                     if armaLabel then
-                        armaLabel.Text = ObterNomeArma(p.Character)
+                        armaLabel.Text = nomeArma
                         pcall(function() armaLabel.TextColor3 = espColor end)
                     end
                 end
@@ -1564,13 +1583,14 @@ local function CriarESP(p)
         bgArma.Size = UDim2.new(0, 130, 0, 20)
         bgArma.AlwaysOnTop = true
         bgArma.ExtentsOffset = Vector3.new(0, 11, 0)
-        bgArma.Enabled = ESP_GlobalAtivado and ESP_Arma
+        local nomeArma = ObterNomeArma(p.Character)
+        bgArma.Enabled = ESP_GlobalAtivado and ESP_Arma and nomeArma ~= ""
         bgArma.Parent = head
 
         local tlArma = bgArma:FindFirstChild("TextLabel") or Instance.new("TextLabel")
         tlArma.Size = UDim2.new(1, 0, 1, 0)
         tlArma.BackgroundTransparency = 1
-        tlArma.Text = ObterNomeArma(p.Character)
+        tlArma.Text = nomeArma
         tlArma.TextColor3 = GetESPColor(p)
         tlArma.Font = Enum.Font.GothamBold
         tlArma.TextSize = 10
@@ -1651,21 +1671,6 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
-local ArmasPermitidasAIM = {
-    ["M4A1"] = true,
-    ["FAL"] = true,
-    ["DEAGLE"] = true,
-    ["Remington 870"] = true,
-    ["MP40"] = true,
-    ["AK-47"] = true,
-    ["MP5"] = true,
-    ["Sawed-Off"] = true,
-    ["P90"] = true,
-    ["Revolver"] = true,
-    ["G36C"] = true,
-    ["BERETTA"] = true,
-    ["HK416"] = true,
-}
 
 local function TemItemEquipado()
     if not Player.Character then return false end
