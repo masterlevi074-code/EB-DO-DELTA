@@ -37,19 +37,16 @@ local ESP_Chams = false
 local ESP_Box = false
 local ESP_Names = false
 local ESP_Tracers = false
-local ESP_BarraVida = false
+local ESP_Vida = false
 local ESP_TimesNomes = false
 local ESP_Distancia = false
+local ESP_Arma = false
 local ESP_CoresPorTime = false
-local ESP_CoresAliadoInimigo = false
-local ESP_CorAliado = Color3.fromRGB(50, 255, 100)
-local ESP_CorInimigo = Color3.fromRGB(255, 60, 60)
 local ESP_BoxThickness = 2
 local CorESP = Color3.fromRGB(255, 50, 50)
 local LinhasTracers = {}
 local CaixasESP2D = {}
 local ESP_BoxMaxDistance = 1500
-local ESP_Arma = false
 
 local ESP_TimesAtivado = false
 local TimesMarcados = {
@@ -121,25 +118,12 @@ local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 local AtualizarESP
 
-local FOVCircle = nil
-pcall(function()
-    if Drawing and type(Drawing.new) == "function" then
-        FOVCircle = Drawing.new("Circle")
-        FOVCircle.Visible = false
-        FOVCircle.Color = Aimbot_CorFOV
-        FOVCircle.Thickness = Aimbot_EspessuraFOV
-        FOVCircle.Radius = Aimbot_RaioFOV
-        FOVCircle.Filled = false
-    end
-end)
-
-local function RemoverDrawing(obj)
-    if not obj then return end
-    pcall(function()
-        if type(obj.Remove) == "function" then obj:Remove()
-        elseif type(obj.Destroy) == "function" then obj:Destroy() end
-    end)
-end
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
+FOVCircle.Color = Aimbot_CorFOV
+FOVCircle.Thickness = Aimbot_EspessuraFOV
+FOVCircle.Radius = Aimbot_RaioFOV
+FOVCircle.Filled = false
 
 --========================================================--
 -- TAMANHO
@@ -202,13 +186,11 @@ local FunctionDescriptions = {
     ["ESP NAMES"] = "Mostra o nome dos jogadores.",
     ["ESP TIMES"] = "Mostra o nome do time acima do jogador.",
     ["ESP DISTÂNCIA"] = "Mostra a distância até cada jogador.",
-    ["ESP BARRA DE VIDA"] = "Mostra uma barra visual com a vida atual do jogador.",
-    ["ESP ARMA"] = "Mostra o nome da arma equipada pelo jogador.",
-    ["ESP DISTÂNCIA MÁXIMA"] = "Define a distância máxima de exibição do ESP.",
+    ["ESP ARMA"] = "Mostra a arma atualmente equipada pelo jogador.",
+    ["ESP VIDA"] = "Mostra a vida atual e máxima do jogador.",
     ["ESP TRACERS"] = "Mostra linhas entre a tela e os jogadores.",
     ["ESP CHAMS"] = "Destaca o personagem visualmente.",
     ["CORES AUTOMÁTICAS POR TIME"] = "Usa a cor do time para identificar cada jogador.",
-    ["CORES ALIADO / INIMIGO"] = "Usa verde para aliados e vermelho para inimigos.",
     ["AIMBOT"] = "Ativa ou desativa o auxílio de mira.",
     ["SHOW FOV"] = "Exibe o círculo de alcance da mira.",
     ["FOV RADIUS"] = "Altera o raio do círculo de FOV.",
@@ -1170,7 +1152,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     local Modal = nil
     local ModalInputConnection = nil
 
-    if not DefaultColor then DefaultColor = Color3.new(1, 1, 1) end
     local h, s, v = DefaultColor:ToHSV()
     local draggingSV = false
     local draggingHue = false
@@ -1424,7 +1405,6 @@ end
 --========================================================--
 -- FUNÇÕES ESP
 --========================================================--
-local SaoDoMesmoTime
 
 local function GetPlayerTime(player)
     if player.Team then
@@ -1437,45 +1417,25 @@ local function GetPlayerTime(player)
 end
 
 local function GetESPColor(player)
-    if not CorESP then return Color3.fromRGB(255, 50, 50) end
-    if not player then return CorESP end
-    if ESP_CoresAliadoInimigo then
-        local meuTime = Player and Player.Team
-        local timeAlvo = player.Team
-        if meuTime and timeAlvo and meuTime == timeAlvo then
-            return ESP_CorAliado
-        end
-        return ESP_CorInimigo
-    end
-    if ESP_CoresPorTime and player.Team then
-        local cor = player.Team.TeamColor
-        if cor then return cor.Color end
+    if ESP_CoresPorTime and player.Team and player.Team.TeamColor then
+        return player.Team.TeamColor.Color
     end
     return CorESP
 end
 
-local function GetEquippedWeaponName(character)
+local function ObterNomeArma(character)
     if not character then return "SEM ARMA" end
-    for _, child in pairs(character:GetChildren()) do
-        if child:IsA("Tool") then return child.Name end
+    for _, item in pairs(character:GetChildren()) do
+        if item:IsA("Tool") then return item.Name end
     end
     return "SEM ARMA"
-end
-
-local function GetESPDistance(player)
-    local character = player and player.Character
-    local root = character and character:FindFirstChild("HumanoidRootPart")
-    local myCharacter = Player and Player.Character
-    local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
-    if not root or not myRoot then return math.huge end
-    return (root.Position - myRoot.Position).Magnitude
 end
 
 AtualizarESP = function()
     if not CorESP then CorESP = Color3.fromRGB(255, 50, 50) end
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
-            local mostrarESP = not JogadoresIgnorados[p.Name] and GetESPDistance(p) <= ESP_BoxMaxDistance
+            local mostrarESP = true
             if ESP_TimesAtivado then
                 local timePlayer = GetPlayerTime(p)
                 if timePlayer then mostrarESP = TimesMarcados[timePlayer] or false else mostrarESP = false end
@@ -1510,28 +1470,25 @@ AtualizarESP = function()
                         pcall(function() distanciaLabel.TextColor3 = espColor end)
                     end
                 end
-                -- Barra de vida
-                local barraGui = head:FindFirstChild("NoahzinBarraVida")
-                if barraGui then
-                    barraGui.Enabled = ESP_GlobalAtivado and ESP_BarraVida and mostrarESP
-                    local fundo = barraGui:FindFirstChild("Fundo")
-                    local preenchimento = fundo and fundo:FindFirstChild("Preenchimento")
-                    local hum = p.Character:FindFirstChildOfClass("Humanoid")
-                    if preenchimento and hum then
-                        local maxVida = math.max(hum.MaxHealth, 1)
-                        local porcentagem = math.clamp(hum.Health / maxVida, 0, 1)
-                        preenchimento.Size = UDim2.new(porcentagem, 0, 1, 0)
-                        preenchimento.BackgroundColor3 = Color3.fromRGB(255, 70, 70):Lerp(Color3.fromRGB(70, 255, 100), porcentagem)
-                    end
-                end
                 -- Arma equipada
                 local armaGui = head:FindFirstChild("NoahzinArma")
                 if armaGui then
                     armaGui.Enabled = ESP_GlobalAtivado and ESP_Arma and mostrarESP
                     local armaLabel = armaGui:FindFirstChild("TextLabel")
                     if armaLabel then
-                        armaLabel.Text = GetEquippedWeaponName(p.Character)
+                        armaLabel.Text = ObterNomeArma(p.Character)
                         pcall(function() armaLabel.TextColor3 = espColor end)
+                    end
+                end
+                -- Vida
+                local vidaGui = head:FindFirstChild("NoahzinVida")
+                if vidaGui then
+                    vidaGui.Enabled = ESP_GlobalAtivado and ESP_Vida and mostrarESP
+                    if vidaGui:FindFirstChild("TextLabel") then
+                        local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                        if hum then
+                            vidaGui.TextLabel.Text = string.format("[%d/%d]", math.floor(hum.Health), math.floor(hum.MaxHealth))
+                        end
                     end
                 end
             end
@@ -1553,10 +1510,9 @@ local function RemoverCaixaESP2D(p)
     if box then pcall(function() if type(box.Remove) == "function" then box:Remove() elseif type(box.Destroy) == "function" then box:Destroy() end end); CaixasESP2D[p] = nil end
 end
 local function AtualizarCaixasESP2D(camera)
-    if not camera then return end
     for p, box in pairs(CaixasESP2D) do
         local c=p.Character; local root=c and c:FindFirstChild("HumanoidRootPart"); local hum=c and c:FindFirstChildOfClass("Humanoid")
-        local mostrar=ESP_GlobalAtivado and ESP_Box and not JogadoresIgnorados[p.Name] and GetESPDistance(p) <= ESP_BoxMaxDistance
+        local mostrar=ESP_GlobalAtivado and ESP_Box
         if ESP_TimesAtivado then local t=c and GetPlayerTime(p); mostrar=mostrar and t ~= nil and TimesMarcados[t] == true end
         if not root or not hum or hum.Health <= 0 or not mostrar or (camera.CFrame.Position-root.Position).Magnitude > ESP_BoxMaxDistance then box.Visible=false
         else
@@ -1602,49 +1558,42 @@ local function CriarESP(p)
         tlTime.TextSize = 11
         tlTime.TextStrokeTransparency = 0
         tlTime.Parent = bgTime
-        -- Barra de vida
-        local bgVida = head:FindFirstChild("NoahzinBarraVida") or Instance.new("BillboardGui")
-        bgVida.Name = "NoahzinBarraVida"
-        bgVida.Size = UDim2.new(0, 70, 0, 7)
-        bgVida.AlwaysOnTop = true
-        bgVida.ExtentsOffset = Vector3.new(0, 5, 0)
-        bgVida.Enabled = ESP_GlobalAtivado and ESP_BarraVida
-        bgVida.Parent = head
-        local fundo = bgVida:FindFirstChild("Fundo") or Instance.new("Frame")
-        fundo.Name = "Fundo"
-        fundo.Size = UDim2.fromScale(1, 1)
-        fundo.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-        fundo.BorderSizePixel = 0
-        fundo.Parent = bgVida
-        local fundoCorner = fundo:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
-        fundoCorner.CornerRadius = UDim.new(1, 0)
-        fundoCorner.Parent = fundo
-        local preenchimento = fundo:FindFirstChild("Preenchimento") or Instance.new("Frame")
-        preenchimento.Name = "Preenchimento"
-        preenchimento.Size = UDim2.fromScale(1, 1)
-        preenchimento.BackgroundColor3 = Color3.fromRGB(70, 255, 100)
-        preenchimento.BorderSizePixel = 0
-        preenchimento.Parent = fundo
-        local preenchimentoCorner = preenchimento:FindFirstChildOfClass("UICorner") or Instance.new("UICorner")
-        preenchimentoCorner.CornerRadius = UDim.new(1, 0)
-        preenchimentoCorner.Parent = preenchimento
         -- Arma equipada
         local bgArma = head:FindFirstChild("NoahzinArma") or Instance.new("BillboardGui")
         bgArma.Name = "NoahzinArma"
-        bgArma.Size = UDim2.new(0, 130, 0, 18)
+        bgArma.Size = UDim2.new(0, 130, 0, 20)
         bgArma.AlwaysOnTop = true
         bgArma.ExtentsOffset = Vector3.new(0, 11, 0)
         bgArma.Enabled = ESP_GlobalAtivado and ESP_Arma
         bgArma.Parent = head
+
         local tlArma = bgArma:FindFirstChild("TextLabel") or Instance.new("TextLabel")
-        tlArma.Size = UDim2.fromScale(1, 1)
+        tlArma.Size = UDim2.new(1, 0, 1, 0)
         tlArma.BackgroundTransparency = 1
-        tlArma.Text = GetEquippedWeaponName(p.Character)
+        tlArma.Text = ObterNomeArma(p.Character)
         tlArma.TextColor3 = GetESPColor(p)
         tlArma.Font = Enum.Font.GothamBold
         tlArma.TextSize = 10
         tlArma.TextStrokeTransparency = 0
         tlArma.Parent = bgArma
+        -- Vida
+        local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
+        bgVida.Name = "NoahzinVida"
+        bgVida.Size = UDim2.new(0, 100, 0, 20)
+        bgVida.AlwaysOnTop = true
+        bgVida.ExtentsOffset = Vector3.new(0, 5, 0)
+        bgVida.Enabled = ESP_GlobalAtivado and ESP_Vida
+        bgVida.Parent = head
+
+        local tlVida = bgVida:FindFirstChild("TextLabel") or Instance.new("TextLabel")
+        tlVida.Size = UDim2.new(1, 0, 1, 0)
+        tlVida.BackgroundTransparency = 1
+        tlVida.Text = ""
+        tlVida.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tlVida.Font = Enum.Font.GothamBold
+        tlVida.TextSize = 11
+        tlVida.TextStrokeTransparency = 0
+        tlVida.Parent = bgVida
         local bgDistancia = head:FindFirstChild("NoahzinDistancia") or Instance.new("BillboardGui")
         bgDistancia.Name = "NoahzinDistancia"
         bgDistancia.Size = UDim2.new(0, 100, 0, 20)
@@ -1662,38 +1611,18 @@ local function CriarESP(p)
         tlDistancia.TextStrokeTransparency = 0
         tlDistancia.Parent = bgDistancia
         if not LinhasTracers[p] then
-            local okTracer, tracer = pcall(function()
-                if Drawing and type(Drawing.new) == "function" then
-                    return Drawing.new("Line")
-                end
-                return nil
-            end)
-            if okTracer and tracer then
-                pcall(function()
-                    tracer.Visible = false
-                    tracer.Color = CorESP
-                    tracer.Thickness = 1.2
-                end)
-                LinhasTracers[p] = tracer
-            end
+            local tracer = Drawing.new("Line"); tracer.Visible = false
+            pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
         end
-        task.spawn(function()
-            pcall(AtualizarESP)
-        end)
+        task.spawn(AtualizarESP)
     end
     if p.Character then AdicionarUI(p.Character) end
-    p.CharacterAdded:Connect(function(character)
-        pcall(function() AdicionarUI(character) end)
-    end)
+    p.CharacterAdded:Connect(AdicionarUI)
 end
 
-for _, p in pairs(Players:GetPlayers()) do
-    pcall(function() CriarESP(p) end)
-end
-Players.PlayerAdded:Connect(function(p)
-    pcall(function() CriarESP(p) end)
-end)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then RemoverDrawing(LinhasTracers[p]); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
+for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
+Players.PlayerAdded:Connect(CriarESP)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -1703,9 +1632,7 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
 end
 
 local function EstaVisivel(alvoParte)
-    local camera = Workspace.CurrentCamera
-    if not camera or not alvoParte then return false end
-    local cameraPos = camera.CFrame.Position
+    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
@@ -1715,7 +1642,7 @@ local function EstaVisivel(alvoParte)
     return false
 end
 
-SaoDoMesmoTime = function(jogadorA, jogadorB)
+local function SaoDoMesmoTime(jogadorA, jogadorB)
     local teamA = jogadorA.Team; local teamB = jogadorB.Team
     if teamA and teamB and teamA == teamB then return true end
     if teamA and teamB and teamA.TeamColor and teamB.TeamColor then
@@ -1726,6 +1653,7 @@ end
 
 local ArmasPermitidasAIM = {
     ["M4A1"] = true,
+    ["FAL"] = true,
     ["DEAGLE"] = true,
     ["Remington 870"] = true,
     ["MP40"] = true,
@@ -1752,9 +1680,7 @@ end
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil; local melhorPontuacao = math.huge
-    local camera = Workspace.CurrentCamera
-    if not camera then return nil end
-    local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
@@ -1975,9 +1901,7 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 --========================================================--
 
 RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera
-    if not camera then return end
-    local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
@@ -2031,20 +1955,11 @@ RunService.RenderStepped:Connect(function()
                         timeGui.TextLabel.Text = p.Team and p.Team.Name or "SEM TIME"
                     end
                 end
-                if ESP_GlobalAtivado and ESP_BarraVida then
-                    local barraGui = head:FindFirstChild("NoahzinBarraVida")
-                    local fundo = barraGui and barraGui:FindFirstChild("Fundo")
-                    local preenchimento = fundo and fundo:FindFirstChild("Preenchimento")
-                    if preenchimento then
-                        local porcentagem = math.clamp(hum.Health / math.max(hum.MaxHealth, 1), 0, 1)
-                        preenchimento.Size = UDim2.new(porcentagem, 0, 1, 0)
-                        preenchimento.BackgroundColor3 = Color3.fromRGB(255, 70, 70):Lerp(Color3.fromRGB(70, 255, 100), porcentagem)
+                if ESP_GlobalAtivado and ESP_Vida then
+                    local vidaGui = head:FindFirstChild("NoahzinVida")
+                    if vidaGui and vidaGui:FindFirstChild("TextLabel") then
+                        vidaGui.TextLabel.Text = string.format("[%d/%d]", math.floor(hum.Health), math.floor(hum.MaxHealth))
                     end
-                end
-                if ESP_GlobalAtivado and ESP_Arma then
-                    local armaGui = head:FindFirstChild("NoahzinArma")
-                    local armaLabel = armaGui and armaGui:FindFirstChild("TextLabel")
-                    if armaLabel then armaLabel.Text = GetEquippedWeaponName(p.Character) end
                 end
                 if ESP_GlobalAtivado and ESP_Distancia then
                     local distanciaGui = head:FindFirstChild("NoahzinDistancia")
@@ -2218,7 +2133,7 @@ local CombatPage = Pages.Combat
 
 local AimbotSection = Section(CombatPage, "AIMBOT")
 Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
-Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; if FOVCircle then FOVCircle.Visible = State end end)
+Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
@@ -2226,20 +2141,11 @@ MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "
 end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
-local jogadoresDisponiveis = {}
-for _, jogador in pairs(Players:GetPlayers()) do
-    if jogador ~= Player then table.insert(jogadoresDisponiveis, jogador.Name) end
-end
-local ignoradosIniciais = {}
-for nome, ignorado in pairs(JogadoresIgnorados) do ignoradosIniciais[nome] = ignorado end
-MultiDropdown(AimbotSection, "JOGADORES IGNORADOS", jogadoresDisponiveis, ignoradosIniciais, function(Selected)
-    JogadoresIgnorados = Selected
-end)
-Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; if FOVCircle then FOVCircle.Radius = Value end end)
+Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 2, function(Value)
     Aimbot_EspessuraFOV = Value
-    if FOVCircle then FOVCircle.Thickness = Value end
+    FOVCircle.Thickness = Value
 end)
 
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
@@ -2281,10 +2187,6 @@ local VisualPage = Pages.Visual
 local ESPSection = Section(VisualPage, "ESP")
 Toggle(ESPSection, "ATIVAR ESP", false, function(State) ESP_GlobalAtivado = State; AtualizarESP() end)
 Toggle(ESPSection, "CORES AUTOMÁTICAS POR TIME", false, function(State) ESP_CoresPorTime = State; AtualizarESP() end)
-Toggle(ESPSection, "CORES ALIADO / INIMIGO", false, function(State)
-    ESP_CoresAliadoInimigo = State
-    pcall(function() AtualizarESP() end)
-end)
 Toggle(ESPSection, "ESP COMPLETO", false, function(State) ESP_Chams=State; ESP_Box=State; ESP_Names=State; ESP_Tracers=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP BOX", false, function(State) ESP_Box=State; AtualizarESP() end)
 Slider(ESPSection, "ESP BOX THICKNESS", 1, 10, 2, function(Value)
@@ -2293,9 +2195,8 @@ end)
 Toggle(ESPSection, "ESP NAMES", false, function(State) ESP_Names=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP CHAMS", false, function(State) ESP_Chams=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP TRACERS", false, function(State) ESP_Tracers=State; AtualizarESP() end)
-Toggle(ESPSection, "ESP BARRA DE VIDA", false, function(State) ESP_BarraVida=State; AtualizarESP() end)
+Toggle(ESPSection, "ESP VIDA", false, function(State) ESP_Vida=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP ARMA", false, function(State) ESP_Arma=State; AtualizarESP() end)
-Slider(ESPSection, "ESP DISTÂNCIA MÁXIMA", 100, 3000, 1500, function(Value) ESP_BoxMaxDistance=Value; AtualizarESP() end)
 Toggle(ESPSection, "ESP TIMES", false, function(State) ESP_TimesNomes=State; AtualizarESP() end)
 Toggle(ESPSection, "ESP DISTÂNCIA", false, function(State) ESP_Distancia=State; AtualizarESP() end)
 
@@ -2533,12 +2434,12 @@ Button(ActionsSection, "DESTRUIR", function()
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
-    RemoverDrawing(FOVCircle)
+    if FOVCircle then FOVCircle:Destroy() end
     AtualizarHighlightAlvo(nil)
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
-    for _, t in pairs(LinhasTracers) do RemoverDrawing(t) end
+    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinBarraVida") then v.NoahzinBarraVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
     Gui:Destroy()
 end)
 
