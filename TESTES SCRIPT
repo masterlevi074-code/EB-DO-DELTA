@@ -2146,6 +2146,13 @@ MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "
 end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
+local jogadoresDisponiveis = {}
+for _, jogador in pairs(Players:GetPlayers()) do
+    if jogador ~= Player then table.insert(jogadoresDisponiveis, jogador.Name) end
+end
+MultiDropdown(AimbotSection, "JOGADORES IGNORADOS", jogadoresDisponiveis, JogadoresIgnorados, function(Selecionados)
+    JogadoresIgnorados = Selecionados
+end)
 Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 2, function(Value)
