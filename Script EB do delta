@@ -82,16 +82,6 @@ local Hitbox_Tamanho = 20
 local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
-local HitboxExp_Ativado = false
-local HitboxExp_Transparencia = 0.7
-local HitboxExp_Partes = {
-    ["Head"] = {Ativo = false, Escala = 1},
-    ["Torso"] = {Ativo = false, Escala = 1},
-    ["Braço Esquerdo"] = {Ativo = false, Escala = 1},
-    ["Braço Direito"] = {Ativo = false, Escala = 1},
-    ["Perna Esquerda"] = {Ativo = false, Escala = 1},
-    ["Perna Direita"] = {Ativo = false, Escala = 1},
-}
 
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
@@ -2137,66 +2127,6 @@ end
 local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destroy() end end; Hitboxes = {} end
 
 --========================================================--
--- HITBOX EXPANDER (FUNÇÕES)
---========================================================--
-
-local function AplicarHitboxExpander()
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character then
-            local char = p.Character
-            local function ExpandirParte(partes, config)
-                for _, nomeParte in ipairs(partes) do
-                    local obj = char:FindFirstChild(nomeParte)
-                    if obj and obj:IsA("BasePart") then
-                        if config.Ativo then
-                            if not obj:GetAttribute("TamanhoOriginal") then
-                                obj:SetAttribute("TamanhoOriginal", obj.Size)
-                            end
-                            local tamOriginal = obj:GetAttribute("TamanhoOriginal")
-                            obj.Size = tamOriginal * config.Escala
-                            obj.Transparency = HitboxExp_Transparencia
-                            obj.CanCollide = false
-                        else
-                            local tamOriginal = obj:GetAttribute("TamanhoOriginal")
-                            if tamOriginal then
-                                obj.Size = tamOriginal
-                                obj:SetAttribute("TamanhoOriginal", nil)
-                            end
-                            obj.Transparency = 0
-                        end
-                    end
-                end
-            end
-
-            ExpandirParte({"Head"}, HitboxExp_Partes["Head"])
-            ExpandirParte({"UpperTorso", "LowerTorso"}, HitboxExp_Partes["Torso"])
-            ExpandirParte({"LeftUpperArm", "LeftLowerArm"}, HitboxExp_Partes["Braço Esquerdo"])
-            ExpandirParte({"RightUpperArm", "RightLowerArm"}, HitboxExp_Partes["Braço Direito"])
-            ExpandirParte({"LeftUpperLeg", "LeftLowerLeg"}, HitboxExp_Partes["Perna Esquerda"])
-            ExpandirParte({"RightUpperLeg", "RightLowerLeg"}, HitboxExp_Partes["Perna Direita"])
-        end
-    end
-end
-
-local function RemoverHitboxExpander()
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character then
-            for _, parte in ipairs({"Head", "UpperTorso", "LowerTorso", "LeftUpperArm", "LeftLowerArm", "RightUpperArm", "RightLowerArm", "LeftUpperLeg", "LeftLowerLeg", "RightUpperLeg", "RightLowerLeg"}) do
-                local obj = p.Character:FindFirstChild(parte)
-                if obj and obj:IsA("BasePart") then
-                    local tamOriginal = obj:GetAttribute("TamanhoOriginal")
-                    if tamOriginal then
-                        obj.Size = tamOriginal
-                        obj:SetAttribute("TamanhoOriginal", nil)
-                    end
-                    obj.Transparency = 0
-                end
-            end
-        end
-    end
-end
-
---========================================================--
 -- LOOP PRINCIPAL
 --========================================================--
 
@@ -2477,33 +2407,6 @@ end)
 
 local HitboxColorSection = Section(CombatPage, "COR DA HITBOX")
 ColorPicker(HitboxColorSection, "Hitbox", Hitbox_Cor)
-
--- Seção Hitbox Expander
-local HitboxExpSection = Section(CombatPage, "HITBOX EXPANDER")
-Toggle(HitboxExpSection, "ATIVAR HITBOX EXPANDER", false, function(State)
-    HitboxExp_Ativado = State
-    if State then
-        AplicarHitboxExpander()
-    else
-        RemoverHitboxExpander()
-    end
-end)
-Slider(HitboxExpSection, "TRANSPARÊNCIA", 0, 100, 70, function(Value)
-    HitboxExp_Transparencia = Value / 100
-    if HitboxExp_Ativado then AplicarHitboxExpander() end
-end)
-
--- Para cada parte
-for nomeParte, config in pairs(HitboxExp_Partes) do
-    Toggle(HitboxExpSection, "AUMENTAR " .. string.upper(nomeParte), false, function(State)
-        config.Ativo = State
-        if HitboxExp_Ativado then AplicarHitboxExpander() end
-    end)
-    Slider(HitboxExpSection, "TAMANHO " .. string.upper(nomeParte), 1, 5, 1, function(Value)
-        config.Escala = Value
-        if HitboxExp_Ativado then AplicarHitboxExpander() end
-    end)
-end
 
 --========================================================--
 -- VISUAL PAGE
