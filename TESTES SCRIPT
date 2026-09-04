@@ -372,34 +372,44 @@ local statusTexts = {"Carregando...", "Inicializando...", "Preparando interface.
 local function UpdateLoadingStatus(index)
     if index <= #statusTexts then
         LoadingStatus.Text = statusTexts[index]
-        task.wait(0.6)
+        task.wait(1.4)
         UpdateLoadingStatus(index + 1)
     end
 end
 task.spawn(function() UpdateLoadingStatus(1) end)
 
-local loadingBarTween = TweenService:Create(LoadingBarFill, TweenInfo.new(2.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
+local loadingBarTween = TweenService:Create(LoadingBarFill, TweenInfo.new(6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
 loadingBarTween:Play()
 
--- Remover tela de carregamento após 2.5 segundos
-task.delay(2.5, function()
+-- Remover tela de carregamento após 6 segundos com animação 
+task.delay(6, function()
     if LoadingScreen then
-        local fadeOut = TweenService:Create(LoadingScreen, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+        -- Fade out com zoom e rotação
+        local fadeOut = TweenService:Create(LoadingScreen, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1.2, 1.2),
+            Position = UDim2.fromScale(-0.1, -0.1),
+            Rotation = 5
+        })
         fadeOut:Play()
+
+        -- Fade out dos textos internos
+        for _, child in pairs(LoadingScreen:GetDescendants()) do
+            if child:IsA("TextLabel") or child:IsA("TextButton") then
+                TweenService:Create(child, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
+            elseif child:IsA("Frame") and child.Name ~= "LoadingBarBg" then
+                TweenService:Create(child, TweenInfo.new(0.8), {BackgroundTransparency = 1}):Play()
+            end
+        end
+
         fadeOut.Completed:Connect(function()
             LoadingScreen:Destroy()
         end)
-        for _, child in pairs(LoadingScreen:GetDescendants()) do
-            if child:IsA("TextLabel") or child:IsA("TextButton") then
-                TweenService:Create(child, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-            elseif child:IsA("Frame") then
-                TweenService:Create(child, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
-            end
+
+        if Notify then
+            Notify("NOXYS HUB ONLINE")
         end
-    if Notify then
-        Notify("NOXYS HUB ONLINE")
-      end
-   end
+    end
 end)
 
   end)
@@ -494,6 +504,11 @@ MainStroke.Color = COLORS.Stroke
 MainStroke.Thickness = 1
 MainStroke.Transparency = 0.1
 MainStroke.Parent = Main
+
+-- Oculta o painel até a animação de entrada
+Main.BackgroundTransparency = 1
+Main.Size = UDim2.fromOffset(UI_WIDTH * 0.7, UI_HEIGHT * 0.7)
+Main.Rotation = -10
 
 --========================================================--
 -- LINHA SUPERIOR
@@ -3003,8 +3018,19 @@ TabButtons.Main.TextColor3 = COLORS.Text
 -- NOTIFICAÇÃO INICIAL
 --========================================================--
 
-task.delay(0.5, function()
+task.delay(7, function()
     Notify("Exército Brásileiro 🇧🇷")
+end)
+
+-- Animação de entrada do painel principal
+task.delay(6.3, function()
+    if Main and Main.Parent then
+        TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            BackgroundTransparency = 0,
+            Size = UDim2.fromOffset(UI_WIDTH, UI_HEIGHT),
+            Rotation = 0
+        }):Play()
+    end
 end)
 
 print("[NOXYS HUB] Tactical Mobile Edition carregada.")
