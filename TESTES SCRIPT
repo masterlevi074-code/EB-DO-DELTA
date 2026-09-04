@@ -599,7 +599,6 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextStrokeColor3 = Accent
 Title.TextStrokeTransparency = 0.6
 Title.Parent = Top
-
 -- Efeito pulsante no título
 local function piscarTitulo()
     local brilho = TweenService:Create(Title, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
