@@ -2505,7 +2505,7 @@ for i = 1, #partesOrdem do
         local toggleCriado = Toggle(HitboxExpSection, "AUMENTAR " .. string.upper(nomeParte), false, function(State)
             config.Ativo = State
             if HitboxExp_Ativado then
-                AplicarHitboxExpander()
+              pcall(AplicarHitboxExpander)
             end
         end)
         
