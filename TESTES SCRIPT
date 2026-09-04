@@ -2512,7 +2512,7 @@ for i = 1, #partesOrdem do
         local sliderCriado = Slider(HitboxExpSection, "TAMANHO " .. string.upper(nomeParte), 1, 5, 1, function(Value)
             config.Escala = Value
             if HitboxExp_Ativado then
-                AplicarHitboxExpander()
+              pcall(AplicarHitboxExpander)
             end
         end)
     end
