@@ -198,6 +198,7 @@ Gui.Parent = CoreGui
 --========================================================--
 -- TELA DE CARREGAMENTO
 --========================================================--
+local LoadingOk, LoadingError = pcall(function()
 local Loading = Instance.new("Frame")
 Loading.Name = "LoadingScreen"
 Loading.Size = UDim2.fromScale(1, 1)
@@ -345,7 +346,7 @@ TweenService:Create(LoadingCard, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum
 LoadingFade.Completed:Wait()
 brilho:Cancel()
 Loading:Destroy()
-
+end)
 local FunctionDescriptions = {
     ["ATIVAR ESP"] = "Liga ou desliga todos os recursos visuais do ESP.",
     ["ESP BOX"] = "Mostra uma caixa 2D ao redor dos jogadores.",
