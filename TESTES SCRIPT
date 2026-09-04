@@ -196,9 +196,7 @@ Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 Gui.DisplayOrder = 999
 Gui.Parent = CoreGui
 
---========================================================--
 -- TELA DE CARREGAMENTO
---========================================================--
 
 task.spawn(function()
   pcall(function()
