@@ -596,32 +596,7 @@ Title.TextColor3 = COLORS.Text
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.TextStrokeColor3 = Accent
-Title.TextStrokeTransparency = 0.6
 Title.Parent = Top
--- Efeito pulsante no título
-local function piscarTitulo()
-    local brilho = TweenService:Create(Title, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-        TextColor3 = Accent,
-        TextStrokeColor3 = Accent,
-        TextStrokeTransparency = 0.2
-    })
-    local normal = TweenService:Create(Title, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
-        TextColor3 = COLORS.Text,
-        TextStrokeColor3 = Accent,
-        TextStrokeTransparency = 0.6
-    })
-
-    brilho:Play()
-    brilho.Completed:Connect(function()
-        normal:Play()
-        normal.Completed:Connect(function()
-            piscarTitulo()
-        end)
-    end)
-end
-
-piscarTitulo()
 
 local StatusDot = Instance.new("Frame")
 StatusDot.Size = UDim2.fromOffset(6, 6)
@@ -683,6 +658,119 @@ Minimize.Parent = Top
 local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
+
+--========================================================--
+-- PESQUISA DE FUNÇÕES
+--========================================================--
+
+local Pages = {}
+local TabButtons = {}
+
+local SearchButton = Instance.new("TextButton")
+SearchButton.Name = "SearchButton"
+SearchButton.Size = UDim2.fromOffset(26, 26)
+SearchButton.Position = UDim2.new(1, -66, 0, 9)
+SearchButton.BackgroundColor3 = COLORS.Panel2
+SearchButton.Text = "⌕"
+SearchButton.TextColor3 = COLORS.Text
+SearchButton.TextSize = 18
+SearchButton.Font = Enum.Font.GothamBold
+SearchButton.AutoButtonColor = false
+SearchButton.Parent = Top
+
+local SearchCorner = Instance.new("UICorner")
+SearchCorner.CornerRadius = UDim.new(0, 6)
+SearchCorner.Parent = SearchButton
+
+local SearchBox = Instance.new("TextBox")
+SearchBox.Name = "SearchBox"
+SearchBox.Size = UDim2.new(1, -104, 0, 26)
+SearchBox.Position = UDim2.fromOffset(42, 9)
+SearchBox.BackgroundColor3 = COLORS.Panel2
+SearchBox.TextColor3 = COLORS.Text
+SearchBox.PlaceholderColor3 = COLORS.Muted
+SearchBox.PlaceholderText = "Pesquisar função..."
+SearchBox.Text = ""
+SearchBox.TextSize = 9
+SearchBox.Font = Enum.Font.GothamMedium
+SearchBox.TextXAlignment = Enum.TextXAlignment.Left
+SearchBox.ClearTextOnFocus = false
+SearchBox.Visible = false
+SearchBox.Parent = Top
+
+local SearchBoxCorner = Instance.new("UICorner")
+SearchBoxCorner.CornerRadius = UDim.new(0, 6)
+SearchBoxCorner.Parent = SearchBox
+
+local SearchPadding = Instance.new("UIPadding")
+SearchPadding.PaddingLeft = UDim.new(0, 9)
+SearchPadding.PaddingRight = UDim.new(0, 8)
+SearchPadding.Parent = SearchBox
+
+local function SelecionarAbaDaBusca(PageName)
+    for TabName, Page in pairs(Pages) do
+        Page.Visible = TabName == PageName
+        local Tab = TabButtons[TabName]
+        if Tab then
+            Tab.BackgroundColor3 = TabName == PageName and Accent or COLORS.Panel2
+            Tab.TextColor3 = TabName == PageName and COLORS.Text or COLORS.Muted
+        end
+    end
+end
+
+local function ProcurarFuncao(texto)
+    texto = string.lower(texto or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if texto == "" then return end
+
+    local encontrados = {}
+    for _, object in ipairs(Gui:GetDescendants()) do
+        if object:IsA("TextLabel") or object:IsA("TextButton") then
+            local nome = object.Text or ""
+            if nome ~= "" and string.find(string.lower(nome), texto, 1, true) then
+                local page = object:FindFirstAncestorWhichIsA("ScrollingFrame")
+                if page and page.Name ~= "" then
+                    table.insert(encontrados, {object = object, page = page})
+                end
+            end
+        end
+    end
+
+    local resultado = encontrados[1]
+    if not resultado then
+        Notify("Nenhuma função encontrada")
+        return
+    end
+
+    SelecionarAbaDaBusca(resultado.page.Name)
+    task.defer(function()
+        local page = resultado.page
+        local y = math.max(0, resultado.object.AbsolutePosition.Y - page.AbsolutePosition.Y + page.CanvasPosition.Y - 12)
+        page.CanvasPosition = Vector2.new(0, y)
+        local alvo = resultado.object
+        local original = alvo.BackgroundColor3
+        if alvo:IsA("GuiObject") then
+            TweenService:Create(alvo, TweenInfo.new(0.15), {BackgroundColor3 = Accent}):Play()
+            task.wait(0.35)
+            if alvo and alvo.Parent then
+                TweenService:Create(alvo, TweenInfo.new(0.3), {BackgroundColor3 = original}):Play()
+            end
+        end
+    end)
+end
+
+SearchButton.MouseButton1Click:Connect(function()
+    SearchBox.Visible = not SearchBox.Visible
+    if SearchBox.Visible then
+        SearchBox:CaptureFocus()
+    else
+        SearchBox:ReleaseFocus()
+        SearchBox.Text = ""
+    end
+end)
+
+SearchBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then ProcurarFuncao(SearchBox.Text) end
+end)
 
 --========================================================--
 -- EFEITOS DECORATIVOS
@@ -756,9 +844,6 @@ TabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 TabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 TabLayout.Padding = UDim.new(0, 2)
 TabLayout.Parent = Tabs
-
-local Pages = {}
-local TabButtons = {}
 
 --========================================================--
 -- CRIAR PÁGINA
