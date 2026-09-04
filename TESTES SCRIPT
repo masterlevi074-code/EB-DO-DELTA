@@ -144,12 +144,17 @@ local ArmasPermitidasAIM = {
     ["HK416"] = true,
 }
 
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
-FOVCircle.Color = Aimbot_CorFOV
-FOVCircle.Thickness = Aimbot_EspessuraFOV
-FOVCircle.Radius = Aimbot_RaioFOV
-FOVCircle.Filled = false
+local FOVCircle = nil
+pcall(function()
+    if Drawing and type(Drawing.new) == "function" then
+        FOVCircle = Drawing.new("Circle")
+        FOVCircle.Visible = false
+        FOVCircle.Color = Aimbot_CorFOV
+        FOVCircle.Thickness = Aimbot_EspessuraFOV
+        FOVCircle.Radius = Aimbot_RaioFOV
+        FOVCircle.Filled = false
+    end
+end)
 
 --========================================================--
 -- TAMANHO
@@ -197,6 +202,8 @@ local Config = {
 --========================================================--
 -- SCREEN GUI (COREGUI PARA SOBREPOR TUDO)
 --========================================================--
+
+local Notify -- forward declaration: usado pela tela de carregamento
 
 local Gui = Instance.new("ScreenGui")
 Gui.Name = "NoxysTacticalHub"
@@ -1612,7 +1619,7 @@ NotifyLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
 NotifyLayout.Padding = UDim.new(0, 4)
 NotifyLayout.Parent = NotificationHolder
 
-local function Notify(Text)
+Notify = function(Text)
 	if not Config.Notifications then return end
 	local N = Instance.new("Frame")
 	N.Size = UDim2.new(1, 0, 0, 32)
@@ -1656,6 +1663,16 @@ end
 --========================================================--
 -- FUNÇÕES ESP
 --========================================================--
+
+-- Remove objetos Drawing sem assumir que o executor possui Destroy().
+local function RemoverDrawing(obj)
+    if not obj then return end
+    pcall(function()
+        if type(obj.Remove) == "function" then obj:Remove()
+        elseif type(obj.Destroy) == "function" then obj:Destroy() end
+    end)
+end
+
 
 local function GetPlayerTime(player)
     if player.Team then
@@ -1866,8 +1883,16 @@ local function CriarESP(p)
         tlDistancia.TextStrokeTransparency = 0
         tlDistancia.Parent = bgDistancia
         if not LinhasTracers[p] then
-            local tracer = Drawing.new("Line"); tracer.Visible = false
-            pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
+            local okTracer, tracer = pcall(function()
+                if not Drawing or type(Drawing.new) ~= "function" then return nil end
+                return Drawing.new("Line")
+            end)
+            if okTracer and tracer then
+                tracer.Visible = false
+                pcall(function() tracer.Color = CorESP end)
+                tracer.Thickness = 1.2
+                LinhasTracers[p] = tracer
+            end
         end
         task.spawn(AtualizarESP)
     end
@@ -1877,7 +1902,7 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then RemoverDrawing(LinhasTracers[p]); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
@@ -2201,7 +2226,9 @@ end
 --========================================================--
 
 RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera
+    if not camera then return end
+    local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
@@ -2281,7 +2308,11 @@ end)
 -- BOTÃO DASH
 --========================================================--
 
-local function CriarBotaoDash()
+local CriarBotaoDash
+local RemoverBotaoDash
+
+CriarBotaoDash = function()
+   RemoverBotaoDash()
    dashButtonScreen = Instance.new("ScreenGui"); dashButtonScreen.Name = "DashButtonScreen"; dashButtonScreen.Parent = CoreGui
    local mainButton = Instance.new("TextButton"); mainButton.Size = UDim2.new(0, 50, 0, 50); mainButton.Position = UDim2.new(0.87, 0, 0.5, 0)
    mainButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35); mainButton.Text = "DASH"; mainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -2290,7 +2321,7 @@ local function CriarBotaoDash()
    local uiStroke = Instance.new("UIStroke", mainButton); uiStroke.Color = Color3.fromRGB(0, 120, 255); uiStroke.Thickness = 2
    mainButton.MouseButton1Click:Connect(function() local char = Player.Character; if char and char:FindFirstChild("HumanoidRootPart") then char.HumanoidRootPart.CFrame = char.HumanoidRootPart.CFrame * CFrame.new(0, 0, -dashStuds) end end)
 end
-local function RemoverBotaoDash() if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end end
+RemoverBotaoDash = function() if CoreGui:FindFirstChild("DashButtonScreen") then CoreGui.DashButtonScreen:Destroy() end end
 
 --========================================================--
 -- TROCA DE SERVIDOR
@@ -2318,7 +2349,7 @@ end
 
 local function ExecutarComandoAdmin(mensagem)
     if not Admin_Ativado then return end
-    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
+    if mensagem:sub(1, #Admin_Prefixo) ~= Admin_Prefixo then return end
     
     local comando = mensagem:sub(#Admin_Prefixo + 1)
     local args = comando:split(" ")
@@ -2379,6 +2410,8 @@ end)
 -- CHATWINDOW
 --========================================================--
 
+local DesativarChatWindow
+
 local function AtivarChatWindow()
     if ChatWindow_Conexoes then DesativarChatWindow() end
     local StarterGui = game:GetService("StarterGui"); local TextChatService = game:GetService("TextChatService")
@@ -2392,7 +2425,7 @@ local function AtivarChatWindow()
     setVisibleEvent.Event:Connect(function(visible) local wc = TextChatService:FindFirstChildOfClass("ChatWindowConfiguration"); if wc then wc.Enabled = visible; pcall(function() visibilityChangedEvent:Fire(visible) end) end end)
 end
 
-local function DesativarChatWindow()
+DesativarChatWindow = function()
     if ChatWindow_Conexoes then pcall(function() ChatWindow_Conexoes.ChatWindow.ToggleVisibility:Destroy(); ChatWindow_Conexoes.ChatWindow.SetVisible:Destroy(); ChatWindow_Conexoes.ChatWindow.VisibilityStateChanged:Destroy() end); ChatWindow_Conexoes = nil end
     pcall(function()
         local StarterGui = game:GetService("StarterGui"); local TextChatService = game:GetService("TextChatService")
@@ -2761,10 +2794,10 @@ Button(ActionsSection, "DESTRUIR", function()
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
-    if FOVCircle then FOVCircle:Destroy() end
+    RemoverDrawing(FOVCircle); FOVCircle = nil
     AtualizarHighlightAlvo(nil)
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
-    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
+    for _, t in pairs(LinhasTracers) do RemoverDrawing(t) end; LinhasTracers = {}
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
     Gui:Destroy()
@@ -2901,6 +2934,7 @@ end)
 --========================================================--
 
 local Minimized = false
+local MiniMoved = false
 local NormalSize = Main.Size
 local MiniSize = UDim2.fromOffset(UI_WIDTH, 46)
 
@@ -3075,8 +3109,6 @@ end)
 local MiniDragging = false
 local MiniDragStart
 local MiniStartPosition
-local MiniMoved = false
-
 MiniButton.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
         MiniDragging = true
@@ -3139,3 +3171,4 @@ task.delay(6.3, function()
 end)
 
 print("[NOXYS HUB] Tactical Mobile Edition carregada.")
+-- Revisado: forward declarations, Drawing guards, cleanup seguro e escopo MiniMoved.
