@@ -596,7 +596,33 @@ Title.TextColor3 = COLORS.Text
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextStrokeColor3 = Accent
+Title.TextStrokeTransparency = 0.6
 Title.Parent = Top
+
+-- Efeito pulsante no título
+local function piscarTitulo()
+    local brilho = TweenService:Create(Title, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+        TextColor3 = Accent,
+        TextStrokeColor3 = Accent,
+        TextStrokeTransparency = 0.2
+    })
+    local normal = TweenService:Create(Title, TweenInfo.new(1.2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+        TextColor3 = COLORS.Text,
+        TextStrokeColor3 = Accent,
+        TextStrokeTransparency = 0.6
+    })
+
+    brilho:Play()
+    brilho.Completed:Connect(function()
+        normal:Play()
+        normal.Completed:Connect(function()
+            piscarTitulo()
+        end)
+    end)
+end
+
+piscarTitulo()
 
 local StatusDot = Instance.new("Frame")
 StatusDot.Size = UDim2.fromOffset(6, 6)
