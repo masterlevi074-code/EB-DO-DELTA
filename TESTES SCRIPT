@@ -506,6 +506,7 @@ MainStroke.Transparency = 0.1
 MainStroke.Parent = Main
 
 -- Oculta o painel até a animação de entrada
+Main.Visible = false
 Main.BackgroundTransparency = 1
 Main.Size = UDim2.fromOffset(UI_WIDTH * 0.7, UI_HEIGHT * 0.7)
 Main.Rotation = -10
@@ -2794,6 +2795,7 @@ UserInputService.InputEnded:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
         Resizing = false
         ResizeHandle.BackgroundColor3 = COLORS.OliveDark
+        NormalSize = Main.Size  -- salva novo tamanho
     end
 end)
 
@@ -2958,6 +2960,7 @@ Minimize.MouseButton1Click:Connect(function()
     if Minimized then return end
     Minimized = true
     Minimize.Text = "+"
+    NormalSize = Main.Size  -- salva o tamanho atual antes de minimizar
     local shrink = TweenService:Create(Main, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = MiniSize})
     shrink:Play()
     shrink.Completed:Wait()
@@ -3024,12 +3027,17 @@ end)
 
 -- Animação de entrada do painel principal
 task.delay(6.3, function()
-    if Main and Main.Parent then
-        TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    if Main and Main.Parent and not Minimized then
+        Main.Visible = true
+        local entrada = TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
             BackgroundTransparency = 0,
             Size = UDim2.fromOffset(UI_WIDTH, UI_HEIGHT),
             Rotation = 0
-        }):Play()
+        })
+        entrada:Play()
+        entrada.Completed:Connect(function()
+            NormalSize = Main.Size  
+       end)
     end
 end)
 
