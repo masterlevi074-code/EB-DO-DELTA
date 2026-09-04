@@ -114,6 +114,7 @@ local Admin_Invisivel = false
 local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
 
+local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 local AtualizarESP
 
@@ -198,155 +199,204 @@ Gui.Parent = CoreGui
 --========================================================--
 -- TELA DE CARREGAMENTO
 --========================================================--
-local LoadingOk, LoadingError = pcall(function()
-local Loading = Instance.new("Frame")
-Loading.Name = "LoadingScreen"
-Loading.Size = UDim2.fromScale(1, 1)
-Loading.BackgroundColor3 = Color3.fromRGB(8, 11, 9)
-Loading.BorderSizePixel = 0
-Loading.ZIndex = 500
-Loading.Parent = Gui
 
-local LoadingScale = Instance.new("UIScale")
-LoadingScale.Scale = 0.92
-LoadingScale.Parent = Loading
+local LoadingScreen = Instance.new("Frame")
+LoadingScreen.Name = "LoadingScreen"
+LoadingScreen.Size = UDim2.fromScale(1, 1)
+LoadingScreen.Position = UDim2.fromScale(0, 0)
+LoadingScreen.BackgroundColor3 = COLORS.Background
+LoadingScreen.BorderSizePixel = 0
+LoadingScreen.ZIndex = 1000
+LoadingScreen.Parent = Gui
 
-local LoadingCard = Instance.new("Frame")
-LoadingCard.AnchorPoint = Vector2.new(0.5, 0.5)
-LoadingCard.Position = UDim2.fromScale(0.5, 0.5)
-LoadingCard.Size = UDim2.fromOffset(250, 142)
-LoadingCard.BackgroundColor3 = Color3.fromRGB(18, 24, 19)
-LoadingCard.BorderSizePixel = 0
-LoadingCard.ZIndex = 501
-LoadingCard.Parent = Loading
 local LoadingCorner = Instance.new("UICorner")
-LoadingCorner.CornerRadius = UDim.new(0, 14)
-LoadingCorner.Parent = LoadingCard
-local LoadingStroke = Instance.new("UIStroke")
-LoadingStroke.Color = Color3.fromRGB(78, 195, 98)
-LoadingStroke.Transparency = 0.35
-LoadingStroke.Thickness = 1
-LoadingStroke.Parent = LoadingCard
+LoadingCorner.CornerRadius = UDim.new(0, 10)
+LoadingCorner.Parent = LoadingScreen
 
+local LoadingOverlay = Instance.new("Frame")
+LoadingOverlay.Size = UDim2.fromScale(1, 1)
+LoadingOverlay.BackgroundColor3 = COLORS.Panel
+LoadingOverlay.BorderSizePixel = 0
+LoadingOverlay.ZIndex = 1001
+LoadingOverlay.Parent = LoadingScreen
+
+local LoadingGradient = Instance.new("UIGradient")
+LoadingGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, COLORS.OliveDark),
+    ColorSequenceKeypoint.new(0.5, COLORS.GreenDark),
+    ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+})
+LoadingGradient.Rotation = 45
+LoadingGradient.Parent = LoadingOverlay
+
+-- Logo central
+local LoadingLogo = Instance.new("Frame")
+LoadingLogo.Size = UDim2.fromOffset(80, 80)
+LoadingLogo.AnchorPoint = Vector2.new(0.5, 0.5)
+LoadingLogo.Position = UDim2.new(0.5, 0, 0.45, 0)
+LoadingLogo.BackgroundColor3 = COLORS.Panel2
+LoadingLogo.BorderSizePixel = 0
+LoadingLogo.ZIndex = 1002
+LoadingLogo.Parent = LoadingScreen
+
+local LoadingLogoCorner = Instance.new("UICorner")
+LoadingLogoCorner.CornerRadius = UDim.new(0, 18)
+LoadingLogoCorner.Parent = LoadingLogo
+
+local LoadingLogoStroke = Instance.new("UIStroke")
+LoadingLogoStroke.Color = Accent
+LoadingLogoStroke.Thickness = 2
+LoadingLogoStroke.Transparency = 0.2
+LoadingLogoStroke.Parent = LoadingLogo
+
+local LoadingLogoText = Instance.new("TextLabel")
+LoadingLogoText.Size = UDim2.fromScale(1, 1)
+LoadingLogoText.BackgroundTransparency = 1
+LoadingLogoText.Text = "NX"
+LoadingLogoText.TextColor3 = COLORS.Text
+LoadingLogoText.TextSize = 32
+LoadingLogoText.Font = Enum.Font.GothamBlack
+LoadingLogoText.ZIndex = 1003
+LoadingLogoText.Parent = LoadingLogo
+
+-- Título
 local LoadingTitle = Instance.new("TextLabel")
+LoadingTitle.Size = UDim2.new(1, -40, 0, 30)
+LoadingTitle.Position = UDim2.new(0, 20, 0.62, 0)
 LoadingTitle.BackgroundTransparency = 1
-LoadingTitle.Position = UDim2.fromOffset(16, 18)
-LoadingTitle.Size = UDim2.new(1, -32, 0, 28)
 LoadingTitle.Text = "NOXYS HUB"
-LoadingTitle.TextColor3 = Color3.fromRGB(232, 235, 229)
-LoadingTitle.TextSize = 19
-LoadingTitle.Font = Enum.Font.GothamBold
-LoadingTitle.ZIndex = 502
-LoadingTitle.Parent = LoadingCard
+LoadingTitle.TextColor3 = COLORS.Text
+LoadingTitle.TextSize = 18
+LoadingTitle.Font = Enum.Font.GothamBlack
+LoadingTitle.ZIndex = 1004
+LoadingTitle.Parent = LoadingScreen
 
+-- Subtítulo
 local LoadingSubtitle = Instance.new("TextLabel")
+LoadingSubtitle.Size = UDim2.new(1, -40, 0, 20)
+LoadingSubtitle.Position = UDim2.new(0, 20, 0.68, 0)
 LoadingSubtitle.BackgroundTransparency = 1
-LoadingSubtitle.Position = UDim2.fromOffset(16, 48)
-LoadingSubtitle.Size = UDim2.new(1, -32, 0, 18)
-LoadingSubtitle.Text = "Inicializando interface tática..."
-LoadingSubtitle.TextColor3 = Color3.fromRGB(143, 151, 141)
+LoadingSubtitle.Text = "TACTICAL MOBILE EDITION"
+LoadingSubtitle.TextColor3 = COLORS.Muted
 LoadingSubtitle.TextSize = 9
 LoadingSubtitle.Font = Enum.Font.GothamMedium
-LoadingSubtitle.ZIndex = 502
-LoadingSubtitle.Parent = LoadingCard
+LoadingSubtitle.ZIndex = 1004
+LoadingSubtitle.Parent = LoadingScreen
 
-local LoadingBarBack = Instance.new("Frame")
-LoadingBarBack.Position = UDim2.fromOffset(18, 87)
-LoadingBarBack.Size = UDim2.new(1, -36, 0, 6)
-LoadingBarBack.BackgroundColor3 = Color3.fromRGB(35, 45, 36)
-LoadingBarBack.BorderSizePixel = 0
-LoadingBarBack.ZIndex = 502
-LoadingBarBack.Parent = LoadingCard
-local LoadingBarBackCorner = Instance.new("UICorner")
-LoadingBarBackCorner.CornerRadius = UDim.new(1, 0)
-LoadingBarBackCorner.Parent = LoadingBarBack
+-- Barra de progresso
+local LoadingBarBg = Instance.new("Frame")
+LoadingBarBg.Size = UDim2.new(0.6, 0, 0, 4)
+LoadingBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
+LoadingBarBg.Position = UDim2.new(0.5, 0, 0.78, 0)
+LoadingBarBg.BackgroundColor3 = COLORS.OliveDark
+LoadingBarBg.BorderSizePixel = 0
+LoadingBarBg.ZIndex = 1005
+LoadingBarBg.Parent = LoadingScreen
 
-local LoadingBar = Instance.new("Frame")
-LoadingBar.Size = UDim2.new(0, 0, 1, 0)
-LoadingBar.BackgroundColor3 = Color3.fromRGB(78, 195, 98)
-LoadingBar.BorderSizePixel = 0
-LoadingBar.ZIndex = 503
-LoadingBar.Parent = LoadingBarBack
 local LoadingBarCorner = Instance.new("UICorner")
 LoadingBarCorner.CornerRadius = UDim.new(1, 0)
-LoadingBarCorner.Parent = LoadingBar
+LoadingBarCorner.Parent = LoadingBarBg
 
+local LoadingBarFill = Instance.new("Frame")
+LoadingBarFill.Size = UDim2.new(0, 0, 1, 0)
+LoadingBarFill.BackgroundColor3 = Accent
+LoadingBarFill.BorderSizePixel = 0
+LoadingBarFill.ZIndex = 1006
+LoadingBarFill.Parent = LoadingBarBg
+
+local LoadingBarFillCorner = Instance.new("UICorner")
+LoadingBarFillCorner.CornerRadius = UDim.new(1, 0)
+LoadingBarFillCorner.Parent = LoadingBarFill
+
+-- Texto de status
 local LoadingStatus = Instance.new("TextLabel")
+LoadingStatus.Size = UDim2.new(1, -40, 0, 14)
+LoadingStatus.Position = UDim2.new(0, 20, 0.81, 0)
 LoadingStatus.BackgroundTransparency = 1
-LoadingStatus.Position = UDim2.fromOffset(18, 103)
-LoadingStatus.Size = UDim2.new(1, -36, 0, 16)
-LoadingStatus.Text = "Carregando módulos  0%"
-LoadingStatus.TextColor3 = Color3.fromRGB(143, 151, 141)
-LoadingStatus.TextSize = 8
-LoadingStatus.Font = Enum.Font.Code
-LoadingStatus.TextXAlignment = Enum.TextXAlignment.Left
-LoadingStatus.ZIndex = 502
-LoadingStatus.Parent = LoadingCard
+LoadingStatus.Text = "Carregando..."
+LoadingStatus.TextColor3 = COLORS.Muted
+LoadingStatus.TextSize = 7
+LoadingStatus.Font = Enum.Font.GothamMedium
+LoadingStatus.ZIndex = 1007
+LoadingStatus.Parent = LoadingScreen
 
--- Brilho passando dentro do cartão
-local LoadingShine = Instance.new("Frame")
-LoadingShine.Position = UDim2.new(0, -45, 0, 0)
-LoadingShine.Size = UDim2.fromOffset(38, 142)
-LoadingShine.BackgroundColor3 = Color3.fromRGB(140, 255, 160)
-LoadingShine.BackgroundTransparency = 0.92
-LoadingShine.BorderSizePixel = 0
-LoadingShine.Rotation = 12
-LoadingShine.ZIndex = 504
-LoadingShine.Parent = LoadingCard
-local ShineGradient = Instance.new("UIGradient")
-ShineGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)})
-ShineGradient.Parent = LoadingShine
-local ShineClip = Instance.new("UICorner")
-ShineClip.CornerRadius = UDim.new(0, 14)
-ShineClip.Parent = LoadingCard
+-- Pontos decorativos flutuantes
+task.spawn(function()
+    local random = Random.new()
+    while LoadingScreen and LoadingScreen.Parent do
+        local particle = Instance.new("Frame")
+        local size = random:NextInteger(2, 5)
+        particle.Size = UDim2.fromOffset(size, size)
+        particle.Position = UDim2.new(random:NextNumber(0.1, 0.9), 0, random:NextNumber(0.1, 0.9), 0)
+        particle.BackgroundColor3 = random:NextNumber() > 0.5 and COLORS.Green or COLORS.Text
+        particle.BackgroundTransparency = 0.1
+        particle.BorderSizePixel = 0
+        particle.ZIndex = 1008
+        particle.Parent = LoadingScreen
 
--- Partículas leves ao redor do cartão
-local LoadingRandom = Random.new()
-for i = 1, 10 do
-    local dot = Instance.new("Frame")
-    dot.Size = UDim2.fromOffset(LoadingRandom:NextInteger(2, 4), LoadingRandom:NextInteger(2, 4))
-    dot.Position = UDim2.fromScale(LoadingRandom:NextNumber(0.16, 0.84), LoadingRandom:NextNumber(0.28, 0.72))
-    dot.BackgroundColor3 = Color3.fromRGB(78, 195, 98)
-    dot.BackgroundTransparency = 0.25
-    dot.BorderSizePixel = 0
-    dot.ZIndex = 500
-    dot.Parent = Loading
-    local dotCorner = Instance.new("UICorner")
-    dotCorner.CornerRadius = UDim.new(1, 0)
-    dotCorner.Parent = dot
-    task.spawn(function()
-        while dot.Parent do
-            local destino = UDim2.new(dot.Position.X.Scale + LoadingRandom:NextNumber(-0.03, 0.03), 0, dot.Position.Y.Scale - LoadingRandom:NextNumber(0.02, 0.06), 0)
-            local movimento = TweenService:Create(dot, TweenInfo.new(LoadingRandom:NextNumber(0.8, 1.4), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = destino, BackgroundTransparency = 0.8})
-            movimento:Play()
-            movimento.Completed:Wait()
-            if dot.Parent then dot.Position = UDim2.fromScale(LoadingRandom:NextNumber(0.16, 0.84), LoadingRandom:NextNumber(0.3, 0.72)); dot.BackgroundTransparency = 0.25 end
-        end
-    end)
-end
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = particle
 
-TweenService:Create(LoadingScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
-local brilho = TweenService:Create(LoadingShine, TweenInfo.new(1.35, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1), {Position = UDim2.new(1, 45, 0, 0)})
-brilho:Play()
-local etapas = {
-    {"Carregando módulos", 0.28},
-    {"Preparando interface", 0.62},
-    {"Finalizando", 1},
-}
-for _, etapa in ipairs(etapas) do
-    LoadingStatus.Text = etapa[1] .. "  " .. math.floor(etapa[2] * 100) .. "%"
-    TweenService:Create(LoadingBar, TweenInfo.new(0.38, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(etapa[2], 0, 1, 0)}):Play()
-    task.wait(0.38)
-end
-LoadingStatus.Text = "Pronto  100%"
-task.wait(0.3)
-local LoadingFade = TweenService:Create(Loading, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
-LoadingFade:Play()
-TweenService:Create(LoadingCard, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play()
-LoadingFade.Completed:Wait()
-brilho:Cancel()
-Loading:Destroy()
+        local floatTween = TweenService:Create(particle, TweenInfo.new(random:NextNumber(1.5, 3), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            Position = UDim2.new(particle.Position.X.Scale + random:NextNumber(-0.1, 0.1), 0, particle.Position.Y.Scale - random:NextNumber(0.05, 0.15), 0),
+            BackgroundTransparency = 1
+        })
+        floatTween:Play()
+        floatTween.Completed:Connect(function()
+            if particle then particle:Destroy() end
+        end)
+        task.wait(0.3)
+    end
 end)
+
+-- Animações de entrada
+LoadingLogo.Rotation = -15
+LoadingLogo.Size = UDim2.fromOffset(0, 0)
+TweenService:Create(LoadingLogo, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.fromOffset(80, 80),
+    Rotation = 0
+}):Play()
+
+LoadingTitle.TextTransparency = 1
+LoadingSubtitle.TextTransparency = 1
+LoadingStatus.TextTransparency = 1
+
+TweenService:Create(LoadingTitle, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(LoadingSubtitle, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+TweenService:Create(LoadingStatus, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
+
+-- Animação da barra de progresso
+local statusTexts = {"Carregando...", "Inicializando...", "Preparando interface...", "Concluído!"}
+local function UpdateLoadingStatus(index)
+    if index <= #statusTexts then
+        LoadingStatus.Text = statusTexts[index]
+        task.wait(0.6)
+        UpdateLoadingStatus(index + 1)
+    end
+end
+task.spawn(function() UpdateLoadingStatus(1) end)
+
+local loadingBarTween = TweenService:Create(LoadingBarFill, TweenInfo.new(2.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
+loadingBarTween:Play()
+
+-- Remover tela de carregamento após 2.5 segundos
+task.delay(2.5, function()
+    if LoadingScreen then
+        local fadeOut = TweenService:Create(LoadingScreen, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+        fadeOut:Play()
+        fadeOut.Completed:Connect(function()
+            LoadingScreen:Destroy()
+        end)
+        for _, child in pairs(LoadingScreen:GetDescendants()) do
+            if child:IsA("TextLabel") or child:IsA("Frame") then
+                TweenService:Create(child, TweenInfo.new(0.5), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+            end
+        end
+        Notify("NOXYS HUB ONLINE")
+    end
+end)
+
 local FunctionDescriptions = {
     ["ATIVAR ESP"] = "Liga ou desliga todos os recursos visuais do ESP.",
     ["ESP BOX"] = "Mostra uma caixa 2D ao redor dos jogadores.",
@@ -1841,6 +1891,7 @@ local function ObterJogadorMaisProximoDaMira()
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+            if JogadoresIgnorados[p.Name] then continue end
             if Aimbot_TeamCheck and SaoDoMesmoTime(Player, p) then continue end
             local parteBuscada = nil
             if Aimbot_ParteAlvo == "Head" then parteBuscada = p.Character:FindFirstChild("Head")
