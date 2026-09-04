@@ -591,7 +591,7 @@ local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.fromOffset(44, 5)
 Title.Size = UDim2.fromOffset(80, 18)
-Title.Text = " NOXYS HUB"
+Title.Text = "۞ NOXYS HUB"
 Title.TextColor3 = COLORS.Text
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
@@ -807,7 +807,7 @@ CreatePage("Movement")
 CreatePage("Config")
 
 CreateTab("Main", "●")
-CreateTab("Combat", "◉")
+CreateTab("Combat", "☉")
 CreateTab("Visual", "◆")
 CreateTab("Movement", "■")
 CreateTab("Config", "▲")
