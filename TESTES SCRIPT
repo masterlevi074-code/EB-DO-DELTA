@@ -407,6 +407,7 @@ task.delay(6, function()
         fadeOut.Completed:Connect(function()
             LoadingScreen:Destroy()
         end)
+  pcall(function()
        if Notify then
         Notify("NOXYS HUB ONLINE")
        end     
