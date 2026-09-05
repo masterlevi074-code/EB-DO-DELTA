@@ -2358,10 +2358,15 @@ local NoCooldownSection = Section(MainPage, "NO COOLDOWN PROXIMITYPROMPT")
 Toggle(NoCooldownSection, "ATIVAR NO COOLDOWN", false, function(State)
     NoCooldown_Ativado = State
     if State then
-        task.spawn(function()
-            pcall(function()
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))()
-            end)
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("ProximityPrompt") then
+                obj.HoldDuration = 0
+            end
+        end
+        Workspace.DescendantAdded:Connect(function(desc)
+            if desc:IsA("ProximityPrompt") then
+                desc.HoldDuration = 0
+            end
         end)
     end
 end)
