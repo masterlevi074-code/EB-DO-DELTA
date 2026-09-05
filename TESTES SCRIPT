@@ -86,6 +86,45 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
+local NoCooldown_Ativado = false
+local NoCooldown_Conexao = nil
+
+local function SetNoCooldown(State)
+    NoCooldown_Ativado = State
+
+    -- Desconecta a conexão anterior
+    if NoCooldown_Conexao then
+        NoCooldown_Conexao:Disconnect()
+        NoCooldown_Conexao = nil
+    end
+
+    if not State then
+        return
+    end
+
+    -- Remove o HoldDuration dos prompts existentes
+    for _, obj in ipairs(game:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            pcall(function()
+                obj.HoldDuration = 0
+            end)
+        end
+    end
+
+    -- Remove de prompts adicionados posteriormente
+    NoCooldown_Conexao = game.DescendantAdded:Connect(function(obj)
+        if not NoCooldown_Ativado then
+            return
+        end
+
+        if obj:IsA("ProximityPrompt") then
+            pcall(function()
+                obj.HoldDuration = 0
+            end)
+        end
+    end)
+end
+
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -2353,6 +2392,18 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+local InteractionSection = Section(MainPage, "INTERAÇÃO")
+
+Toggle(InteractionSection, "NO COOLDOWN", false, function(State)
+    SetNoCooldown(State)
+
+    if State then
+        Notify("NO COOLDOWN: ON")
+    else
+        Notify("NO COOLDOWN: OFF")
+    end
 end)
 
 --========================================================--
