@@ -2004,9 +2004,15 @@ local function ExecutarTeste()
         return
     end
 
+    local carregador = loadstring or load
+    if type(carregador) ~= "function" then
+        Notify("Este ambiente não suporta loadstring/load")
+        return
+    end
+
     local sucesso, scriptRemoto = pcall(function()
         local codigo = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
-        return loadstring(codigo)
+        return carregador(codigo)
     end)
 
     if not sucesso or type(scriptRemoto) ~= "function" then
@@ -2014,12 +2020,13 @@ local function ExecutarTeste()
         return
     end
 
-    local executado = pcall(scriptRemoto)
+    local executado, erroExecucao = pcall(scriptRemoto)
     if executado then
         Teste_Executado = true
         Notify("Teste ativado")
     else
-        Notify("Falha ao executar Teste")
+        warn("Teste - erro ao executar: " .. tostring(erroExecucao))
+        Notify("Falha ao executar Teste: " .. tostring(erroExecucao))
     end
 end
 
