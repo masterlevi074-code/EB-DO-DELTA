@@ -1,0 +1,17 @@
+-- Remove HoldDuration de todos os ProximityPrompts
+
+local function removeHoldDuration(obj)
+    if obj:IsA("ProximityPrompt") then
+        obj.HoldDuration = 0
+    end
+end
+
+-- Prompts que já existem
+for _, obj in ipairs(game:GetDescendants()) do
+    removeHoldDuration(obj)
+end
+
+-- Prompts criados/adicionados depois
+game.DescendantAdded:Connect(function(obj)
+    removeHoldDuration(obj)
+end)
