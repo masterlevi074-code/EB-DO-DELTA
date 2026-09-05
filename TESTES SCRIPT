@@ -2359,12 +2359,28 @@ end)
 local NoCooldownSection = Section(MainPage, "NO COOLDOWN PROXIMITYPROMPT")
 Toggle(NoCooldownSection, "ATIVAR NO COOLDOWN", false, function(State)
     if State then
-        pcall(function()
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))()
+        task.spawn(function()
+            local sucesso, erro = pcall(function()
+                if game:HttpGet then
+                    local scriptCarregado = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))
+                    if scriptCarregado then
+                        scriptCarregado()
+                    else
+                        error("Falha ao carregar script remoto")
+                    end
+                else
+                    error("HttpGet não disponível")
+                end
+            end)
+            if sucesso then
+                pcall(function() Notify("No Cooldown Ativado") end)
+            else
+                warn("Erro ao carregar No Cooldown: " .. tostring(erro))
+                pcall(function() Notify("Erro ao carregar No Cooldown") end)
+            end
         end)
-        Notify("No Cooldown Ativado")
     else
-        Notify("No Cooldown Desativado (Reinicie para desfazer)")
+        pcall(function() Notify("No Cooldown Desativado (Reinicie para desfazer)") end)
     end
 end)
 
