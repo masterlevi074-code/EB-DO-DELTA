@@ -115,6 +115,7 @@ local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
 
 local NoCooldown_Ativado = false
+local NoCooldown_Conexao = nil
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -2132,38 +2133,26 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 -- NO COOLDOWN PROXIMITYPROMPT
 --========================================================--
 
-local function AplicarNoCooldown()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
-            if not obj:GetAttribute("HoldDurationOriginal") then
-                obj:SetAttribute("HoldDurationOriginal", obj.HoldDuration)
-            end
-            obj.HoldDuration = 0
-        end
+local function removeHoldDuration(obj)
+    if obj:IsA("ProximityPrompt") then
+        obj.HoldDuration = 0
     end
+end
+
+local function AplicarNoCooldown()
+    if NoCooldown_Conexao then return end
+    for _, obj in ipairs(Workspace:GetDescendants()) do
+        removeHoldDuration(obj)
+    end
+    NoCooldown_Conexao = Workspace.DescendantAdded:Connect(removeHoldDuration)
 end
 
 local function RemoverNoCooldown()
-    for _, obj in pairs(Workspace:GetDescendants()) do
-        if obj:IsA("ProximityPrompt") then
-            local original = obj:GetAttribute("HoldDurationOriginal")
-            if original ~= nil then
-                obj.HoldDuration = original
-                obj:SetAttribute("HoldDurationOriginal", nil)
-            end
-        end
+    if NoCooldown_Conexao then
+        NoCooldown_Conexao:Disconnect()
+        NoCooldown_Conexao = nil
     end
 end
-
--- Conectar para novos ProximityPrompts
-Workspace.DescendantAdded:Connect(function(desc)
-    if NoCooldown_Ativado and desc:IsA("ProximityPrompt") then
-        if not desc:GetAttribute("HoldDurationOriginal") then
-            desc:SetAttribute("HoldDurationOriginal", desc.HoldDuration)
-        end
-        desc.HoldDuration = 0
-    end
-end)
 
 --========================================================--
 -- LOOP PRINCIPAL
