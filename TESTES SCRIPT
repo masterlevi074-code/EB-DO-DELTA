@@ -114,8 +114,6 @@ local Admin_Invisivel = false
 local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
 
-local NoCooldown_Ativado = false
-
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 local AtualizarESP
@@ -407,10 +405,10 @@ task.delay(6, function()
         fadeOut.Completed:Connect(function()
             LoadingScreen:Destroy()
         end)
-  pcall(function()
-       if Notify then
-        Notify("NOXYS HUB ONLINE")
-       end     
+
+        if Notify then
+            Notify("NOXYS HUB ONLINE")
+        end
     end
 end)
 
@@ -2355,24 +2353,6 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
-end)
-
--- Seção No Cooldown ProximityPrompt
-local NoCooldownSection = Section(MainPage, "NO COOLDOWN PROXIMITYPROMPT")
-Toggle(NoCooldownSection, "ATIVAR NO COOLDOWN", false, function(State)
-    NoCooldown_Ativado = State
-    if State then
-        for _, obj in pairs(Workspace:GetDescendants()) do
-            if obj:IsA("ProximityPrompt") then
-                obj.HoldDuration = 0
-            end
-        end
-        Workspace.DescendantAdded:Connect(function(desc)
-            if desc:IsA("ProximityPrompt") then
-                desc.HoldDuration = 0
-            end
-        end)
-    end
 end)
 
 --========================================================--
