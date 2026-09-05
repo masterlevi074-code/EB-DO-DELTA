@@ -87,7 +87,7 @@ local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
 local NoCooldown_Ativado = false
-local NoCooldown_Conexao = nni
+local NoCooldown_Conexao = nil
 
 local BlocosAtivado = false
 local Hitboxes = {}
