@@ -2398,9 +2398,9 @@ local UtilidadesSection = Section(MainPage, "UTILIDADES")
 Toggle(UtilidadesSection, "NO COOLDOWN PROXIMITYPROMPT", false, function(State)
     NoCooldown_Ativado = State
     if State then
-        AplicarNoCooldown()
+      pcall(AplicarNoCooldown)
     else
-        RemoverNoCooldown()
+      pcall(RemoverNoCooldown)
     end
 end)
 
