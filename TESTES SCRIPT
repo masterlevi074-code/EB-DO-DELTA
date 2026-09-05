@@ -2348,7 +2348,13 @@ local ProximityPromptSection = Section(MainPage, "INTERAÇÃO")
 Toggle(ProximityPromptSection, "PROMPT SEM DELAY", false, function(State)
     if State then
         local sucesso, erro = pcall(function()
-            local scriptRemoto = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/")
+            local scriptRemoto = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
+
+            -- Corrige automaticamente o arquivo remoto caso ele termine sem fechar o Connect
+            if not scriptRemoto:match("end%)%s*$") then
+                scriptRemoto = scriptRemoto .. "\nend)"
+            end
+
             local carregarScript = loadstring(scriptRemoto)
 
             if not carregarScript then
