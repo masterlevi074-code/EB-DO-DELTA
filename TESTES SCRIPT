@@ -86,6 +86,9 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
+local NoCooldown_Ativado = false
+local NoCooldown_Script = nil
+
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -405,7 +408,7 @@ task.delay(6, function()
         fadeOut.Completed:Connect(function()
             LoadingScreen:Destroy()
         end)
-
+   pcall(function()
         if Notify then
             Notify("NOXYS HUB ONLINE")
         end
@@ -1993,6 +1996,26 @@ local function DestruirPainelJJ()
 end
 local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
+-- =======================================-
+-- NO COOLDOWN PROXIMITYPROMPT
+-- =======================================-
+
+local function CarregarNoCooldown()
+    if not NoCooldown_Script then
+        pcall(function()
+            NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))
+        end)
+    end
+end
+local function IniciarNoCooldown()
+    CarregarNoCooldown()
+    if NoCooldown_Script then
+        pcall(function()
+            NoCooldown_Script()
+        end)
+    end
+end
+
 --========================================================--
 -- BLOCOS PARKOUR
 --========================================================--
@@ -2353,6 +2376,17 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+local NoCooldownSection = Section(MainPage, "NO COOLDOWN PROXIMITYPROMPT")
+Toggle(NoCooldownSection, "ATIVAR NO COOLDOWN", false, function(State)
+    NoCooldown_Ativado = State
+    if State then
+        IniciarNoCooldown()
+    else
+        -- não desfaz, pois o script remoto não tem reversão
+        Notify("Reinicie para desfazer")
+    end
 end)
 
 --========================================================--
