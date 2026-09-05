@@ -2346,30 +2346,93 @@ local MainPage = Pages.Main
 
 local ProximityPromptSection = Section(MainPage, "INTERAÇÃO")
 Toggle(ProximityPromptSection, "PROMPT SEM DELAY", false, function(State)
-    if State then
-        local sucesso, erro = pcall(function()
-            local scriptRemoto = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
+    if not State then
+        if _G.NoxysProximityPromptConnection then
+            pcall(function()
+                _G.NoxysProximityPromptConnection:Disconnect()
+            end)
+            _G.NoxysProximityPromptConnection = nil
+        end
+        Notify("ProximityPrompt sem delay: OFF")
+        return
+    end
 
-            -- Corrige automaticamente o arquivo remoto caso ele termine sem fechar o Connect
+    local sucesso, erro = pcall(function()
+            local function AplicarNoCooldownLocal()
+                local function RemoverHoldDuration(obj)
+                    if obj and obj:IsA("ProximityPrompt") then
+                        pcall(function()
+                            obj.HoldDuration = 0
+                        end)
+                    end
+                end
+
+                for _, obj in ipairs(game:GetDescendants()) do
+                    RemoverHoldDuration(obj)
+                end
+
+                if _G.NoxysProximityPromptConnection then
+                    pcall(function()
+                        _G.NoxysProximityPromptConnection:Disconnect()
+                    end)
+                end
+
+                _G.NoxysProximityPromptConnection = game.DescendantAdded:Connect(function(obj)
+                    RemoverHoldDuration(obj)
+                end)
+            end
+
+            local obterScript = game.HttpGet
+            if type(obterScript) ~= "function" then
+                AplicarNoCooldownLocal()
+                warn("HttpGet não está disponível; foi usado o fallback local")
+                return
+            end
+
+            local requisicaoOK, scriptRemoto = pcall(obterScript, game, "https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
+            if not requisicaoOK then
+                AplicarNoCooldownLocal()
+                warn("Falha ao buscar o script remoto; foi usado o fallback local: " .. tostring(scriptRemoto))
+                return
+            end
+
+            local compilador = loadstring
+
+            -- Alguns ambientes não disponibilizam loadstring. Nesse caso,
+            -- usa diretamente a mesma lógica do script remoto.
+            if type(compilador) ~= "function" then
+                AplicarNoCooldownLocal()
+                return
+            end
+
+            -- O arquivo remoto publicado pode estar sem o fechamento final.
+            if type(scriptRemoto) ~= "string" then
+                error("O conteúdo remoto não é um texto válido")
+            end
+
             if not scriptRemoto:match("end%)%s*$") then
                 scriptRemoto = scriptRemoto .. "\nend)"
             end
 
-            local carregarScript = loadstring(scriptRemoto)
-
-            if not carregarScript then
-                error("Não foi possível compilar o script remoto")
+            local carregarScript, erroCompilacao = compilador(scriptRemoto)
+            if type(carregarScript) ~= "function" then
+                AplicarNoCooldownLocal()
+                warn("Script remoto inválido; foi usado o fallback local: " .. tostring(erroCompilacao))
+                return
             end
 
-            carregarScript()
-        end)
+            local executou, erroExecucao = pcall(carregarScript)
+            if not executou then
+                AplicarNoCooldownLocal()
+                warn("Script remoto falhou; foi usado o fallback local: " .. tostring(erroExecucao))
+            end
+    end)
 
-        if sucesso then
-            Notify("Script do ProximityPrompt carregado")
-        else
-            Notify("Erro ao carregar o script")
-            warn("Erro no script do ProximityPrompt: " .. tostring(erro))
-        end
+    if sucesso then
+        Notify("Script do ProximityPrompt carregado")
+    else
+        Notify("Erro ao carregar o script")
+        warn("Erro no script do ProximityPrompt: " .. tostring(erro))
     end
 end)
 
