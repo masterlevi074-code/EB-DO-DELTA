@@ -806,11 +806,11 @@ CreatePage("Visual")
 CreatePage("Movement")
 CreatePage("Config")
 
-CreateTab("Main", "●")
-CreateTab("Combat", "☉")
-CreateTab("Visual", "◆")
-CreateTab("Movement", "■")
-CreateTab("Config", "▲")
+CreateTab("Main", "⌂")
+CreateTab("Combat", "۞")
+CreateTab("Visual", "☉")
+CreateTab("Movement", "◉")
+CreateTab("Config", "◈")
 
 --========================================================--
 -- SECTION (COM CONTAINER PRÓPRIO - CORRIGIDO)
