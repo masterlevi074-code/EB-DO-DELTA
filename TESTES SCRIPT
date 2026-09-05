@@ -87,7 +87,6 @@ local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
 local BlocosAtivado = false
-
 local Hitboxes = {}
 
 local SpeedHack_Ativado = false
@@ -2344,98 +2343,6 @@ end
 
 local MainPage = Pages.Main
 
-local ProximityPromptSection = Section(MainPage, "INTERAÇÃO")
-Toggle(ProximityPromptSection, "PROMPT SEM DELAY", false, function(State)
-    if not State then
-        if _G.NoxysProximityPromptConnection then
-            pcall(function()
-                _G.NoxysProximityPromptConnection:Disconnect()
-            end)
-            _G.NoxysProximityPromptConnection = nil
-        end
-        Notify("ProximityPrompt sem delay: OFF")
-        return
-    end
-
-    local sucesso, erro = pcall(function()
-            local function AplicarNoCooldownLocal()
-                local function RemoverHoldDuration(obj)
-                    if obj and obj:IsA("ProximityPrompt") then
-                        pcall(function()
-                            obj.HoldDuration = 0
-                        end)
-                    end
-                end
-
-                for _, obj in ipairs(game:GetDescendants()) do
-                    RemoverHoldDuration(obj)
-                end
-
-                if _G.NoxysProximityPromptConnection then
-                    pcall(function()
-                        _G.NoxysProximityPromptConnection:Disconnect()
-                    end)
-                end
-
-                _G.NoxysProximityPromptConnection = game.DescendantAdded:Connect(function(obj)
-                    RemoverHoldDuration(obj)
-                end)
-            end
-
-            local obterScript = game.HttpGet
-            if type(obterScript) ~= "function" then
-                AplicarNoCooldownLocal()
-                warn("HttpGet não está disponível; foi usado o fallback local")
-                return
-            end
-
-            local requisicaoOK, scriptRemoto = pcall(obterScript, game, "https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
-            if not requisicaoOK then
-                AplicarNoCooldownLocal()
-                warn("Falha ao buscar o script remoto; foi usado o fallback local: " .. tostring(scriptRemoto))
-                return
-            end
-
-            local compilador = loadstring
-
-            -- Alguns ambientes não disponibilizam loadstring. Nesse caso,
-            -- usa diretamente a mesma lógica do script remoto.
-            if type(compilador) ~= "function" then
-                AplicarNoCooldownLocal()
-                return
-            end
-
-            -- O arquivo remoto publicado pode estar sem o fechamento final.
-            if type(scriptRemoto) ~= "string" then
-                error("O conteúdo remoto não é um texto válido")
-            end
-
-            if not scriptRemoto:match("end%)%s*$") then
-                scriptRemoto = scriptRemoto .. "\nend)"
-            end
-
-            local carregarScript, erroCompilacao = compilador(scriptRemoto)
-            if type(carregarScript) ~= "function" then
-                AplicarNoCooldownLocal()
-                warn("Script remoto inválido; foi usado o fallback local: " .. tostring(erroCompilacao))
-                return
-            end
-
-            local executou, erroExecucao = pcall(carregarScript)
-            if not executou then
-                AplicarNoCooldownLocal()
-                warn("Script remoto falhou; foi usado o fallback local: " .. tostring(erroExecucao))
-            end
-    end)
-
-    if sucesso then
-        Notify("Script do ProximityPrompt carregado")
-    else
-        Notify("Erro ao carregar o script")
-        warn("Erro no script do ProximityPrompt: " .. tostring(erro))
-    end
-end)
-
 local AutoJJSection = Section(MainPage, "AUTO JJ")
 Toggle(AutoJJSection, "AUTO JJ", false, function(State)
     AutoJJ_Ativado = State
@@ -2446,6 +2353,19 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+-- Seção No Cooldown ProximityPrompt
+local NoCooldownSection = Section(MainPage, "NO COOLDOWN PROXIMITYPROMPT")
+Toggle(NoCooldownSection, "ATIVAR NO COOLDOWN", false, function(State)
+    if State then
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))()
+        end)
+        Notify("No Cooldown Ativado")
+    else
+        Notify("No Cooldown Desativado (Reinicie para desfazer)")
+    end
 end)
 
 --========================================================--
