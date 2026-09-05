@@ -88,8 +88,6 @@ local AutoJJ_Script = nil
 
 local BlocosAtivado = false
 
-local ProximityPrompt_Ativado = false
-local ProximityPrompt_Conexao = nil
 local Hitboxes = {}
 
 local SpeedHack_Ativado = false
@@ -2341,44 +2339,6 @@ local function DesativarChatWindow()
 end
 
 --========================================================--
--- PROXIMITY PROMPT
---========================================================--
-
-local function RemoverHoldDuration(obj)
-    if obj:IsA("ProximityPrompt") then
-        pcall(function()
-            obj.HoldDuration = 0
-        end)
-    end
-end
-
-local function AtivarProximityPrompt()
-    if ProximityPrompt_Conexao then
-        ProximityPrompt_Conexao:Disconnect()
-        ProximityPrompt_Conexao = nil
-    end
-
-    -- Remove o delay dos prompts que já existem
-    for _, obj in ipairs(game:GetDescendants()) do
-        RemoverHoldDuration(obj)
-    end
-
-    -- Remove o delay dos prompts criados depois
-    ProximityPrompt_Conexao = game.DescendantAdded:Connect(function(obj)
-        if ProximityPrompt_Ativado then
-            RemoverHoldDuration(obj)
-        end
-    end)
-end
-
-local function DesativarProximityPrompt()
-    if ProximityPrompt_Conexao then
-        ProximityPrompt_Conexao:Disconnect()
-        ProximityPrompt_Conexao = nil
-    end
-end
-
---========================================================--
 -- MAIN PAGE (PRINCIPAL)
 --========================================================--
 
@@ -2386,14 +2346,24 @@ local MainPage = Pages.Main
 
 local ProximityPromptSection = Section(MainPage, "INTERAÇÃO")
 Toggle(ProximityPromptSection, "PROMPT SEM DELAY", false, function(State)
-    ProximityPrompt_Ativado = State
-
     if State then
-        AtivarProximityPrompt()
-        Notify("ProximityPrompt sem delay: ON")
-    else
-        DesativarProximityPrompt()
-        Notify("ProximityPrompt sem delay: OFF")
+        local sucesso, erro = pcall(function()
+            local scriptRemoto = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/")
+            local carregarScript = loadstring(scriptRemoto)
+
+            if not carregarScript then
+                error("Não foi possível compilar o script remoto")
+            end
+
+            carregarScript()
+        end)
+
+        if sucesso then
+            Notify("Script do ProximityPrompt carregado")
+        else
+            Notify("Erro ao carregar o script")
+            warn("Erro no script do ProximityPrompt: " .. tostring(erro))
+        end
     end
 end)
 
@@ -2710,8 +2680,7 @@ end)
 
 local ActionsSection = Section(ConfigPage, "ACTIONS")
 Button(ActionsSection, "DESTRUIR", function()
-    AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false; ProximityPrompt_Ativado = false
-    DesativarProximityPrompt()
+    AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
