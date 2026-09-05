@@ -114,6 +114,8 @@ local Admin_Invisivel = false
 local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
 
+local NoCooldown_Ativado = false
+
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
 local AtualizarESP
@@ -2127,6 +2129,43 @@ end
 local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destroy() end end; Hitboxes = {} end
 
 --========================================================--
+-- NO COOLDOWN PROXIMITYPROMPT
+--========================================================--
+
+local function AplicarNoCooldown()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            if not obj:GetAttribute("HoldDurationOriginal") then
+                obj:SetAttribute("HoldDurationOriginal", obj.HoldDuration)
+            end
+            obj.HoldDuration = 0
+        end
+    end
+end
+
+local function RemoverNoCooldown()
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("ProximityPrompt") then
+            local original = obj:GetAttribute("HoldDurationOriginal")
+            if original ~= nil then
+                obj.HoldDuration = original
+                obj:SetAttribute("HoldDurationOriginal", nil)
+            end
+        end
+    end
+end
+
+-- Conectar para novos ProximityPrompts
+Workspace.DescendantAdded:Connect(function(desc)
+    if NoCooldown_Ativado and desc:IsA("ProximityPrompt") then
+        if not desc:GetAttribute("HoldDurationOriginal") then
+            desc:SetAttribute("HoldDurationOriginal", desc.HoldDuration)
+        end
+        desc.HoldDuration = 0
+    end
+end)
+
+--========================================================--
 -- LOOP PRINCIPAL
 --========================================================--
 
@@ -2353,6 +2392,16 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+local UtilidadesSection = Section(MainPage, "UTILIDADES")
+Toggle(UtilidadesSection, "NO COOLDOWN PROXIMITYPROMPT", false, function(State)
+    NoCooldown_Ativado = State
+    if State then
+        AplicarNoCooldown()
+    else
+        RemoverNoCooldown()
+    end
 end)
 
 --========================================================--
