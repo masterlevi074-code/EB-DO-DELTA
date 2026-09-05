@@ -85,11 +85,7 @@ local Hitbox_Material = Enum.Material.Neon
 
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
-
--- ===== NOVAS VARIÁVEIS PARA NO COOLDOWN =====
-local NoCooldown_Ativado = false
-local NoCooldown_Carregado = false
--- =============================================
+local Teste_Executado = false
 
 local BlocosAtivado = false
 local Hitboxes = {}
@@ -389,6 +385,7 @@ loadingBarTween:Play()
 -- Remover tela de carregamento após 6 segundos com animação 
 task.delay(6, function()
     if LoadingScreen then
+        -- Fade out com zoom e rotação
         local fadeOut = TweenService:Create(LoadingScreen, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             BackgroundTransparency = 1,
             Size = UDim2.fromScale(1.2, 1.2),
@@ -397,6 +394,7 @@ task.delay(6, function()
         })
         fadeOut:Play()
 
+        -- Fade out dos textos internos
         for _, child in pairs(LoadingScreen:GetDescendants()) do
             if child:IsA("TextLabel") or child:IsA("TextButton") then
                 TweenService:Create(child, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
@@ -442,7 +440,6 @@ local FunctionDescriptions = {
     ["SPEED HACK"] = "Controla a velocidade do personagem.",
     ["DASH"] = "Move o personagem rapidamente para frente.",
     ["DESTRUIR"] = "Fecha o hub e remove seus recursos ativos.",
-    ["NO COOLDOWN PROMPT"] = "Remove o tempo de espera dos ProximityPrompts.",
 }
 
 local function AdicionarDescricao(object, nome)
@@ -595,7 +592,7 @@ local Title = Instance.new("TextLabel")
 Title.BackgroundTransparency = 1
 Title.Position = UDim2.fromOffset(44, 5)
 Title.Size = UDim2.fromOffset(80, 18)
-Title.Text = "NOXYS HUB"
+Title.Text = "۞ NOXYS HUB"
 Title.TextColor3 = COLORS.Text
 Title.TextSize = 12
 Title.Font = Enum.Font.GothamBold
@@ -641,7 +638,7 @@ local Subtitle = Instance.new("TextLabel")
 Subtitle.BackgroundTransparency = 1
 Subtitle.Position = UDim2.fromOffset(45, 23)
 Subtitle.Size = UDim2.new(1, -90, 0, 14)
-Subtitle.Text = "TACTICAL SYSTEM"
+Subtitle.Text = "Exército Brásileiro 🇧🇷 | TACTICAL SYSTEM"
 Subtitle.TextColor3 = COLORS.Muted
 Subtitle.TextSize = 7
 Subtitle.Font = Enum.Font.GothamMedium
@@ -811,7 +808,7 @@ CreatePage("Movement")
 CreatePage("Config")
 
 CreateTab("Main", "●")
-CreateTab("Combat", "◉")
+CreateTab("Combat", "☉")
 CreateTab("Visual", "◆")
 CreateTab("Movement", "■")
 CreateTab("Config", "▲")
@@ -1900,6 +1897,7 @@ local function SaoDoMesmoTime(jogadorA, jogadorB)
     return false
 end
 
+
 local function TemItemEquipado()
     if not Player.Character then return false end
     for _, child in pairs(Player.Character:GetChildren()) do
@@ -1994,28 +1992,35 @@ local function DestruirPainelJJ()
     end)
     AutoJJ_Script = nil
 end
-local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end
+local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
--- NO COOLDOWN PROXIMITYPROMPT
+-- TESTE - NO COOLDOWN PROXIMITY PROMPT
 --========================================================--
 
-local function CarregarNoCooldown()
-    if NoCooldown_Carregado then
-        Notify("No Cooldown já está ativo")
+local function ExecutarTeste()
+    if Teste_Executado then
+        Notify("Teste já executado")
         return
     end
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))()
-    end)
-    NoCooldown_Carregado = true
-    Notify("No Cooldown carregado!")
-end
 
-local function DesativarNoCooldown()
-    NoCooldown_Ativado = false
-    NoCooldown_Carregado = false
-    Notify("No Cooldown desativado (reinicie o jogo para reverter)")
+    local sucesso, scriptRemoto = pcall(function()
+        local codigo = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
+        return loadstring(codigo)
+    end)
+
+    if not sucesso or type(scriptRemoto) ~= "function" then
+        Notify("Falha ao carregar Teste")
+        return
+    end
+
+    local executado = pcall(scriptRemoto)
+    if executado then
+        Teste_Executado = true
+        Notify("Teste ativado")
+    else
+        Notify("Falha ao executar Teste")
+    end
 end
 
 --========================================================--
@@ -2374,15 +2379,8 @@ Toggle(AutoJJSection, "AUTO JJ", false, function(State)
     if State then IniciarAutoJJ() else DestruirPainelJJ() end
 end)
 
-local NoCooldownSection = Section(MainPage, "NO COOLDOWN PROMPT")
-Toggle(NoCooldownSection, "NO COOLDOWN PROMPT", false, function(State)
-    NoCooldown_Ativado = State
-    if State then
-        CarregarNoCooldown()
-    else
-        DesativarNoCooldown()
-    end
-end)
+local TesteSection = Section(MainPage, "TESTE")
+Button(TesteSection, "Teste", ExecutarTeste)
 
 local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
@@ -2698,8 +2696,6 @@ Button(ActionsSection, "DESTRUIR", function()
     if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
-    NoCooldown_Ativado = false
-    NoCooldown_Carregado = false
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     AtualizarHighlightAlvo(nil)
