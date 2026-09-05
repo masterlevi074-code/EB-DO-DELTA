@@ -86,9 +86,6 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
-local NoCooldown_Ativado = false
-local NoCooldown_Conexao = nil
-
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -2356,17 +2353,6 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
-end)
-
-local InteractionSection = Section(MainPage, "INTERAÇÃO")
-Toggle(InteractionSection, "NO COOLDOWN", false, function(State)
-    if State then
-        pcall(function()
-            loadstring(game:HttpGet(
-                "https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"
-            ))()
-        end)
-    end
 end)
 
 --========================================================--
