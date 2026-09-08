@@ -87,7 +87,7 @@ local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
 local NoCooldown_Ativado = false
-local NoCooldown_Script = nil
+local NoCooldown_Conexao = nil
 
 local BlocosAtivado = false
 local Hitboxes = {}
@@ -95,6 +95,7 @@ local Hitboxes = {}
 local SpeedHack_Ativado = false
 local SpeedHack_Velocidade = 50
 local SpeedHack_Conexao = nil
+local MainLoop_Conexao = nil
 
 local Underground_Ativado = false
 local Underground_Conexao = nil
@@ -1862,8 +1863,13 @@ local function CriarESP(p)
         tlDistancia.TextStrokeTransparency = 0
         tlDistancia.Parent = bgDistancia
         if not LinhasTracers[p] then
-            local tracer = Drawing.new("Line"); tracer.Visible = false
-            pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
+            local okTracer, tracer = pcall(function() return Drawing.new("Line") end)
+            if okTracer and tracer then
+                tracer.Visible = false
+                pcall(function() tracer.Color = CorESP end)
+                tracer.Thickness = 1.2
+                LinhasTracers[p] = tracer
+            end
         end
         task.spawn(AtualizarESP)
     end
@@ -2007,16 +2013,39 @@ local function DestruirPainelJJ()
     end)
     AutoJJ_Script = nil
 end
-local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
+local function IniciarAutoJJ() CarregarScriptJJ(); if type(AutoJJ_Script) == "function" then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
 -- NO COOLDOWN
 --========================================================--
 
-local function CarregarScriptNoCooldown()
-    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt") .. "\nend)")() end) end
+local function IniciarNoCooldown()
+    local function removeHoldDuration(obj)
+        if obj:IsA("ProximityPrompt") then
+            obj.HoldDuration = 0
+        end
+    end
+
+    for _, obj in ipairs(game:GetDescendants()) do
+        removeHoldDuration(obj)
+    end
+
+    if not NoCooldown_Conexao then
+        NoCooldown_Conexao = game.DescendantAdded:Connect(function(obj)
+            if NoCooldown_Ativado then
+                removeHoldDuration(obj)
+            end
+        end)
+    end
 end
-local function IniciarNoCooldown() CarregarScriptNoCooldown() end
+
+local function DesativarNoCooldown()
+    NoCooldown_Ativado = false
+    if NoCooldown_Conexao then
+        NoCooldown_Conexao:Disconnect()
+        NoCooldown_Conexao = nil
+    end
+end
 
 --========================================================--
 -- BLOCOS PARKOUR
@@ -2155,7 +2184,7 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 -- LOOP PRINCIPAL
 --========================================================--
 
-RunService.RenderStepped:Connect(function()
+MainLoop_Conexao = RunService.RenderStepped:Connect(function()
     local camera = Workspace.CurrentCamera
     if not camera then return end
     local viewportTamanho = camera.ViewportSize
@@ -2388,7 +2417,7 @@ end)
 local NoCooldownSection = Section(MainPage, "NO COOLDOWN")
 Toggle(NoCooldownSection, "NO COOLDOWN", false, function(State)
     NoCooldown_Ativado = State
-    if State then IniciarNoCooldown() end
+    if State then IniciarNoCooldown() else DesativarNoCooldown() end
 end)
 
 --========================================================--
@@ -2588,8 +2617,10 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
             end
         end)
         local camera = Workspace.CurrentCamera
-        camera.CameraSubject = Underground_CameraPart
-        camera.CameraType = Enum.CameraType.Follow
+        if camera then
+            camera.CameraSubject = Underground_CameraPart
+            camera.CameraType = Enum.CameraType.Follow
+        end
     else
         Underground_Voltando = true
         if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
@@ -2694,11 +2725,13 @@ local ActionsSection = Section(ConfigPage, "ACTIONS")
 Button(ActionsSection, "DESTRUIR", function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
+    if MainLoop_Conexao then MainLoop_Conexao:Disconnect(); MainLoop_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
     if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
+    DesativarNoCooldown()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then
         pcall(function()
@@ -2800,6 +2833,8 @@ end)
 -- REDIMENSIONAMENTO
 --========================================================--
 
+local NormalSize = Main.Size
+
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Size = UDim2.fromOffset(20, 20)
@@ -2863,8 +2898,8 @@ end)
 --========================================================--
 
 local Minimized = false
-local NormalSize = Main.Size
 local MiniSize = UDim2.fromOffset(UI_WIDTH, 46)
+local MiniMoved = false
 
 local MiniButton = Instance.new("TextButton")
 MiniButton.Name = "MiniButton"
@@ -3037,7 +3072,6 @@ end)
 local MiniDragging = false
 local MiniDragStart
 local MiniStartPosition
-local MiniMoved = false
 
 MiniButton.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
