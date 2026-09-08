@@ -86,7 +86,6 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 local Teste_Executado = false
-local Teste_Script = nil
 
 local BlocosAtivado = false
 local Hitboxes = {}
@@ -1999,33 +1998,22 @@ local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(f
 -- TESTE - NO COOLDOWN PROXIMITY PROMPT
 --========================================================--
 
-local function CarregarTeste()
-    if not Teste_Script then
-        pcall(function()
-            Teste_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))
-        end)
-    end
-end
-
 local function IniciarTeste()
     if Teste_Executado then
-        Notify("Teste já executado")
+        if type(Notify) == "function" then Notify("Teste já executado") end
         return
     end
 
-    CarregarTeste()
-    if Teste_Script then
-        local sucesso = pcall(function()
-            Teste_Script()
-        end)
-        if sucesso then
-            Teste_Executado = true
-            Notify("Teste ativado")
-        else
-            Notify("Erro ao executar Teste")
-        end
+    local sucesso, erro = pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))()
+    end)
+
+    if sucesso then
+        Teste_Executado = true
+        if type(Notify) == "function" then Notify("Teste ativado") end
     else
-        Notify("Erro ao carregar Teste")
+        warn("Teste: " .. tostring(erro))
+        if type(Notify) == "function" then Notify("Erro ao executar Teste") end
     end
 end
 
