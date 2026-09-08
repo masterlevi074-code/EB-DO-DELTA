@@ -86,9 +86,6 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
-local NoCooldown_Ativado = false
-local NoCooldown_Script = nil
-
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -1978,7 +1975,7 @@ end
 --========================================================--
 
 local function CarregarScriptJJ()
-    if not AutoJJ_Script then pcall(function() AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua")) end) end
+    if not AutoJJ_Script then pcall(function() AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))() end) end
 end
 local function DestruirPainelJJ()
     pcall(function()
@@ -1997,26 +1994,6 @@ end
 local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
--- NO COOLDOWN
---========================================================--
-
-local function CarregarNoCooldown()
-    if not NoCooldown_Script then
-        pcall(function()
-            local codigo = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
-            NoCooldown_Script = loadstring(codigo .. "\nend)")
-        end)
-    end
-end
-
-local function IniciarNoCooldown()
-    CarregarNoCooldown()
-    if type(NoCooldown_Script) == "function" then
-        pcall(function() NoCooldown_Script() end)
-    end
-end
-
---=======================================================--
 -- BLOCOS PARKOUR
 --========================================================--
 
@@ -2376,12 +2353,6 @@ local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
-end)
-
-local UtiliesSection = Section(MainPage, "NO COOLDOWN")
-Toggle(UtiliesSection, "NO COOLDOWN", false, function(State)
-    NoCooldown_Ativado = State
-    if State then IniciarNoCooldown() end
 end)
 
 --========================================================--
