@@ -2052,13 +2052,20 @@ end
 --========================================================--
 
 local function CarregarTeste()
-    if not Teste_Script then pcall(function() Teste_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")) end) end
+    if not Teste_Script then
+        pcall(function()
+            local codigo = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
+            Teste_Script = loadstring(codigo .. "\nend)")
+        end)
+    end
 end
 
 local function IniciarTeste()
     CarregarTeste()
     if type(Teste_Script) == "function" then
         pcall(function() Teste_Script() end)
+    else
+        Notify("Erro: código remoto do Teste inválido")
     end
 end
 
