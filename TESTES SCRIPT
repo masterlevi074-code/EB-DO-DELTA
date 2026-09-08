@@ -85,7 +85,6 @@ local Hitbox_Material = Enum.Material.Neon
 
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
-
 local Teste_Executado = false
 local Teste_Script = nil
 
