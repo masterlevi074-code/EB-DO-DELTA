@@ -86,9 +86,6 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
-local NoCooldown_Ativado = false
-local NoCooldown_Conexao = nil
-
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -2030,19 +2027,9 @@ local function IniciarNoCooldown()
         removeHoldDuration(obj)
     end
 
-    if not NoCooldown_Conexao then
-        NoCooldown_Conexao = game.DescendantAdded:Connect(function(obj)
-            removeHoldDuration(obj)
-        end)
-    end
-end
-
-local function DesativarNoCooldown()
-    NoCooldown_Ativado = false
-    if NoCooldown_Conexao then
-        NoCooldown_Conexao:Disconnect()
-        NoCooldown_Conexao = nil
-    end
+    game.DescendantAdded:Connect(function(obj)
+        removeHoldDuration(obj)
+    end)
 end
 
 --========================================================--
@@ -2413,9 +2400,8 @@ Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
 end)
 
 local NoCooldownSection = Section(MainPage, "NO COOLDOWN")
-Toggle(NoCooldownSection, "NO COOLDOWN", false, function(State)
-    NoCooldown_Ativado = State
-    if State then IniciarNoCooldown() else DesativarNoCooldown() end
+Button(NoCooldownSection, "NO COOLDOWN", function()
+    IniciarNoCooldown()
 end)
 
 --========================================================--
@@ -2729,7 +2715,6 @@ Button(ActionsSection, "DESTRUIR", function()
     if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
-    DesativarNoCooldown()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then
         pcall(function()
