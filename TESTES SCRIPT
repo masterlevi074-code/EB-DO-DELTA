@@ -86,7 +86,7 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
-local NNoCooldown_Ativado = false
+local NoCooldown_Ativado = false
 local NoCooldown_Script = nil
 
 local BlocosAtivado = false
@@ -2001,7 +2001,19 @@ local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(f
 --========================================================--
 
 local function CarregarNoCooldown()
-    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))() end) end
+    if not NoCooldown_Script then
+        pcall(function()
+            local codigo = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
+            NoCooldown_Script = loadstring(codigo .. "\nend)")
+        end)
+    end
+end
+
+local function IniciarNoCooldown()
+    CarregarNoCooldown()
+    if type(NoCooldown_Script) == "function" then
+        pcall(function() NoCooldown_Script() end)
+    end
 end
 
 --=======================================================--
@@ -2366,10 +2378,10 @@ Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     if State then CreateHitboxes() else RemoveHitboxes() end
 end)
 
-local UtiliesSection = Sector(MainPage, "NO COOLDOWN")
+local UtiliesSection = Section(MainPage, "NO COOLDOWN")
 Toggle(UtiliesSection, "NO COOLDOWN", false, function(State)
     NoCooldown_Ativado = State
-    if State then IniciarNoCooldown() else Nothing() end
+    if State then IniciarNoCooldown() end
 end)
 
 --========================================================--
