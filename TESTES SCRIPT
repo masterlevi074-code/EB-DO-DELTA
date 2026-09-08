@@ -2014,7 +2014,7 @@ local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(f
 --========================================================--
 
 local function CarregarScriptNoCooldown()
-    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))() end) end
+    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt") .. "\nend)")() end) end
 end
 local function IniciarNoCooldown() CarregarScriptNoCooldown() end
 
