@@ -2020,7 +2020,9 @@ end
 
 local function CarregarScriptJJ()
     if not AutoJJ_Script then
-        AutoJJ_Script = CarregarCodigoRemoto("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua")
+        pcall(function()
+            AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua"))
+        end)
     end
 end
 local function DestruirPainelJJ()
@@ -2048,33 +2050,32 @@ end
 -- TESTE - NO COOLDOWN PROXIMITY PROMPT
 --========================================================--
 
+local function CarregarTeste()
+    if not Teste_Script then
+        pcall(function()
+            Teste_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))
+        end)
+    end
+end
+
 local function IniciarTeste()
     if Teste_Executado then
         Notify("Teste já executado")
         return
     end
-    if not Teste_Script then
-        local scriptCarregado, erroCarregamento = CarregarCodigoRemoto("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
-        if type(scriptCarregado) ~= "function" then
-            Notify("Erro ao carregar Teste: " .. tostring(erroCarregamento))
-            return
-        end
-        Teste_Script = scriptCarregado
-    end
-
-    if type(Teste_Script) ~= "function" then
-        Notify("Teste não retornou uma função")
-        return
-    end
-
-    local executou, erroExecucao = pcall(function()
+    CarregarTeste()
+    if type(Teste_Script) == "function" then
+        local executou, erroExecucao = pcall(function()
             Teste_Script()
-    end)
-    if executou then
-        Teste_Executado = true
-        Notify("Teste ativado")
+        end)
+        if executou then
+            Teste_Executado = true
+            Notify("Teste ativado")
+        else
+            Notify("Erro no Teste: " .. tostring(erroExecucao))
+        end
     else
-        Notify("Erro no Teste: " .. tostring(erroExecucao))
+        Notify("Erro ao carregar Teste")
     end
 end
 
