@@ -2010,8 +2010,8 @@ local function DestruirPainelNoCooldown()
         for _, gui in pairs(PlayerGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
         for _, gui in pairs(todosGuis) do
             local nome = gui.Name:lower()
-            if nome:find(ndddddd") or nome:find("nddddd") then gui:Destroy()
-            else for _, child in pairs(gui:GetDescendants()) do if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then gui:Destroy(); break end end
+            if nome:find("ndddddd") or nome:find("nddddd") then gui:Destroy()
+            else for _, child in pairs(gui:GetDescendants()) do if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Ndddddd" then gui:Destroy(); break end end
             end
         end
     end)
