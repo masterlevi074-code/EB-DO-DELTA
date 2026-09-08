@@ -86,8 +86,8 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
-local AutoJJ_Ativado = false
-local AutoJJ_Script = nil
+local NoCooldown_Ativado = false
+local NoCooldown_Script = nil
 
 local BlocosAtivado = false
 local Hitboxes = {}
@@ -2000,24 +2000,24 @@ local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(f
 -- NO COOLDOWN
 --========================================================--
 
-local function CarregarScriptJJ()
-    if not AutoJJ_Script then pcall(function() AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua")) end) end
+local function CarregarScriptNoCooldown()
+    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))() end) end
 end
-local function DestruirPainelJJ()
+local function DestruirPainelNoCooldown()
     pcall(function()
         local todosGuis = {}
         for _, gui in pairs(CoreGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
         for _, gui in pairs(PlayerGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
         for _, gui in pairs(todosGuis) do
             local nome = gui.Name:lower()
-            if nome:find("auto") or nome:find("jj") then gui:Destroy()
+            if nome:find(ndddddd") or nome:find("nddddd") then gui:Destroy()
             else for _, child in pairs(gui:GetDescendants()) do if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Auto jjs" then gui:Destroy(); break end end
             end
         end
     end)
-    AutoJJ_Script = nil
+   NoCooldown_Script = nil
 end
-local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
+local function IniciarNoCooldown() CarregarScriptNoCooldown(); if NoCooldown_Script then pcall(function() NoCooldown_Script() end) end end
 
 --========================================================--
 -- BLOCOS PARKOUR
@@ -2381,10 +2381,10 @@ Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     if State then CreateHitboxes() else RemoveHitboxes() end
 end)
 
-local AutoJJSection = Section(MainPage, "AUTO JJ")
-Toggle(AutoJJSection, "AUTO JJ", false, function(State)
-    AutoJJ_Ativado = State
-    if State then IniciarAutoJJ() else DestruirPainelJJ() end
+local NoCooldownSection = Section(MainPage, "NO COOLDOWN")
+Toggle(NoCooldownSection, "NO COOLDOWN", false, function(State)
+    NoCooldown_Ativado = State
+    if State then IniciarNoCooldown() else DestruirPainelNoCooldown() end
 end)
 
 --========================================================--
