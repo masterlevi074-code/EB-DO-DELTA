@@ -137,12 +137,15 @@ local ArmasPermitidasAIM = {
     ["HK416"] = true,
 }
 
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Visible = false
-FOVCircle.Color = Aimbot_CorFOV
-FOVCircle.Thickness = Aimbot_EspessuraFOV
-FOVCircle.Radius = Aimbot_RaioFOV
-FOVCircle.Filled = false
+local FOVCircle = nil
+pcall(function()
+    FOVCircle = Drawing.new("Circle")
+    FOVCircle.Visible = false
+    FOVCircle.Color = Aimbot_CorFOV
+    FOVCircle.Thickness = Aimbot_EspessuraFOV
+    FOVCircle.Radius = Aimbot_RaioFOV
+    FOVCircle.Filled = false
+end)
 
 --========================================================--
 -- TAMANHO
@@ -1870,9 +1873,14 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
+Players.PlayerRemoving:Connect(function(p)
+    local tracer = LinhasTracers[p]
+    if tracer then pcall(function() if type(tracer.Remove) == "function" then tracer:Remove() elseif type(tracer.Destroy) == "function" then tracer:Destroy() end end); LinhasTracers[p] = nil end
+    RemoverCaixaESP2D(p)
+end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
+    if not camera or not alvoPosicao or camera.ViewportSize.Y <= 0 then return 0 end
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
     local fovVertical = math.rad(camera.FieldOfView)
     local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
@@ -1880,7 +1888,9 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
 end
 
 local function EstaVisivel(alvoParte)
-    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
+    local camera = Workspace.CurrentCamera
+    if not camera or not alvoParte then return false end
+    local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
@@ -1913,7 +1923,10 @@ end
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil; local melhorPontuacao = math.huge
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera
+    if not camera then return nil end
+    local viewportTamanho = camera.ViewportSize
+    if not viewportTamanho or viewportTamanho.Y <= 0 then return nil end
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
@@ -2003,21 +2016,7 @@ local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(f
 local function CarregarScriptNoCooldown()
     if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))() end) end
 end
-local function DestruirPainelNoCooldown()
-    pcall(function()
-        local todosGuis = {}
-        for _, gui in pairs(CoreGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
-        for _, gui in pairs(PlayerGui:GetChildren()) do if gui:IsA("ScreenGui") then table.insert(todosGuis, gui) end end
-        for _, gui in pairs(todosGuis) do
-            local nome = gui.Name:lower()
-            if nome:find("ndddddd") or nome:find("nddddd") then gui:Destroy()
-            else for _, child in pairs(gui:GetDescendants()) do if (child:IsA("TextLabel") or child:IsA("TextButton")) and child.Text == "Ndddddd" then gui:Destroy(); break end end
-            end
-        end
-    end)
-   NoCooldown_Script = nil
-end
-local function IniciarNoCooldown() CarregarScriptNoCooldown(); if NoCooldown_Script then pcall(function() NoCooldown_Script() end) end end
+local function IniciarNoCooldown() CarregarScriptNoCooldown() end
 
 --========================================================--
 -- BLOCOS PARKOUR
@@ -2157,7 +2156,10 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 --========================================================--
 
 RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
+    local camera = Workspace.CurrentCamera
+    if not camera then return end
+    local viewportTamanho = camera.ViewportSize
+    if not viewportTamanho or viewportTamanho.Y <= 0 then return end
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
@@ -2274,7 +2276,7 @@ end
 
 local function ExecutarComandoAdmin(mensagem)
     if not Admin_Ativado then return end
-    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
+    if type(mensagem) ~= "string" or mensagem:sub(1, #Admin_Prefixo) ~= Admin_Prefixo then return end
     
     local comando = mensagem:sub(#Admin_Prefixo + 1)
     local args = comando:split(" ")
@@ -2302,9 +2304,11 @@ local function ExecutarComandoAdmin(mensagem)
         if Player.Character then for _, part in pairs(Player.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0 end end; Admin_Invisivel = false end
     elseif cmd == "view" then
         local alvo = EncontrarJogadorAdmin(resto)
-        if alvo and alvo.Character then Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
+        local camera = Workspace.CurrentCamera
+        if camera and alvo and alvo.Character then camera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
     elseif cmd == "unview" then
-        Workspace.CurrentCamera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character
+        local camera = Workspace.CurrentCamera
+        if camera then camera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character end
     elseif cmd == "sit" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Sit = true end
@@ -2384,7 +2388,7 @@ end)
 local NoCooldownSection = Section(MainPage, "NO COOLDOWN")
 Toggle(NoCooldownSection, "NO COOLDOWN", false, function(State)
     NoCooldown_Ativado = State
-    if State then IniciarNoCooldown() else DestruirPainelNoCooldown() end
+    if State then IniciarNoCooldown() end
 end)
 
 --========================================================--
@@ -2395,7 +2399,7 @@ local CombatPage = Pages.Combat
 
 local AimbotSection = Section(CombatPage, "AIMBOT")
 Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
-Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
+Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; if FOVCircle then FOVCircle.Visible = State end end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
@@ -2403,11 +2407,11 @@ MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "
 end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
-Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
+Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; if FOVCircle then FOVCircle.Radius = Value end end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 2, function(Value)
     Aimbot_EspessuraFOV = Value
-    FOVCircle.Thickness = Value
+    if FOVCircle then FOVCircle.Thickness = Value end
 end)
 
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
@@ -2696,12 +2700,35 @@ Button(ActionsSection, "DESTRUIR", function()
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
-    if FOVCircle then FOVCircle:Destroy() end
+    if FOVCircle then
+        pcall(function()
+            if type(FOVCircle.Remove) == "function" then FOVCircle:Remove() elseif type(FOVCircle.Destroy) == "function" then FOVCircle:Destroy() end
+        end)
+        FOVCircle = nil
+    end
     AtualizarHighlightAlvo(nil)
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
-    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
+    for _, t in pairs(LinhasTracers) do
+        if t then pcall(function() if type(t.Remove) == "function" then t:Remove() elseif type(t.Destroy) == "function" then t:Destroy() end end) end
+    end
+    LinhasTracers = {}
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
-    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
+    for _, plr in pairs(Players:GetPlayers()) do
+        local character = plr.Character
+        if character then
+            local head = character:FindFirstChild("Head")
+            for _, name in ipairs({"NoahzinESP", "NoahzinBox"}) do
+                local object = character:FindFirstChild(name)
+                if object then object:Destroy() end
+            end
+            if head then
+                for _, name in ipairs({"NoahzinName", "NoahzinDistancia", "NoahzinTime", "NoahzinVida", "NoahzinArma"}) do
+                    local object = head:FindFirstChild(name)
+                    if object then object:Destroy() end
+                end
+            end
+        end
+    end
     Gui:Destroy()
 end)
 
