@@ -82,13 +82,9 @@ local Hitbox_Tamanho = 20
 local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
-local HitboxOriginais = {}
 
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
-
-local Teste_Ativado = false
-local Teste_Script = nil
 
 local BlocosAtivado = false
 local Hitboxes = {}
@@ -96,7 +92,6 @@ local Hitboxes = {}
 local SpeedHack_Ativado = false
 local SpeedHack_Velocidade = 50
 local SpeedHack_Conexao = nil
-local RenderStepped_Conexao = nil
 
 local Underground_Ativado = false
 local Underground_Conexao = nil
@@ -118,7 +113,6 @@ local Admin_Invisivel = false
 
 local ChatWindow_Ativado = false
 local ChatWindow_Conexoes = nil
-local CameraState = {Subject = nil, Type = nil}
 
 local JogadoresIgnorados = {}
 local DropdownSelecionado = ""
@@ -137,43 +131,15 @@ local ArmasPermitidasAIM = {
     ["Revolver"] = true,
     ["G36C"] = true,
     ["BERETTA"] = true,
-	["HK416"] = true,
+    ["HK416"] = true,
 }
 
-local function RemoverDrawing(drawing)
-    if not drawing then return end
-    pcall(function()
-        if type(drawing.Remove) == "function" then
-            drawing:Remove()
-        elseif type(drawing.Destroy) == "function" then
-            drawing:Destroy()
-        end
-    end)
-end
-
-local function CarregarCodigoRemoto(url)
-    if type(url) ~= "string" or url == "" then return nil, "URL inválida" end
-    if type(loadstring) ~= "function" then return nil, "loadstring não está disponível neste ambiente" end
-    local okHttp, sourceOrError = pcall(function() return game:HttpGet(url) end)
-    if not okHttp or type(sourceOrError) ~= "string" or sourceOrError == "" then
-        return nil, "falha no HttpGet: " .. tostring(sourceOrError)
-    end
-    local okCompile, compiledOrError = pcall(function() return loadstring(sourceOrError) end)
-    if not okCompile or type(compiledOrError) ~= "function" then
-        return nil, "falha no loadstring: " .. tostring(compiledOrError)
-    end
-    return compiledOrError
-end
-
-local FOVCircle = nil
-pcall(function()
-    FOVCircle = Drawing.new("Circle")
-    FOVCircle.Visible = false
-    FOVCircle.Color = Aimbot_CorFOV
-    FOVCircle.Thickness = Aimbot_EspessuraFOV
-    FOVCircle.Radius = Aimbot_RaioFOV
-    FOVCircle.Filled = false
-end)
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
+FOVCircle.Color = Aimbot_CorFOV
+FOVCircle.Thickness = Aimbot_EspessuraFOV
+FOVCircle.Radius = Aimbot_RaioFOV
+FOVCircle.Filled = false
 
 --========================================================--
 -- TAMANHO
@@ -1053,7 +1019,7 @@ local function Toggle(Container, Text, Default, Callback)
 		local CirclePosition = State and UDim2.new(1, -14, 0, 2) or UDim2.fromOffset(2, 2)
 		TweenService:Create(Switch, TweenInfo.new(0.12), {BackgroundColor3 = SwitchColor}):Play()
 		TweenService:Create(Circle, TweenInfo.new(0.12), {Position = CirclePosition}):Play()
-			if type(Callback) == "function" then Callback(State) end
+		if Callback then Callback(State) end
 	end
 
 	Button.MouseButton1Click:Connect(function()
@@ -1129,7 +1095,7 @@ local function MultiDropdown(Container, Text, Options, Defaults, Callback)
             if selected[option] then table.insert(names, option) end
         end
         Label.Text = Text .. (#names > 0 and (": " .. table.concat(names, ", ")) or ": nenhum")
-            if type(Callback) == "function" then Callback(selected) end
+        if Callback then Callback(selected) end
     end
     for _, option in ipairs(Options) do
         local OptionButton = Instance.new("TextButton")
@@ -1248,7 +1214,7 @@ local function Slider(Container, Text, Min, Max, Default, Callback)
 		Fill.Size = UDim2.new(P, 0, 1, 0)
 		Knob.Position = UDim2.new(P, 0, 0.5, 0)
 		ValueLabel.Text = tostring(Value)
-            if type(Callback) == "function" then Callback(Value) end
+		if Callback then Callback(Value) end
 	end
 
 	Bar.InputBegan:Connect(function(Input)
@@ -1296,7 +1262,7 @@ local function Button(Container, Text, Callback)
 	Corner.Parent = B
 
 	B.MouseButton1Click:Connect(function()
-		if type(Callback) == "function" then Callback() end
+		if Callback then Callback() end
 	end)
 
     AdicionarDescricao(B, Text)
@@ -1348,7 +1314,7 @@ local function Input(Container, LabelText, Placeholder, Callback)
     BoxCorner.Parent = Box
 
     Box.FocusLost:Connect(function(enterPressed)
-        if enterPressed and type(Callback) == "function" then
+        if enterPressed and Callback then
             Callback(Box.Text)
         end
     end)
@@ -1890,13 +1856,8 @@ local function CriarESP(p)
         tlDistancia.TextStrokeTransparency = 0
         tlDistancia.Parent = bgDistancia
         if not LinhasTracers[p] then
-            local ok, tracer = pcall(function() return Drawing.new("Line") end)
-            if ok and tracer then
-                tracer.Visible = false
-                pcall(function() tracer.Color = CorESP end)
-                tracer.Thickness = 1.2
-                LinhasTracers[p] = tracer
-            end
+            local tracer = Drawing.new("Line"); tracer.Visible = false
+            pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
         end
         task.spawn(AtualizarESP)
     end
@@ -1906,10 +1867,9 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then RemoverDrawing(LinhasTracers[p]); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
-    if not camera or not alvoPosicao or camera.ViewportSize.Y <= 0 then return 0 end
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
     local fovVertical = math.rad(camera.FieldOfView)
     local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
@@ -1917,9 +1877,7 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
 end
 
 local function EstaVisivel(alvoParte)
-    local camera = Workspace.CurrentCamera
-    if not camera or not alvoParte then return false end
-    local cameraPos = camera.CFrame.Position
+    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
@@ -1952,10 +1910,7 @@ end
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil; local melhorPontuacao = math.huge
-    local camera = Workspace.CurrentCamera
-    if not camera then return nil end
-    local viewportTamanho = camera.ViewportSize
-    if not viewportTamanho or viewportTamanho.Y <= 0 then return nil end
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
@@ -2020,11 +1975,7 @@ end
 --========================================================--
 
 local function CarregarScriptJJ()
-    if not AutoJJ_Script then
-        pcall(function()
-            AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua"))
-        end)
-    end
+    if not AutoJJ_Script then pcall(function() AutoJJ_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/CoiledTom/EB-do-delta-/refs/heads/main/auto%20jjs%20EB%20do%20delta%20com%20delay.lua")) end) end
 end
 local function DestruirPainelJJ()
     pcall(function()
@@ -2040,34 +1991,12 @@ local function DestruirPainelJJ()
     end)
     AutoJJ_Script = nil
 end
-local function IniciarAutoJJ()
-    CarregarScriptJJ()
-    if type(AutoJJ_Script) == "function" then
-        pcall(function() AutoJJ_Script() end)
-    end
+local function CarregarScriptNoCooldown()
+    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")) end) end
 end
+local function IniciarNoCooldown() CarregarScriptNoCooldown(); if NoCooldown_Script then pcall(function() NoCooldown_Script() end) end end
 
---========================================================--
--- TESTE - NO COOLDOWN PROXIMITY PROMPT
---========================================================--
-
-local function CarregarTeste()
-    if not Teste_Script then
-        pcall(function()
-            local codigo = game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")
-            Teste_Script = loadstring(codigo .. "\nend)")
-        end)
-    end
-end
-
-local function IniciarTeste()
-    CarregarTeste()
-    if type(Teste_Script) == "function" then
-        pcall(function() Teste_Script() end)
-    else
-        Notify("Erro: código remoto do Teste inválido")
-    end
-end
+local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
 -- BLOCOS PARKOUR
@@ -2202,31 +2131,12 @@ local function CreateHitboxes()
 end
 local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destroy() end end; Hitboxes = {} end
 
-local function RestaurarHitboxes()
-    for player, original in pairs(HitboxOriginais) do
-        local root = original.Root or (player and player.Character and player.Character:FindFirstChild("HumanoidRootPart"))
-        if root then
-            pcall(function()
-                root.Size = original.Size
-                root.Transparency = original.Transparency
-                root.Material = original.Material
-                root.Color = original.Color
-                root.CanCollide = original.CanCollide
-            end)
-        end
-    end
-    HitboxOriginais = {}
-end
-
 --========================================================--
 -- LOOP PRINCIPAL
 --========================================================--
 
-RenderStepped_Conexao = RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera
-    if not camera then return end
-    local viewportTamanho = camera.ViewportSize
-    if not viewportTamanho or viewportTamanho.Y <= 0 then return end
+RunService.RenderStepped:Connect(function()
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
@@ -2247,23 +2157,7 @@ RenderStepped_Conexao = RunService.RenderStepped:Connect(function()
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= Player and p.Character then
             local root = p.Character:FindFirstChild("HumanoidRootPart"); local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            if hum and root and hum.Health > 0 and Hitbox_Ativado then
-                if not HitboxOriginais[p] or HitboxOriginais[p].Root ~= root then
-                    HitboxOriginais[p] = {
-                        Root = root,
-                        Size = root.Size,
-                        Transparency = root.Transparency,
-                        Material = root.Material,
-                        Color = root.Color,
-                        CanCollide = root.CanCollide,
-                    }
-                end
-                root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
-                root.Transparency = Hitbox_Transparencia
-                pcall(function() root.Material = Hitbox_Material end)
-                pcall(function() root.Color = Hitbox_Cor end)
-                root.CanCollide = false
-            end
+            if hum and root and hum.Health > 0 and Hitbox_Ativado then root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho); root.Transparency = Hitbox_Transparencia; pcall(function() root.Material = Hitbox_Material end); pcall(function() root.Color = Hitbox_Cor end); root.CanCollide = false end
         end
     end
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
@@ -2359,7 +2253,7 @@ end
 
 local function ExecutarComandoAdmin(mensagem)
     if not Admin_Ativado then return end
-    if type(mensagem) ~= "string" or mensagem:sub(1, #Admin_Prefixo) ~= Admin_Prefixo then return end
+    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
     
     local comando = mensagem:sub(#Admin_Prefixo + 1)
     local args = comando:split(" ")
@@ -2387,11 +2281,9 @@ local function ExecutarComandoAdmin(mensagem)
         if Player.Character then for _, part in pairs(Player.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0 end end; Admin_Invisivel = false end
     elseif cmd == "view" then
         local alvo = EncontrarJogadorAdmin(resto)
-        local camera = Workspace.CurrentCamera
-        if camera and alvo and alvo.Character then camera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
+        if alvo and alvo.Character then Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
     elseif cmd == "unview" then
-        local camera = Workspace.CurrentCamera
-        if camera then camera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character end
+        Workspace.CurrentCamera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character
     elseif cmd == "sit" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Sit = true end
@@ -2462,10 +2354,10 @@ Toggle(AutoJJSection, "AUTO JJ", false, function(State)
     if State then IniciarAutoJJ() else DestruirPainelJJ() end
 end)
 
-local TesteSection = Section(MainPage, "TESTE")
-Button(TesteSection, "Teste", function()
-    Teste_Ativado = true
-    IniciarTeste()
+local NoCooldownSection = Section(MainPage, "OUTROS")
+Toggle(NoCooldownSection, "NO COOLDOWN", false, function(State)
+    NoCooldown_Ativado = State
+    if State then IniciarNoCooldown() end
 end)
 
 local BlocosSection = Section(MainPage, "BLOCOS")
@@ -2482,10 +2374,7 @@ local CombatPage = Pages.Combat
 
 local AimbotSection = Section(CombatPage, "AIMBOT")
 Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
-Toggle(AimbotSection, "SHOW FOV", false, function(State)
-    Aimbot_UsarFOV = State
-    if FOVCircle then FOVCircle.Visible = State end
-end)
+Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
@@ -2493,14 +2382,11 @@ MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "
 end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
-Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value)
-    Aimbot_RaioFOV = Value
-    if FOVCircle then FOVCircle.Radius = Value end
-end)
+Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 2, function(Value)
     Aimbot_EspessuraFOV = Value
-    if FOVCircle then FOVCircle.Thickness = Value end
+    FOVCircle.Thickness = Value
 end)
 
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
@@ -2523,7 +2409,7 @@ ColorPicker(FOVColorSection, "FOV", Aimbot_CorFOV)
 local HitboxSection = Section(CombatPage, "HITBOX")
 Toggle(HitboxSection, "HITBOX", false, function(State)
     Hitbox_Ativado = State
-    if not State then RestaurarHitboxes() end
+    if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
 end)
 Slider(HitboxSection, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
 Slider(HitboxSection, "HITBOX TRANSP", 0, 100, 70, function(Value)
@@ -2677,22 +2563,13 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
             end
         end)
         local camera = Workspace.CurrentCamera
-        if camera then
-            CameraState.Subject = camera.CameraSubject
-            CameraState.Type = camera.CameraType
-            camera.CameraSubject = Underground_CameraPart
-            camera.CameraType = Enum.CameraType.Follow
-        end
+        camera.CameraSubject = Underground_CameraPart
+        camera.CameraType = Enum.CameraType.Follow
     else
         Underground_Voltando = true
         if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
         local camera = Workspace.CurrentCamera
-        if camera then
-            camera.CameraSubject = CameraState.Subject or (Player.Character and Player.Character:FindFirstChild("Humanoid"))
-            camera.CameraType = CameraState.Type or Enum.CameraType.Follow
-            CameraState.Subject = nil
-            CameraState.Type = nil
-        end
+        if camera then camera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid"); camera.CameraType = Enum.CameraType.Follow end
         if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
         if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
         root.CFrame = CFrame.new(root.Position.X, Underground_yCamera, root.Position.Z)
@@ -2792,18 +2669,16 @@ local ActionsSection = Section(ConfigPage, "ACTIONS")
 Button(ActionsSection, "DESTRUIR", function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
-    if RenderStepped_Conexao then RenderStepped_Conexao:Disconnect(); RenderStepped_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
     if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
-    RemoveHitboxes(); RestaurarHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
-    RemoverDrawing(FOVCircle)
-    FOVCircle = nil
+    RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
+    if FOVCircle then FOVCircle:Destroy() end
     AtualizarHighlightAlvo(nil)
-    for _, t in pairs(LinhasTracers) do RemoverDrawing(t) end
-    LinhasTracers = {}
+    for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
+    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
     Gui:Destroy()
@@ -2877,9 +2752,6 @@ end)
 -- REDIMENSIONAMENTO
 --========================================================--
 
-local NormalSize = Main.Size
-local MiniMoved = false
-
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Size = UDim2.fromOffset(20, 20)
@@ -2943,6 +2815,7 @@ end)
 --========================================================--
 
 local Minimized = false
+local NormalSize = Main.Size
 local MiniSize = UDim2.fromOffset(UI_WIDTH, 46)
 
 local MiniButton = Instance.new("TextButton")
@@ -3116,6 +2989,7 @@ end)
 local MiniDragging = false
 local MiniDragStart
 local MiniStartPosition
+local MiniMoved = false
 
 MiniButton.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
