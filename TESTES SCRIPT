@@ -85,8 +85,6 @@ local Hitbox_Material = Enum.Material.Neon
 
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
-local Teste_Executado = false
-local Teste_Script = nil
 
 local BlocosAtivado = false
 local Hitboxes = {}
@@ -1996,25 +1994,6 @@ end
 local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
--- TESTE - NO COOLDOWN PROXIMITY PROMPT
---========================================================--
-
-local function IniciarTeste()
-    if Teste_Executado then return end
-    if not Teste_Script then
-        pcall(function()
-            Teste_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))
-        end)
-    end
-    if Teste_Script then
-        pcall(function()
-            Teste_Script()
-            Teste_Executado = true
-        end)
-    end
-end
-
---========================================================--
 -- BLOCOS PARKOUR
 --========================================================--
 
@@ -2369,9 +2348,6 @@ Toggle(AutoJJSection, "AUTO JJ", false, function(State)
     AutoJJ_Ativado = State
     if State then IniciarAutoJJ() else DestruirPainelJJ() end
 end)
-
-local TesteSection = Section(MainPage, "TESTE")
-Button(TesteSection, "Teste", IniciarTeste)
 
 local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
