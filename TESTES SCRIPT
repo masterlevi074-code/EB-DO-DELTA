@@ -86,7 +86,8 @@ local HitboxOriginais = {}
 
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
-local Teste_Executado = false
+
+local Teste_Ativado = false
 local Teste_Script = nil
 
 local BlocosAtivado = false
@@ -2051,31 +2052,13 @@ end
 --========================================================--
 
 local function CarregarTeste()
-    if not Teste_Script then
-        pcall(function()
-            Teste_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))
-        end)
-    end
+    if not Teste_Script then pcall(function() Teste_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")) end) end
 end
 
 local function IniciarTeste()
-    if Teste_Executado then
-        Notify("Teste já executado")
-        return
-    end
     CarregarTeste()
     if type(Teste_Script) == "function" then
-        local executou, erroExecucao = pcall(function()
-            Teste_Script()
-        end)
-        if executou then
-            Teste_Executado = true
-            Notify("Teste ativado")
-        else
-            Notify("Erro no Teste: " .. tostring(erroExecucao))
-        end
-    else
-        Notify("Erro ao carregar Teste")
+        pcall(function() Teste_Script() end)
     end
 end
 
@@ -2474,6 +2457,7 @@ end)
 
 local TesteSection = Section(MainPage, "TESTE")
 Button(TesteSection, "Teste", function()
+    Teste_Ativado = true
     IniciarTeste()
 end)
 
