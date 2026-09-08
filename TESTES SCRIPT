@@ -86,6 +86,9 @@ local Hitbox_Material = Enum.Material.Neon
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
+local NNoCooldown_Ativado = false
+local NoCooldown_Script = nil
+
 local BlocosAtivado = false
 local Hitboxes = {}
 
@@ -1991,14 +1994,17 @@ local function DestruirPainelJJ()
     end)
     AutoJJ_Script = nil
 end
-local function CarregarScriptNoCooldown()
-    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt")) end) end
-end
-local function IniciarNoCooldown() CarregarScriptNoCooldown(); if NoCooldown_Script then pcall(function() NoCooldown_Script() end) end end
-
 local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
+-- NO COOLDOWN
+--========================================================--
+
+local function CarregarNoCooldown()
+    if not NoCooldown_Script then pcall(function() NoCooldown_Script = loadstring(game:HttpGet("https://raw.githubusercontent.com/masterlevi074-code/EB-DO-DELTA/refs/heads/main/No%20Cooldown%20ProximityPrompt"))() end) end
+end
+
+--=======================================================--
 -- BLOCOS PARKOUR
 --========================================================--
 
@@ -2354,16 +2360,16 @@ Toggle(AutoJJSection, "AUTO JJ", false, function(State)
     if State then IniciarAutoJJ() else DestruirPainelJJ() end
 end)
 
-local NoCooldownSection = Section(MainPage, "OUTROS")
-Toggle(NoCooldownSection, "NO COOLDOWN", false, function(State)
-    NoCooldown_Ativado = State
-    if State then IniciarNoCooldown() end
-end)
-
 local BlocosSection = Section(MainPage, "BLOCOS")
 Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     BlocosAtivado = State
     if State then CreateHitboxes() else RemoveHitboxes() end
+end)
+
+local UtiliesSection = Sector(MainPage, "NO COOLDOWN")
+Toggle(UtiliesSection, "NO COOLDOWN", false, function(State)
+    NoCooldown_Ativado = State
+    if State then IniciarNoCooldown() else Nothing() end
 end)
 
 --========================================================--
