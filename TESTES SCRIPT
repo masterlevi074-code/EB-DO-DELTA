@@ -659,19 +659,6 @@ local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
-local InfoButton = Instance.new("TextButton")
-InfoButton.Size = UDim2.fromOffset(38, 26)
-InfoButton.Position = UDim2.new(1, -76, 0, 9)
-InfoButton.BackgroundColor3 = COLORS.Panel2
-InfoButton.BorderSizePixel = 0
-InfoButton.Text = "INFO"
-InfoButton.TextColor3 = COLORS.Text
-InfoButton.TextSize = 7
-InfoButton.Font = Enum.Font.GothamBold
-InfoButton.AutoButtonColor = false
-InfoButton.ZIndex = 110
-InfoButton.Parent = Top
-
 --========================================================--
 -- EFEITOS DECORATIVOS
 --========================================================--
