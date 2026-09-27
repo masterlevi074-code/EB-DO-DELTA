@@ -185,7 +185,7 @@ local Config = {
 }
 
 --========================================================--
--- SCREEN GUI
+-- SCREEN GUI (COREGUI PARA SOBREPOR TUDO)
 --========================================================--
 
 local Gui = Instance.new("ScreenGui")
@@ -230,6 +230,7 @@ LoadingGradient.Color = ColorSequence.new({
 LoadingGradient.Rotation = 45
 LoadingGradient.Parent = LoadingOverlay
 
+-- Logo central
 local LoadingLogo = Instance.new("Frame")
 LoadingLogo.Size = UDim2.fromOffset(80, 80)
 LoadingLogo.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -259,6 +260,7 @@ LoadingLogoText.Font = Enum.Font.GothamBlack
 LoadingLogoText.ZIndex = 1003
 LoadingLogoText.Parent = LoadingLogo
 
+-- Título
 local LoadingTitle = Instance.new("TextLabel")
 LoadingTitle.Size = UDim2.new(1, -40, 0, 30)
 LoadingTitle.Position = UDim2.new(0, 20, 0.62, 0)
@@ -270,6 +272,7 @@ LoadingTitle.Font = Enum.Font.GothamBlack
 LoadingTitle.ZIndex = 1004
 LoadingTitle.Parent = LoadingScreen
 
+-- Subtítulo
 local LoadingSubtitle = Instance.new("TextLabel")
 LoadingSubtitle.Size = UDim2.new(1, -40, 0, 20)
 LoadingSubtitle.Position = UDim2.new(0, 20, 0.68, 0)
@@ -281,6 +284,7 @@ LoadingSubtitle.Font = Enum.Font.GothamMedium
 LoadingSubtitle.ZIndex = 1004
 LoadingSubtitle.Parent = LoadingScreen
 
+-- Barra de progresso
 local LoadingBarBg = Instance.new("Frame")
 LoadingBarBg.Size = UDim2.new(0.6, 0, 0, 4)
 LoadingBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -305,6 +309,7 @@ local LoadingBarFillCorner = Instance.new("UICorner")
 LoadingBarFillCorner.CornerRadius = UDim.new(1, 0)
 LoadingBarFillCorner.Parent = LoadingBarFill
 
+-- Texto de status
 local LoadingStatus = Instance.new("TextLabel")
 LoadingStatus.Size = UDim2.new(1, -40, 0, 14)
 LoadingStatus.Position = UDim2.new(0, 20, 0.81, 0)
@@ -316,6 +321,7 @@ LoadingStatus.Font = Enum.Font.GothamMedium
 LoadingStatus.ZIndex = 1007
 LoadingStatus.Parent = LoadingScreen
 
+-- Pontos decorativos flutuantes
 task.spawn(function()
     local random = Random.new()
     while LoadingScreen and LoadingScreen.Parent do
@@ -345,6 +351,7 @@ task.spawn(function()
     end
 end)
 
+-- Animações de entrada
 LoadingLogo.Rotation = -15
 LoadingLogo.Size = UDim2.fromOffset(0, 0)
 TweenService:Create(LoadingLogo, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -360,6 +367,7 @@ TweenService:Create(LoadingTitle, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum
 TweenService:Create(LoadingSubtitle, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 TweenService:Create(LoadingStatus, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 
+-- Animação da barra de progresso
 local statusTexts = {"Carregando...", "Inicializando...", "Preparando interface...", "Concluído!"}
 local function UpdateLoadingStatus(index)
     if index <= #statusTexts then
@@ -373,8 +381,10 @@ task.spawn(function() UpdateLoadingStatus(1) end)
 local loadingBarTween = TweenService:Create(LoadingBarFill, TweenInfo.new(6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
 loadingBarTween:Play()
 
+-- Remover tela de carregamento após 6 segundos com animação 
 task.delay(6, function()
     if LoadingScreen then
+        -- Fade out com zoom e rotação
         local fadeOut = TweenService:Create(LoadingScreen, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             BackgroundTransparency = 1,
             Size = UDim2.fromScale(1.2, 1.2),
@@ -383,6 +393,7 @@ task.delay(6, function()
         })
         fadeOut:Play()
 
+        -- Fade out dos textos internos
         for _, child in pairs(LoadingScreen:GetDescendants()) do
             if child:IsA("TextLabel") or child:IsA("TextButton") then
                 TweenService:Create(child, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
@@ -469,7 +480,6 @@ local function AdicionarDescricao(object, nome)
     label.ZIndex = (object.ZIndex or 1) + 1
     label.Parent = object
 end
-
 --========================================================--
 -- MAIN
 --========================================================--
@@ -495,6 +505,7 @@ MainStroke.Thickness = 1
 MainStroke.Transparency = 0.1
 MainStroke.Parent = Main
 
+-- Oculta o painel até a animação de entrada
 Main.Visible = false
 Main.BackgroundTransparency = 1
 Main.Size = UDim2.fromOffset(UI_WIDTH * 0.7, UI_HEIGHT * 0.7)
@@ -516,6 +527,7 @@ local TopLineCorner = Instance.new("UICorner")
 TopLineCorner.CornerRadius = UDim.new(1, 0)
 TopLineCorner.Parent = TopLine
 
+-- Efeito visual: brilho animado na linha superior
 local TopGradient = Instance.new("UIGradient")
 TopGradient.Color = ColorSequence.new({
     ColorSequenceKeypoint.new(0, COLORS.OliveDark),
@@ -597,6 +609,7 @@ local StatusCorner = Instance.new("UICorner")
 StatusCorner.CornerRadius = UDim.new(1, 0)
 StatusCorner.Parent = StatusDot
 
+-- Pulso suave do indicador online
 local StatusScale = Instance.new("UIScale")
 StatusScale.Scale = 1
 StatusScale.Parent = StatusDot
@@ -631,10 +644,6 @@ Subtitle.Font = Enum.Font.GothamMedium
 Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 Subtitle.Parent = Top
 
---========================================================--
--- BOTÃO MINIMIZAR
---========================================================--
-
 local Minimize = Instance.new("TextButton")
 Minimize.Size = UDim2.fromOffset(26, 26)
 Minimize.Position = UDim2.new(1, -34, 0, 9)
@@ -651,18 +660,21 @@ MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
 --========================================================--
--- BOTÃO INFO (AO LADO DO MINIMIZAR)
+-- BOTÃO INFO / PAINEL DE INFORMAÇÕES DO JOGADOR
 --========================================================--
 
 local InfoButton = Instance.new("TextButton")
-InfoButton.Size = UDim2.fromOffset(32, 26)
-InfoButton.Position = UDim2.new(1, -70, 0, 9)
+InfoButton.Name = "InfoButton"
+InfoButton.Size = UDim2.fromOffset(26, 26)
+InfoButton.Position = UDim2.new(1, -66, 0, 9)
 InfoButton.BackgroundColor3 = COLORS.Panel2
-InfoButton.Text = "ℹ"
+InfoButton.BorderSizePixel = 0
+InfoButton.Text = "i"
 InfoButton.TextColor3 = COLORS.Text
-InfoButton.TextSize = 14
+InfoButton.TextSize = 13
 InfoButton.Font = Enum.Font.GothamBold
 InfoButton.AutoButtonColor = false
+InfoButton.ZIndex = 10
 InfoButton.Parent = Top
 
 local InfoCorner = Instance.new("UICorner")
@@ -672,33 +684,23 @@ InfoCorner.Parent = InfoButton
 local InfoStroke = Instance.new("UIStroke")
 InfoStroke.Color = Accent
 InfoStroke.Thickness = 1
-InfoStroke.Transparency = 0.4
+InfoStroke.Transparency = 0.35
 InfoStroke.Parent = InfoButton
 
 --========================================================--
 -- PAINEL DE INFORMAÇÕES
 --========================================================--
 
-local InfoOverlay = Instance.new("Frame")
-InfoOverlay.Name = "InfoOverlay"
-InfoOverlay.Size = UDim2.fromScale(1, 1)
-InfoOverlay.Position = UDim2.fromScale(0, 0)
-InfoOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
-InfoOverlay.BackgroundTransparency = 1
-InfoOverlay.BorderSizePixel = 0
-InfoOverlay.Visible = false
-InfoOverlay.ZIndex = 400
-InfoOverlay.Parent = Main
-
 local InfoPanel = Instance.new("Frame")
-InfoPanel.Name = "InfoPanel"
-InfoPanel.Size = UDim2.new(1, -20, 0, 0)
-InfoPanel.Position = UDim2.fromOffset(10, 10)
-InfoPanel.BackgroundColor3 = COLORS.Panel
+InfoPanel.Name = "PlayerInfo"
+InfoPanel.Size = UDim2.fromOffset(235, 245)
+InfoPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+InfoPanel.Position = UDim2.fromScale(0.5, 0.5)
+InfoPanel.BackgroundColor3 = COLORS.Background
 InfoPanel.BorderSizePixel = 0
-InfoPanel.ClipsDescendants = true
-InfoPanel.ZIndex = 401
-InfoPanel.Parent = InfoOverlay
+InfoPanel.Visible = false
+InfoPanel.ZIndex = 800
+InfoPanel.Parent = Gui
 
 local InfoPanelCorner = Instance.new("UICorner")
 InfoPanelCorner.CornerRadius = UDim.new(0, 10)
@@ -707,226 +709,240 @@ InfoPanelCorner.Parent = InfoPanel
 local InfoPanelStroke = Instance.new("UIStroke")
 InfoPanelStroke.Color = Accent
 InfoPanelStroke.Thickness = 1
+InfoPanelStroke.Transparency = 0.15
 InfoPanelStroke.Parent = InfoPanel
 
+-- Linha superior
+local InfoTopLine = Instance.new("Frame")
+InfoTopLine.Size = UDim2.new(1, -12, 0, 2)
+InfoTopLine.Position = UDim2.fromOffset(6, 5)
+InfoTopLine.BackgroundColor3 = Accent
+InfoTopLine.BorderSizePixel = 0
+InfoTopLine.ZIndex = 801
+InfoTopLine.Parent = InfoPanel
+
+local InfoTopCorner = Instance.new("UICorner")
+InfoTopCorner.CornerRadius = UDim.new(1, 0)
+InfoTopCorner.Parent = InfoTopLine
+
+-- Título
 local InfoTitle = Instance.new("TextLabel")
-InfoTitle.Size = UDim2.new(1, -50, 0, 22)
-InfoTitle.Position = UDim2.fromOffset(10, 6)
+InfoTitle.Size = UDim2.new(1, -50, 0, 25)
+InfoTitle.Position = UDim2.fromOffset(12, 12)
 InfoTitle.BackgroundTransparency = 1
 InfoTitle.Text = "INFORMAÇÕES DO JOGADOR"
 InfoTitle.TextColor3 = COLORS.Text
 InfoTitle.TextSize = 10
 InfoTitle.Font = Enum.Font.GothamBold
 InfoTitle.TextXAlignment = Enum.TextXAlignment.Left
-InfoTitle.ZIndex = 402
+InfoTitle.ZIndex = 801
 InfoTitle.Parent = InfoPanel
 
+-- Botão fechar
 local InfoClose = Instance.new("TextButton")
-InfoClose.Size = UDim2.fromOffset(24, 24)
-InfoClose.Position = UDim2.new(1, -30, 0, 5)
+InfoClose.Size = UDim2.fromOffset(25, 25)
+InfoClose.Position = UDim2.new(1, -35, 0, 10)
 InfoClose.BackgroundColor3 = COLORS.Panel2
-InfoClose.Text = "✕"
+InfoClose.BorderSizePixel = 0
+InfoClose.Text = "×"
 InfoClose.TextColor3 = COLORS.Text
-InfoClose.TextSize = 12
+InfoClose.TextSize = 15
 InfoClose.Font = Enum.Font.GothamBold
 InfoClose.AutoButtonColor = false
-InfoClose.ZIndex = 403
+InfoClose.ZIndex = 802
 InfoClose.Parent = InfoPanel
 
 local InfoCloseCorner = Instance.new("UICorner")
 InfoCloseCorner.CornerRadius = UDim.new(0, 6)
 InfoCloseCorner.Parent = InfoClose
 
-local AvatarFrame = Instance.new("Frame")
-AvatarFrame.Size = UDim2.fromOffset(80, 80)
-AvatarFrame.Position = UDim2.new(0.5, -40, 0, 36)
-AvatarFrame.BackgroundColor3 = COLORS.Panel2
-AvatarFrame.BorderSizePixel = 0
-AvatarFrame.ZIndex = 402
-AvatarFrame.Parent = InfoPanel
+-- Imagem do jogador
+local PlayerImage = Instance.new("ImageLabel")
+PlayerImage.Size = UDim2.fromOffset(75, 75)
+PlayerImage.Position = UDim2.fromOffset(12, 48)
+PlayerImage.BackgroundColor3 = COLORS.Panel2
+PlayerImage.BorderSizePixel = 0
+PlayerImage.Image = ""
+PlayerImage.ZIndex = 801
+PlayerImage.Parent = InfoPanel
 
-local AvatarCorner = Instance.new("UICorner")
-AvatarCorner.CornerRadius = UDim.new(1, 0)
-AvatarCorner.Parent = AvatarFrame
+local PlayerImageCorner = Instance.new("UICorner")
+PlayerImageCorner.CornerRadius = UDim.new(0, 8)
+PlayerImageCorner.Parent = PlayerImage
 
-local AvatarStroke = Instance.new("UIStroke")
-AvatarStroke.Color = Accent
-AvatarStroke.Thickness = 2
-AvatarStroke.Parent = AvatarFrame
+local PlayerImageStroke = Instance.new("UIStroke")
+PlayerImageStroke.Color = Accent
+PlayerImageStroke.Thickness = 1
+PlayerImageStroke.Parent = PlayerImage
 
-local AvatarImage = Instance.new("ImageLabel")
-AvatarImage.Size = UDim2.fromScale(1, 1)
-AvatarImage.BackgroundTransparency = 1
-AvatarImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-AvatarImage.ZIndex = 403
-AvatarImage.Parent = AvatarFrame
+-- Nome de exibição
+local PlayerDisplayName = Instance.new("TextLabel")
+PlayerDisplayName.Size = UDim2.new(1, -105, 0, 24)
+PlayerDisplayName.Position = UDim2.fromOffset(98, 51)
+PlayerDisplayName.BackgroundTransparency = 1
+PlayerDisplayName.Text = Player.DisplayName
+PlayerDisplayName.TextColor3 = COLORS.Text
+PlayerDisplayName.TextSize = 11
+PlayerDisplayName.Font = Enum.Font.GothamBold
+PlayerDisplayName.TextXAlignment = Enum.TextXAlignment.Left
+PlayerDisplayName.TextTruncate = Enum.TextTruncate.AtEnd
+PlayerDisplayName.ZIndex = 801
+PlayerDisplayName.Parent = InfoPanel
 
-local AvatarImageCorner = Instance.new("UICorner")
-AvatarImageCorner.CornerRadius = UDim.new(1, 0)
-AvatarImageCorner.Parent = AvatarImage
+-- Username
+local PlayerUsername = Instance.new("TextLabel")
+PlayerUsername.Size = UDim2.new(1, -105, 0, 20)
+PlayerUsername.Position = UDim2.fromOffset(98, 74)
+PlayerUsername.BackgroundTransparency = 1
+PlayerUsername.Text = "@" .. Player.Name
+PlayerUsername.TextColor3 = COLORS.Muted
+PlayerUsername.TextSize = 8
+PlayerUsername.Font = Enum.Font.GothamMedium
+PlayerUsername.TextXAlignment = Enum.TextXAlignment.Left
+PlayerUsername.TextTruncate = Enum.TextTruncate.AtEnd
+PlayerUsername.ZIndex = 801
+PlayerUsername.Parent = InfoPanel
 
--- Nome e Display abaixo do avatar
-local InfoNameBig = Instance.new("TextLabel")
-InfoNameBig.Size = UDim2.new(1, -20, 0, 18)
-InfoNameBig.Position = UDim2.fromOffset(10, 120)
-InfoNameBig.BackgroundTransparency = 1
-InfoNameBig.Text = Player.DisplayName
-InfoNameBig.TextColor3 = COLORS.Text
-InfoNameBig.TextSize = 12
-InfoNameBig.Font = Enum.Font.GothamBold
-InfoNameBig.ZIndex = 402
-InfoNameBig.Parent = InfoPanel
+-- Linha separadora
+local InfoSeparator = Instance.new("Frame")
+InfoSeparator.Size = UDim2.new(1, -24, 0, 1)
+InfoSeparator.Position = UDim2.fromOffset(12, 133)
+InfoSeparator.BackgroundColor3 = COLORS.Stroke
+InfoSeparator.BorderSizePixel = 0
+InfoSeparator.ZIndex = 801
+InfoSeparator.Parent = InfoPanel
 
-local InfoUserTag = Instance.new("TextLabel")
-InfoUserTag.Size = UDim2.new(1, -20, 0, 14)
-InfoUserTag.Position = UDim2.fromOffset(10, 138)
-InfoUserTag.BackgroundTransparency = 1
-InfoUserTag.Text = "@" .. Player.Name
-InfoUserTag.TextColor3 = COLORS.Muted
-InfoUserTag.TextSize = 9
-InfoUserTag.Font = Enum.Font.GothamMedium
-InfoUserTag.ZIndex = 402
-InfoUserTag.Parent = InfoPanel
+-- Função para criar informação
+local function CriarInfo(Texto, Valor, PosY)
 
-local InfoRows = Instance.new("Frame")
-InfoRows.Size = UDim2.new(1, -20, 1, -190)
-InfoRows.Position = UDim2.fromOffset(10, 158)
-InfoRows.BackgroundTransparency = 1
-InfoRows.ZIndex = 402
-InfoRows.Parent = InfoPanel
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -24, 0, 22)
+    Label.Position = UDim2.fromOffset(12, PosY)
+    Label.BackgroundTransparency = 1
+    Label.Text = Texto .. "  " .. Valor
+    Label.TextColor3 = COLORS.Muted
+    Label.TextSize = 8
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.ZIndex = 801
+    Label.Parent = InfoPanel
 
-local InfoRowsLayout = Instance.new("UIListLayout")
-InfoRowsLayout.Padding = UDim.new(0, 4)
-InfoRowsLayout.Parent = InfoRows
-
-local function CreateInfoRow(label, value)
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, 0, 0, 20)
-    row.BackgroundColor3 = COLORS.Panel2
-    row.BackgroundTransparency = 0.25
-    row.BorderSizePixel = 0
-    row.ZIndex = 402
-    row.Parent = InfoRows
-
-    local rowCorner = Instance.new("UICorner")
-    rowCorner.CornerRadius = UDim.new(0, 4)
-    rowCorner.Parent = row
-
-    local labelText = Instance.new("TextLabel")
-    labelText.Size = UDim2.new(0.4, -6, 1, 0)
-    labelText.Position = UDim2.fromOffset(6, 0)
-    labelText.BackgroundTransparency = 1
-    labelText.Text = label
-    labelText.TextColor3 = COLORS.Muted
-    labelText.TextSize = 8
-    labelText.Font = Enum.Font.GothamBold
-    labelText.TextXAlignment = Enum.TextXAlignment.Left
-    labelText.ZIndex = 403
-    labelText.Parent = row
-
-    local valueText = Instance.new("TextLabel")
-    valueText.Size = UDim2.new(0.6, -6, 1, 0)
-    valueText.Position = UDim2.new(0.4, 0, 0, 0)
-    valueText.BackgroundTransparency = 1
-    valueText.Text = value
-    valueText.TextColor3 = COLORS.Text
-    valueText.TextSize = 8
-    valueText.Font = Enum.Font.GothamMedium
-    valueText.TextXAlignment = Enum.TextXAlignment.Right
-    valueText.TextTruncate = Enum.TextTruncate.AtEnd
-    valueText.ZIndex = 403
-    valueText.Parent = row
-
-    return valueText
+    return Label
 end
 
-local IdValue      = CreateInfoRow("ID:", tostring(Player.UserId))
-local AgeValue     = CreateInfoRow("CONTA:", Player.AccountAge .. " dias")
-local TeamValue    = CreateInfoRow("TIME:", Player.Team and Player.Team.Name or "Nenhum")
-local HealthValue  = CreateInfoRow("VIDA:", "100/100")
-local PingValue    = CreateInfoRow("PING:", "—")
-local ServerValue  = CreateInfoRow("SERVIDOR:", "—")
+CriarInfo("NOME", Player.Name, 142)
+CriarInfo("ID", tostring(Player.UserId), 164)
+CriarInfo("CONTA", tostring(Player.AccountAge) .. " dias", 186)
+CriarInfo("STATUS", "ONLINE", 208)
 
--- Carrega foto do jogador
+--========================================================--
+-- PEGAR FOTO DO JOGADOR
+--========================================================--
+
 task.spawn(function()
-    local sucesso, imagem = pcall(function()
-        return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+
+    local Success, Image = pcall(function()
+
+        local Content, IsReady =
+            Players:GetUserThumbnailAsync(
+                Player.UserId,
+                Enum.ThumbnailType.HeadShot,
+                Enum.ThumbnailSize.Size150x150
+            )
+
+        return Content
+
     end)
-    if sucesso and imagem then
-        AvatarImage.Image = imagem
+
+    if Success and Image then
+        PlayerImage.Image = Image
     end
+
 end)
 
--- Server JobId
-pcall(function()
-    ServerValue.Text = game.JobId ~= "" and game.JobId:sub(1, 12) .. "..." or "Studio"
-end)
+--========================================================--
+-- ABRIR INFORMAÇÕES
+--========================================================--
 
--- Atualiza em tempo real
-task.spawn(function()
-    while InfoPanel and InfoPanel.Parent do
-        local char = Player.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum and HealthValue then
-            local cor = COLORS.Green
-            local ratio = hum.Health / math.max(hum.MaxHealth, 1)
-            if ratio < 0.25 then cor = Color3.fromRGB(220, 70, 70)
-            elseif ratio < 0.5 then cor = COLORS.Yellow end
-            HealthValue.Text = string.format("%d/%d", math.floor(hum.Health), math.floor(hum.MaxHealth))
-            HealthValue.TextColor3 = cor
-        end
-        if TeamValue then
-            TeamValue.Text = Player.Team and Player.Team.Name or "Nenhum"
-            TeamValue.TextColor3 = Player.Team and Player.Team.TeamColor.Color or COLORS.Text
-        end
-        if PingValue then
-            local ok, ping = pcall(function() return Player:GetNetworkPing() * 1000 end)
-            if ok and ping then
-                PingValue.Text = string.format("%d ms", math.floor(ping))
-                if ping < 100 then PingValue.TextColor3 = COLORS.Green
-                elseif ping < 200 then PingValue.TextColor3 = COLORS.Yellow
-                else PingValue.TextColor3 = Color3.fromRGB(220, 70, 70) end
-            end
-        end
-        task.wait(0.5)
+local InfoAberto = false
+
+local function AbrirInfo()
+
+    if InfoAberto then
+        return
     end
-end)
 
--- Abrir / Fechar
-local InfoOpen = false
+    InfoAberto = true
+    InfoPanel.Visible = true
 
-local function SetInfoOpen(open)
-    InfoOpen = open
-    if open then
-        InfoOverlay.Visible = true
-        InfoOverlay.BackgroundTransparency = 1
-        InfoPanel.Size = UDim2.new(1, -20, 0, 0)
-        InfoPanel.Position = UDim2.new(0, 10, 0.5, 0)
-        TweenService:Create(InfoOverlay, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play()
-        local targetH = math.max(Main.AbsoluteSize.Y - 20, 300)
-        TweenService:Create(InfoPanel, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.new(1, -20, 0, targetH),
-            Position = UDim2.fromOffset(10, 10)
-        }):Play()
-    else
-        local t = TweenService:Create(InfoOverlay, TweenInfo.new(0.16), {BackgroundTransparency = 1})
-        t:Play()
-        t.Completed:Connect(function()
-            InfoOverlay.Visible = false
-        end)
+    InfoPanel.Size = UDim2.fromOffset(210, 220)
+    InfoPanel.BackgroundTransparency = 1
+
+    TweenService:Create(
+        InfoPanel,
+        TweenInfo.new(
+            0.25,
+            Enum.EasingStyle.Back,
+            Enum.EasingDirection.Out
+        ),
+        {
+            Size = UDim2.fromOffset(235, 245),
+            BackgroundTransparency = 0
+        }
+    ):Play()
+
+end
+
+--========================================================--
+-- FECHAR INFORMAÇÕES
+--========================================================--
+
+local function FecharInfo()
+
+    if not InfoAberto then
+        return
     end
+
+    InfoAberto = false
+
+    local Tween = TweenService:Create(
+        InfoPanel,
+        TweenInfo.new(
+            0.18,
+            Enum.EasingStyle.Quad,
+            Enum.EasingDirection.In
+        ),
+        {
+            Size = UDim2.fromOffset(210, 220),
+            BackgroundTransparency = 1
+        }
+    )
+
+    Tween:Play()
+
+    Tween.Completed:Connect(function()
+
+        if not InfoAberto then
+            InfoPanel.Visible = false
+        end
+
+    end)
+
 end
 
 InfoButton.MouseButton1Click:Connect(function()
-    SetInfoOpen(not InfoOpen)
-    InfoButton.BackgroundColor3 = InfoOpen and Accent or COLORS.Panel2
-    InfoButton.TextColor3 = InfoOpen and COLORS.Background or COLORS.Text
+
+    if InfoAberto then
+        FecharInfo()
+    else
+        AbrirInfo()
+    end
+
 end)
 
+
 InfoClose.MouseButton1Click:Connect(function()
-    SetInfoOpen(false)
-    InfoButton.BackgroundColor3 = COLORS.Panel2
-    InfoButton.TextColor3 = COLORS.Text
+    FecharInfo()
 end)
 
 --========================================================--
@@ -1034,6 +1050,10 @@ local function CreatePage(Name)
 	return Page
 end
 
+--========================================================--
+-- CRIAR ABA
+--========================================================--
+
 local function CreateTab(Name, Icon)
 	local Button = Instance.new("TextButton")
 	Button.Size = UDim2.fromOffset(52, 22)
@@ -1079,7 +1099,7 @@ CreateTab("Movement", "■")
 CreateTab("Config", "▲")
 
 --========================================================--
--- SECTION
+-- SECTION (COM CONTAINER PRÓPRIO - CORRIGIDO)
 --========================================================--
 
 local SectionContainers = {}
@@ -1176,6 +1196,7 @@ local function Section(Page, Text)
     HeaderLine.BorderSizePixel = 0
     HeaderLine.Parent = Header
 
+    -- Brilho e partículas discretas passando no cabeçalho da seção
     local SectionShine = Instance.new("Frame")
     SectionShine.Size = UDim2.new(0, 2, 1, 0)
     SectionShine.Position = UDim2.new(0, -8, 0, 0)
@@ -1229,7 +1250,7 @@ local function Section(Page, Text)
 end
 
 --========================================================--
--- TOGGLE
+-- TOGGLE (DENTRO DO CONTAINER)
 --========================================================--
 
 local function Toggle(Container, Text, Default, Callback)
@@ -1300,7 +1321,6 @@ end
 --========================================================--
 -- DROPDOWN MULTI-SELEÇÃO
 --========================================================--
-
 local function MultiDropdown(Container, Text, Options, Defaults, Callback)
     local selected = {}
     for _, option in ipairs(Options) do selected[option] = Defaults[option] == true end
@@ -1399,7 +1419,7 @@ local function MultiDropdown(Container, Text, Options, Defaults, Callback)
 end
 
 --========================================================--
--- SLIDER
+-- SLIDER (DENTRO DO CONTAINER)
 --========================================================--
 
 local function Slider(Container, Text, Min, Max, Default, Callback)
@@ -1507,7 +1527,7 @@ local function Slider(Container, Text, Min, Max, Default, Callback)
 end
 
 --========================================================--
--- BOTÃO
+-- BOTÃO (DENTRO DO CONTAINER)
 --========================================================--
 
 local function Button(Container, Text, Callback)
@@ -1536,7 +1556,7 @@ local function Button(Container, Text, Callback)
 end
 
 --========================================================--
--- INPUT
+-- INPUT (DENTRO DO CONTAINER)
 --========================================================--
 
 local function Input(Container, LabelText, Placeholder, Callback)
@@ -1589,7 +1609,7 @@ local function Input(Container, LabelText, Placeholder, Callback)
 end
 
 --========================================================--
--- COLOR PICKER
+-- COLOR PICKER (CORRIGIDO)
 --========================================================--
 
 local function ColorPicker(Container, Category, DefaultColor)
@@ -1669,6 +1689,9 @@ local function ColorPicker(Container, Category, DefaultColor)
     local draggingSV = false
     local draggingHue = false
 
+    -- =================================================
+    -- SV PICKER — base = hue, overlays controlam s e v
+    -- =================================================
     local SV = Instance.new("Frame")
     SV.Size = UDim2.new(1, -16, 0, 108)
     SV.Position = UDim2.fromOffset(8, 32)
@@ -1682,6 +1705,7 @@ local function ColorPicker(Container, Category, DefaultColor)
     SVCorner.CornerRadius = UDim.new(0, 5)
     SVCorner.Parent = SV
 
+    -- Overlay BRANCO: opaco à esquerda (s=0), transparente à direita (s=1)
     local WhiteOverlay = Instance.new("Frame")
     WhiteOverlay.Size = UDim2.fromScale(1, 1)
     WhiteOverlay.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -1697,11 +1721,12 @@ local function ColorPicker(Container, Category, DefaultColor)
     WhiteGradient.Rotation = 0
     WhiteGradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.new(1,1,1))
     WhiteGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 1),
+        NumberSequenceKeypoint.new(0, 0),  -- esquerda: branco opaco
+        NumberSequenceKeypoint.new(1, 1),  -- direita: transparente
     })
     WhiteGradient.Parent = WhiteOverlay
 
+    -- Overlay PRETO: transparente em cima (v=1), opaco embaixo (v=0)
     local BlackOverlay = Instance.new("Frame")
     BlackOverlay.Size = UDim2.fromScale(1, 1)
     BlackOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
@@ -1717,11 +1742,12 @@ local function ColorPicker(Container, Category, DefaultColor)
     BlackGradient.Rotation = 90
     BlackGradient.Color = ColorSequence.new(Color3.new(0,0,0), Color3.new(0,0,0))
     BlackGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(1, 0),
+        NumberSequenceKeypoint.new(0, 1),  -- topo: transparente
+        NumberSequenceKeypoint.new(1, 0),  -- baixo: preto opaco
     })
     BlackGradient.Parent = BlackOverlay
 
+    -- Marcador do SV
     local SVMarker = Instance.new("Frame")
     SVMarker.Size = UDim2.fromOffset(10, 10)
     SVMarker.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1739,6 +1765,9 @@ local function ColorPicker(Container, Category, DefaultColor)
     SVMarkerStroke.Thickness = 1
     SVMarkerStroke.Parent = SVMarker
 
+    -- =================================================
+    -- HUE SLIDER
+    -- =================================================
     local Hue = Instance.new("Frame")
     Hue.Size = UDim2.new(1, -16, 0, 14)
     Hue.Position = UDim2.fromOffset(8, 148)
@@ -1781,6 +1810,7 @@ local function ColorPicker(Container, Category, DefaultColor)
     HueMarkerStroke.Thickness = 1
     HueMarkerStroke.Parent = HueMarker
 
+    -- Texto informativo
     local ValueText = Instance.new("TextLabel")
     ValueText.BackgroundTransparency = 1
     ValueText.Position = UDim2.fromOffset(8, 8)
@@ -1794,7 +1824,7 @@ local function ColorPicker(Container, Category, DefaultColor)
 
     local function ApplyColor(color)
         Preview.BackgroundColor3 = color
-        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)  -- base = hue atual
         SVMarker.Position = UDim2.new(s, 0, 1 - v, 0)
         HueMarker.Position = UDim2.new(h, 0, 0.5, 0)
         ValueText.Text = string.format("H %.0f°  S %.0f%%  V %.0f%%", h * 360, s * 100, v * 100)
@@ -1925,7 +1955,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     ApplyColor(DefaultColor)
     return Holder
 end
-
 --========================================================--
 -- NOTIFICAÇÕES
 --========================================================--
@@ -2032,6 +2061,7 @@ AtualizarESP = function()
                 if nameGui then nameGui.Enabled = ESP_GlobalAtivado and ESP_Names and mostrarESP
                     if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = espColor end) end
                 end
+                -- Nome do time
                 local timeGui = head:FindFirstChild("NoahzinTime")
                 if timeGui then
                     timeGui.Enabled = ESP_GlobalAtivado and ESP_TimesNomes and mostrarESP
@@ -2041,6 +2071,7 @@ AtualizarESP = function()
                         pcall(function() timeLabel.TextColor3 = espColor end)
                     end
                 end
+                -- Distância
                 local distanciaGui = head:FindFirstChild("NoahzinDistancia")
                 if distanciaGui then
                     distanciaGui.Enabled = ESP_GlobalAtivado and ESP_Distancia and mostrarESP
@@ -2051,6 +2082,7 @@ AtualizarESP = function()
                         pcall(function() distanciaLabel.TextColor3 = espColor end)
                     end
                 end
+                -- Arma equipada
                 local armaGui = head:FindFirstChild("NoahzinArma")
                 if armaGui then
                     local nomeArma = ObterNomeArma(p.Character)
@@ -2061,6 +2093,7 @@ AtualizarESP = function()
                         pcall(function() armaLabel.TextColor3 = espColor end)
                     end
                 end
+                -- Vida
                 local vidaGui = head:FindFirstChild("NoahzinVida")
                 if vidaGui then
                     vidaGui.Enabled = ESP_GlobalAtivado and ESP_Vida and mostrarESP
@@ -2120,6 +2153,7 @@ local function CriarESP(p)
         tl.Size = UDim2.new(1, 0, 1, 0); tl.BackgroundTransparency = 1; tl.Text = p.Name
         pcall(function() tl.TextColor3 = GetESPColor(p) end)
         tl.Font = Enum.Font.GothamBold; tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
+        -- Nome do time
         local bgTime = head:FindFirstChild("NoahzinTime") or Instance.new("BillboardGui")
         bgTime.Name = "NoahzinTime"
         bgTime.Size = UDim2.new(0, 150, 0, 20)
@@ -2137,6 +2171,7 @@ local function CriarESP(p)
         tlTime.TextSize = 11
         tlTime.TextStrokeTransparency = 0
         tlTime.Parent = bgTime
+        -- Arma equipada
         local bgArma = head:FindFirstChild("NoahzinArma") or Instance.new("BillboardGui")
         bgArma.Name = "NoahzinArma"
         bgArma.Size = UDim2.new(0, 130, 0, 20)
@@ -2155,6 +2190,7 @@ local function CriarESP(p)
         tlArma.TextSize = 10
         tlArma.TextStrokeTransparency = 0
         tlArma.Parent = bgArma
+        -- Vida
         local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
         bgVida.Name = "NoahzinVida"
         bgVida.Size = UDim2.new(0, 100, 0, 20)
@@ -2671,7 +2707,7 @@ local function DesativarChatWindow()
 end
 
 --========================================================--
--- MAIN PAGE
+-- MAIN PAGE (PRINCIPAL)
 --========================================================--
 
 local MainPage = Pages.Main
@@ -3128,7 +3164,7 @@ UserInputService.InputEnded:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
         Resizing = false
         ResizeHandle.BackgroundColor3 = COLORS.OliveDark
-        NormalSize = Main.Size
+        NormalSize = Main.Size  -- salva novo tamanho
     end
 end)
 
@@ -3293,13 +3329,7 @@ Minimize.MouseButton1Click:Connect(function()
     if Minimized then return end
     Minimized = true
     Minimize.Text = "+"
-    NormalSize = Main.Size
-    -- Fecha painel info se estiver aberto
-    if InfoOpen then
-        SetInfoOpen(false)
-        InfoButton.BackgroundColor3 = COLORS.Panel2
-        InfoButton.TextColor3 = COLORS.Text
-    end
+    NormalSize = Main.Size  -- salva o tamanho atual antes de minimizar
     local shrink = TweenService:Create(Main, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = MiniSize})
     shrink:Play()
     shrink.Completed:Wait()
@@ -3313,6 +3343,7 @@ MiniButton.MouseButton1Click:Connect(function()
     AtualizarEstadoMinimizado()
 end)
 
+-- Arraste independente do botão flutuante (mouse e toque)
 local MiniDragging = false
 local MiniDragStart
 local MiniStartPosition
@@ -3363,6 +3394,7 @@ task.delay(7, function()
     Notify("Exército Brásileiro 🇧🇷")
 end)
 
+-- Animação de entrada do painel principal
 task.delay(6.3, function()
     if Main and Main.Parent and not Minimized then
         Main.Visible = true
