@@ -446,6 +446,7 @@ local FunctionDescriptions = {
     ["PRIORIZAR ALVO"] = "Selecione um ou vários critérios para calcular a prioridade do alvo.",
     ["DESTACAR ALVO"] = "Destaca com Highlight o jogador escolhido pelo aimbot.",
     ["HITBOX"] = "Ativa o recurso de hitbox do hub.",
+    ["FILTRAR POR TIMES"] = "Aplica a hitbox apenas nos times selecionados abaixo.",
     ["SPEED HACK"] = "Controla a velocidade do personagem.",
     ["DASH"] = "Move o personagem rapidamente para frente.",
     ["DESTRUIR"] = "Fecha o hub e remove seus recursos ativos.",
@@ -2259,27 +2260,27 @@ RunService.RenderStepped:Connect(function()
     else
         AtualizarHighlightAlvo(nil)
     end
-for _, p in pairs(Players:GetPlayers()) do
-    if p ~= Player and p.Character then
-        local root = p.Character:FindFirstChild("HumanoidRootPart")
-        local hum = p.Character:FindFirstChildOfClass("Humanoid")
-        if hum and root and hum.Health > 0 then
-            if Hitbox_Ativado and PlayerBateFiltroHitbox(p) then
-                root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
-                root.Transparency = Hitbox_Transparencia
-                pcall(function() root.Material = Hitbox_Material end)
-                pcall(function() root.Color = Hitbox_Cor end)
-                root.CanCollide = false
-            else
-                if root.Size ~= Vector3.new(2, 2, 1) then
-                    root.Size = Vector3.new(2, 2, 1)
-                    root.Transparency = 1
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if hum and root and hum.Health > 0 then
+                if Hitbox_Ativado and PlayerBateFiltroHitbox(p) then
+                    root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
+                    root.Transparency = Hitbox_Transparencia
+                    pcall(function() root.Material = Hitbox_Material end)
+                    pcall(function() root.Color = Hitbox_Cor end)
                     root.CanCollide = false
+                else
+                    if root.Size ~= Vector3.new(2, 2, 1) then
+                        root.Size = Vector3.new(2, 2, 1)
+                        root.Transparency = 1
+                        root.CanCollide = false
+                    end
                 end
             end
         end
     end
-end
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_GlobalAtivado and ESP_Tracers and p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -2813,7 +2814,16 @@ Button(ActionsSection, "DESTRUIR", function()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
     if FOVCircle then FOVCircle:Destroy() end
     AtualizarHighlightAlvo(nil)
-    for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
+            local root = p.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.Size = Vector3.new(2, 2, 1)
+                root.Transparency = 1
+                root.CanCollide = false
+            end
+        end
+    end
     for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
     for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
@@ -3171,57 +3181,7 @@ TabButtons.Main.TextColor3 = COLORS.Text
 task.delay(7, function()
     Notify("Exército Brásileiro 🇧🇷")
 end)
-local function GetPlayerTime(player)
-    if player.Team then
-        local teamName = player.Team.Name
-        for time, _ in pairs(TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
-        end
-    end
-    return nil
-end
 
-local function GetHitboxTime(player)
-    if player.Team then
-        local teamName = player.Team.Name
-        for time, _ in pairs(Hitbox_TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
-        end
-    end
-    return nil
-end
-
-local function PlayerBateFiltroHitbox(player)
-    if not Hitbox_FiltroTimesAtivado then return true end
-    local t = GetHitboxTime(player)
-    if t then return Hitbox_TimesMarcados[t] == true end
-    return false
-endlocal function GetPlayerTime(player)
-    if player.Team then
-        local teamName = player.Team.Name
-        for time, _ in pairs(TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
-        end
-    end
-    return nil
-end
-
-local function GetHitboxTime(player)
-    if player.Team then
-        local teamName = player.Team.Name
-        for time, _ in pairs(Hitbox_TimesMarcados) do
-            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
-        end
-    end
-    return nil
-end
-
-local function PlayerBateFiltroHitbox(player)
-    if not Hitbox_FiltroTimesAtivado then return true end
-    local t = GetHitboxTime(player)
-    if t then return Hitbox_TimesMarcados[t] == true end
-    return false
-end
 -- Animação de entrada do painel principal
 task.delay(6.3, function()
     if Main and Main.Parent and not Minimized then
