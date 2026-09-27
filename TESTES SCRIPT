@@ -84,6 +84,15 @@ local Hitbox_Transparencia = 0.7
 local Hitbox_Cor = Color3.fromRGB(255, 0, 0)
 local Hitbox_Material = Enum.Material.Neon
 
+local Hitbox_FiltroTimesAtivado = false
+local Hitbox_TimesMarcados = {
+    ["[CI]"] = false, ["[EB]"] = false, ["[OF]"] = false,
+    ["[BAC]"] = false, ["[BPE]"] = false, ["[BFE]"] = false,
+    ["[CIE]"] = false, ["[BIP]"] = false, ["[CAAT]"] = false,
+    ["[CIGS]"] = false, ["[MD]"] = false, ["[REC MEC]"] = false,
+    ["[CYBER]"] = false,
+}
+
 local AutoJJ_Ativado = false
 local AutoJJ_Script = nil
 
@@ -1741,6 +1750,23 @@ local function GetPlayerTime(player)
     return nil
 end
 
+local function GetHitboxTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(Hitbox_TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
+        end
+    end
+    return nil
+end
+
+local function PlayerBateFiltroHitbox(player)
+    if not Hitbox_FiltroTimesAtivado then return true end
+    local t = GetHitboxTime(player)
+    if t then return Hitbox_TimesMarcados[t] == true end
+    return false
+end
+
 local function GetESPColor(player)
     if ESP_CoresPorTime and player.Team and player.Team.TeamColor then
         return player.Team.TeamColor.Color
@@ -2233,12 +2259,27 @@ RunService.RenderStepped:Connect(function()
     else
         AtualizarHighlightAlvo(nil)
     end
-    for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character then
-            local root = p.Character:FindFirstChild("HumanoidRootPart"); local hum = p.Character:FindFirstChildOfClass("Humanoid")
-            if hum and root and hum.Health > 0 and Hitbox_Ativado then root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho); root.Transparency = Hitbox_Transparencia; pcall(function() root.Material = Hitbox_Material end); pcall(function() root.Color = Hitbox_Cor end); root.CanCollide = false end
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= Player and p.Character then
+        local root = p.Character:FindFirstChild("HumanoidRootPart")
+        local hum = p.Character:FindFirstChildOfClass("Humanoid")
+        if hum and root and hum.Health > 0 then
+            if Hitbox_Ativado and PlayerBateFiltroHitbox(p) then
+                root.Size = Vector3.new(Hitbox_Tamanho, Hitbox_Tamanho, Hitbox_Tamanho)
+                root.Transparency = Hitbox_Transparencia
+                pcall(function() root.Material = Hitbox_Material end)
+                pcall(function() root.Color = Hitbox_Cor end)
+                root.CanCollide = false
+            else
+                if root.Size ~= Vector3.new(2, 2, 1) then
+                    root.Size = Vector3.new(2, 2, 1)
+                    root.Transparency = 1
+                    root.CanCollide = false
+                end
+            end
         end
     end
+end
     local centroBaseTela = Vector2.new(viewportTamanho.X / 2, viewportTamanho.Y)
     for p, tracer in pairs(LinhasTracers) do
         if ESP_GlobalAtivado and ESP_Tracers and p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -2482,12 +2523,34 @@ ColorPicker(FOVColorSection, "FOV", Aimbot_CorFOV)
 local HitboxSection = Section(CombatPage, "HITBOX")
 Toggle(HitboxSection, "HITBOX", false, function(State)
     Hitbox_Ativado = State
-    if not State then for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end end
+    if not State then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= Player and p.Character then
+                local root = p.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.Size = Vector3.new(2, 2, 1)
+                    root.Transparency = 1
+                    root.CanCollide = false
+                end
+            end
+        end
+    end
 end)
 Slider(HitboxSection, "HITBOX SIZE", 5, 50, 20, function(Value) Hitbox_Tamanho = Value end)
 Slider(HitboxSection, "HITBOX TRANSP", 0, 100, 70, function(Value)
     Hitbox_Transparencia = Value / 100
 end)
+Toggle(HitboxSection, "FILTRAR POR TIMES", false, function(State)
+    Hitbox_FiltroTimesAtivado = State
+end)
+
+local HitboxTimesSection = Section(CombatPage, "HITBOX POR TIMES")
+local hitboxTimesNomes = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]", "[CYBER]"}
+for _, time in ipairs(hitboxTimesNomes) do
+    Toggle(HitboxTimesSection, time, Hitbox_TimesMarcados[time], function(State)
+        Hitbox_TimesMarcados[time] = State
+    end)
+end
 
 local HitboxColorSection = Section(CombatPage, "COR DA HITBOX")
 ColorPicker(HitboxColorSection, "Hitbox", Hitbox_Cor)
@@ -3108,7 +3171,57 @@ TabButtons.Main.TextColor3 = COLORS.Text
 task.delay(7, function()
     Notify("Exército Brásileiro 🇧🇷")
 end)
+local function GetPlayerTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
+        end
+    end
+    return nil
+end
 
+local function GetHitboxTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(Hitbox_TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
+        end
+    end
+    return nil
+end
+
+local function PlayerBateFiltroHitbox(player)
+    if not Hitbox_FiltroTimesAtivado then return true end
+    local t = GetHitboxTime(player)
+    if t then return Hitbox_TimesMarcados[t] == true end
+    return false
+endlocal function GetPlayerTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
+        end
+    end
+    return nil
+end
+
+local function GetHitboxTime(player)
+    if player.Team then
+        local teamName = player.Team.Name
+        for time, _ in pairs(Hitbox_TimesMarcados) do
+            if teamName:find(time:gsub("%[", ""):gsub("%]", ""), 1, true) then return time end
+        end
+    end
+    return nil
+end
+
+local function PlayerBateFiltroHitbox(player)
+    if not Hitbox_FiltroTimesAtivado then return true end
+    local t = GetHitboxTime(player)
+    if t then return Hitbox_TimesMarcados[t] == true end
+    return false
+end
 -- Animação de entrada do painel principal
 task.delay(6.3, function()
     if Main and Main.Parent and not Minimized then
