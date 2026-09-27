@@ -660,21 +660,21 @@ MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
 --========================================================--
--- BOTÃO INFO / PAINEL DE INFORMAÇÕES DO JOGADOR
+-- BOTÃO INFO / INFORMAÇÕES DO JOGADOR
 --========================================================--
 
 local InfoButton = Instance.new("TextButton")
 InfoButton.Name = "InfoButton"
-InfoButton.Size = UDim2.fromOffset(26, 26)
-InfoButton.Position = UDim2.new(1, -66, 0, 9)
+InfoButton.Size = UDim2.fromOffset(34, 26)
+InfoButton.Position = UDim2.new(1, -74, 0, 9)
 InfoButton.BackgroundColor3 = COLORS.Panel2
 InfoButton.BorderSizePixel = 0
-InfoButton.Text = "i"
+InfoButton.Text = "INFO"
 InfoButton.TextColor3 = COLORS.Text
-InfoButton.TextSize = 13
+InfoButton.TextSize = 8
 InfoButton.Font = Enum.Font.GothamBold
 InfoButton.AutoButtonColor = false
-InfoButton.ZIndex = 10
+InfoButton.ZIndex = 20
 InfoButton.Parent = Top
 
 local InfoCorner = Instance.new("UICorner")
@@ -684,22 +684,23 @@ InfoCorner.Parent = InfoButton
 local InfoStroke = Instance.new("UIStroke")
 InfoStroke.Color = Accent
 InfoStroke.Thickness = 1
-InfoStroke.Transparency = 0.35
+InfoStroke.Transparency = 0.15
 InfoStroke.Parent = InfoButton
+
 
 --========================================================--
 -- PAINEL DE INFORMAÇÕES
 --========================================================--
 
 local InfoPanel = Instance.new("Frame")
-InfoPanel.Name = "PlayerInfo"
-InfoPanel.Size = UDim2.fromOffset(235, 245)
+InfoPanel.Name = "InfoPanel"
+InfoPanel.Size = UDim2.fromOffset(235, 250)
 InfoPanel.AnchorPoint = Vector2.new(0.5, 0.5)
 InfoPanel.Position = UDim2.fromScale(0.5, 0.5)
-InfoPanel.BackgroundColor3 = COLORS.Background
+InfoPanel.BackgroundColor3 = COLORS.Panel
 InfoPanel.BorderSizePixel = 0
 InfoPanel.Visible = false
-InfoPanel.ZIndex = 800
+InfoPanel.ZIndex = 900
 InfoPanel.Parent = Gui
 
 local InfoPanelCorner = Instance.new("UICorner")
@@ -708,240 +709,193 @@ InfoPanelCorner.Parent = InfoPanel
 
 local InfoPanelStroke = Instance.new("UIStroke")
 InfoPanelStroke.Color = Accent
-InfoPanelStroke.Thickness = 1
-InfoPanelStroke.Transparency = 0.15
+InfoPanelStroke.Thickness = 1.5
 InfoPanelStroke.Parent = InfoPanel
 
+
 -- Linha superior
+
 local InfoTopLine = Instance.new("Frame")
-InfoTopLine.Size = UDim2.new(1, -12, 0, 2)
-InfoTopLine.Position = UDim2.fromOffset(6, 5)
+InfoTopLine.Size = UDim2.new(1, -20, 0, 2)
+InfoTopLine.Position = UDim2.fromOffset(10, 8)
 InfoTopLine.BackgroundColor3 = Accent
 InfoTopLine.BorderSizePixel = 0
-InfoTopLine.ZIndex = 801
+InfoTopLine.ZIndex = 901
 InfoTopLine.Parent = InfoPanel
 
-local InfoTopCorner = Instance.new("UICorner")
-InfoTopCorner.CornerRadius = UDim.new(1, 0)
-InfoTopCorner.Parent = InfoTopLine
 
 -- Título
+
 local InfoTitle = Instance.new("TextLabel")
-InfoTitle.Size = UDim2.new(1, -50, 0, 25)
-InfoTitle.Position = UDim2.fromOffset(12, 12)
+InfoTitle.Size = UDim2.new(1, -55, 0, 25)
+InfoTitle.Position = UDim2.fromOffset(12, 13)
 InfoTitle.BackgroundTransparency = 1
-InfoTitle.Text = "INFORMAÇÕES DO JOGADOR"
+InfoTitle.Text = "INFORMAÇÕES"
 InfoTitle.TextColor3 = COLORS.Text
-InfoTitle.TextSize = 10
+InfoTitle.TextSize = 12
 InfoTitle.Font = Enum.Font.GothamBold
 InfoTitle.TextXAlignment = Enum.TextXAlignment.Left
-InfoTitle.ZIndex = 801
+InfoTitle.ZIndex = 901
 InfoTitle.Parent = InfoPanel
 
+
 -- Botão fechar
+
 local InfoClose = Instance.new("TextButton")
-InfoClose.Size = UDim2.fromOffset(25, 25)
-InfoClose.Position = UDim2.new(1, -35, 0, 10)
+InfoClose.Size = UDim2.fromOffset(28, 28)
+InfoClose.Position = UDim2.new(1, -36, 0, 11)
 InfoClose.BackgroundColor3 = COLORS.Panel2
 InfoClose.BorderSizePixel = 0
 InfoClose.Text = "×"
 InfoClose.TextColor3 = COLORS.Text
-InfoClose.TextSize = 15
+InfoClose.TextSize = 18
 InfoClose.Font = Enum.Font.GothamBold
 InfoClose.AutoButtonColor = false
-InfoClose.ZIndex = 802
+InfoClose.ZIndex = 902
 InfoClose.Parent = InfoPanel
 
 local InfoCloseCorner = Instance.new("UICorner")
 InfoCloseCorner.CornerRadius = UDim.new(0, 6)
 InfoCloseCorner.Parent = InfoClose
 
--- Imagem do jogador
-local PlayerImage = Instance.new("ImageLabel")
-PlayerImage.Size = UDim2.fromOffset(75, 75)
-PlayerImage.Position = UDim2.fromOffset(12, 48)
-PlayerImage.BackgroundColor3 = COLORS.Panel2
-PlayerImage.BorderSizePixel = 0
-PlayerImage.Image = ""
-PlayerImage.ZIndex = 801
-PlayerImage.Parent = InfoPanel
 
-local PlayerImageCorner = Instance.new("UICorner")
-PlayerImageCorner.CornerRadius = UDim.new(0, 8)
-PlayerImageCorner.Parent = PlayerImage
+-- Avatar
 
-local PlayerImageStroke = Instance.new("UIStroke")
-PlayerImageStroke.Color = Accent
-PlayerImageStroke.Thickness = 1
-PlayerImageStroke.Parent = PlayerImage
+local InfoAvatar = Instance.new("ImageLabel")
+InfoAvatar.Size = UDim2.fromOffset(70, 70)
+InfoAvatar.Position = UDim2.fromOffset(14, 52)
+InfoAvatar.BackgroundColor3 = COLORS.Panel2
+InfoAvatar.BorderSizePixel = 0
+InfoAvatar.Image = ""
+InfoAvatar.ZIndex = 901
+InfoAvatar.Parent = InfoPanel
+
+local InfoAvatarCorner = Instance.new("UICorner")
+InfoAvatarCorner.CornerRadius = UDim.new(0, 8)
+InfoAvatarCorner.Parent = InfoAvatar
+
 
 -- Nome de exibição
-local PlayerDisplayName = Instance.new("TextLabel")
-PlayerDisplayName.Size = UDim2.new(1, -105, 0, 24)
-PlayerDisplayName.Position = UDim2.fromOffset(98, 51)
-PlayerDisplayName.BackgroundTransparency = 1
-PlayerDisplayName.Text = Player.DisplayName
-PlayerDisplayName.TextColor3 = COLORS.Text
-PlayerDisplayName.TextSize = 11
-PlayerDisplayName.Font = Enum.Font.GothamBold
-PlayerDisplayName.TextXAlignment = Enum.TextXAlignment.Left
-PlayerDisplayName.TextTruncate = Enum.TextTruncate.AtEnd
-PlayerDisplayName.ZIndex = 801
-PlayerDisplayName.Parent = InfoPanel
+
+local InfoDisplayName = Instance.new("TextLabel")
+InfoDisplayName.Size = UDim2.new(1, -100, 0, 22)
+InfoDisplayName.Position = UDim2.fromOffset(94, 53)
+InfoDisplayName.BackgroundTransparency = 1
+InfoDisplayName.Text = Player.DisplayName or "Jogador"
+InfoDisplayName.TextColor3 = COLORS.Text
+InfoDisplayName.TextSize = 12
+InfoDisplayName.Font = Enum.Font.GothamBold
+InfoDisplayName.TextXAlignment = Enum.TextXAlignment.Left
+InfoDisplayName.TextTruncate = Enum.TextTruncate.AtEnd
+InfoDisplayName.ZIndex = 901
+InfoDisplayName.Parent = InfoPanel
+
 
 -- Username
-local PlayerUsername = Instance.new("TextLabel")
-PlayerUsername.Size = UDim2.new(1, -105, 0, 20)
-PlayerUsername.Position = UDim2.fromOffset(98, 74)
-PlayerUsername.BackgroundTransparency = 1
-PlayerUsername.Text = "@" .. Player.Name
-PlayerUsername.TextColor3 = COLORS.Muted
-PlayerUsername.TextSize = 8
-PlayerUsername.Font = Enum.Font.GothamMedium
-PlayerUsername.TextXAlignment = Enum.TextXAlignment.Left
-PlayerUsername.TextTruncate = Enum.TextTruncate.AtEnd
-PlayerUsername.ZIndex = 801
-PlayerUsername.Parent = InfoPanel
 
--- Linha separadora
+local InfoUsername = Instance.new("TextLabel")
+InfoUsername.Size = UDim2.new(1, -100, 0, 20)
+InfoUsername.Position = UDim2.fromOffset(94, 76)
+InfoUsername.BackgroundTransparency = 1
+InfoUsername.Text = "@" .. tostring(Player.Name)
+InfoUsername.TextColor3 = COLORS.Muted
+InfoUsername.TextSize = 9
+InfoUsername.Font = Enum.Font.GothamMedium
+InfoUsername.TextXAlignment = Enum.TextXAlignment.Left
+InfoUsername.TextTruncate = Enum.TextTruncate.AtEnd
+InfoUsername.ZIndex = 901
+InfoUsername.Parent = InfoPanel
+
+
+-- Separador
+
 local InfoSeparator = Instance.new("Frame")
-InfoSeparator.Size = UDim2.new(1, -24, 0, 1)
-InfoSeparator.Position = UDim2.fromOffset(12, 133)
-InfoSeparator.BackgroundColor3 = COLORS.Stroke
+InfoSeparator.Size = UDim2.new(1, -28, 0, 1)
+InfoSeparator.Position = UDim2.fromOffset(14, 132)
+InfoSeparator.BackgroundColor3 = COLORS.Panel2
 InfoSeparator.BorderSizePixel = 0
-InfoSeparator.ZIndex = 801
+InfoSeparator.ZIndex = 901
 InfoSeparator.Parent = InfoPanel
 
--- Função para criar informação
-local function CriarInfo(Texto, Valor, PosY)
 
+-- Função para criar linhas de informação
+
+local function CriarInfoLinha(nome, valor, y)
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -24, 0, 22)
-    Label.Position = UDim2.fromOffset(12, PosY)
+    Label.Size = UDim2.new(1, -28, 0, 22)
+    Label.Position = UDim2.fromOffset(14, y)
     Label.BackgroundTransparency = 1
-    Label.Text = Texto .. "  " .. Valor
-    Label.TextColor3 = COLORS.Muted
-    Label.TextSize = 8
+    Label.Text = nome .. ": " .. tostring(valor)
+    Label.TextColor3 = COLORS.Text
+    Label.TextSize = 9
     Label.Font = Enum.Font.GothamMedium
     Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.ZIndex = 801
+    Label.TextTruncate = Enum.TextTruncate.AtEnd
+    Label.ZIndex = 901
     Label.Parent = InfoPanel
 
     return Label
 end
 
-CriarInfo("NOME", Player.Name, 142)
-CriarInfo("ID", tostring(Player.UserId), 164)
-CriarInfo("CONTA", tostring(Player.AccountAge) .. " dias", 186)
-CriarInfo("STATUS", "ONLINE", 208)
+CriarInfoLinha("USER ID", Player.UserId, 142)
+CriarInfoLinha("CONTA", tostring(Player.AccountAge) .. " dias", 164)
+CriarInfoLinha("JOGADORES", tostring(#Players:GetPlayers()), 186)
+
+
+-- Status
+
+local InfoStatus = CriarInfoLinha("STATUS", "ONLINE", 208)
+InfoStatus.TextColor3 = COLORS.Green
+
 
 --========================================================--
--- PEGAR FOTO DO JOGADOR
+-- CARREGAR AVATAR
 --========================================================--
 
 task.spawn(function()
-
-    local Success, Image = pcall(function()
-
-        local Content, IsReady =
-            Players:GetUserThumbnailAsync(
-                Player.UserId,
-                Enum.ThumbnailType.HeadShot,
-                Enum.ThumbnailSize.Size150x150
-            )
-
-        return Content
-
+    local Success, Content = pcall(function()
+        return Players:GetUserThumbnailAsync(
+            Player.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size150x150
+        )
     end)
 
-    if Success and Image then
-        PlayerImage.Image = Image
+    if Success and type(Content) == "string" then
+        InfoAvatar.Image = Content
     end
-
 end)
 
+
 --========================================================--
--- ABRIR INFORMAÇÕES
+-- ABRIR / FECHAR INFO
 --========================================================--
 
 local InfoAberto = false
 
+local function FecharInfo()
+    InfoAberto = false
+    InfoPanel.Visible = false
+end
+
 local function AbrirInfo()
-
-    if InfoAberto then
-        return
-    end
-
     InfoAberto = true
     InfoPanel.Visible = true
-
-    InfoPanel.Size = UDim2.fromOffset(210, 220)
-    InfoPanel.BackgroundTransparency = 1
-
-    TweenService:Create(
-        InfoPanel,
-        TweenInfo.new(
-            0.25,
-            Enum.EasingStyle.Back,
-            Enum.EasingDirection.Out
-        ),
-        {
-            Size = UDim2.fromOffset(235, 245),
-            BackgroundTransparency = 0
-        }
-    ):Play()
-
 end
 
---========================================================--
--- FECHAR INFORMAÇÕES
---========================================================--
 
-local function FecharInfo()
+-- IMPORTANTE:
+-- Activated funciona tanto com toque quanto com mouse.
 
-    if not InfoAberto then
-        return
-    end
-
-    InfoAberto = false
-
-    local Tween = TweenService:Create(
-        InfoPanel,
-        TweenInfo.new(
-            0.18,
-            Enum.EasingStyle.Quad,
-            Enum.EasingDirection.In
-        ),
-        {
-            Size = UDim2.fromOffset(210, 220),
-            BackgroundTransparency = 1
-        }
-    )
-
-    Tween:Play()
-
-    Tween.Completed:Connect(function()
-
-        if not InfoAberto then
-            InfoPanel.Visible = false
-        end
-
-    end)
-
-end
-
-InfoButton.MouseButton1Click:Connect(function()
-
+InfoButton.Activated:Connect(function()
     if InfoAberto then
         FecharInfo()
     else
         AbrirInfo()
     end
-
 end)
 
-
-InfoClose.MouseButton1Click:Connect(function()
+InfoClose.Activated:Connect(function()
     FecharInfo()
 end)
 
