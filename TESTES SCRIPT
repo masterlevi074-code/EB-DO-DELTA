@@ -1764,6 +1764,371 @@ local function Notify(Text)
 end
 
 --========================================================--
+-- MODAL DE INFORMAÇÕES DO JOGADOR
+--========================================================--
+
+local InfoModalAtivo = nil
+local InfoConexao = nil
+
+local function FormatarIdade(dias)
+    if dias >= 365 then
+        local anos = math.floor(dias / 365)
+        return anos .. (anos == 1 and " ano" or " anos")
+    elseif dias >= 30 then
+        local meses = math.floor(dias / 30)
+        return meses .. (meses == 1 and " mês" or " meses")
+    elseif dias >= 1 then
+        return dias .. (dias == 1 and " dia" or " dias")
+    end
+    return "hoje"
+end
+
+local function FecharInfoModal()
+    if not InfoModalAtivo then return end
+    if InfoConexao then InfoConexao:Disconnect(); InfoConexao = nil end
+    local wrapper = InfoModalAtivo
+    InfoModalAtivo = nil
+
+    local modal = wrapper:FindFirstChild("ModalBox")
+    if modal then
+        local scale = modal:FindFirstChildOfClass("UIScale")
+        if scale then
+            TweenService:Create(scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.75}):Play()
+        end
+    end
+
+    local fade = TweenService:Create(wrapper, TweenInfo.new(0.18), {BackgroundTransparency = 1})
+    fade:Play()
+    fade.Completed:Connect(function() wrapper:Destroy() end)
+end
+
+local function AbrirInfoModal()
+    if InfoModalAtivo then return end
+
+    -- Wrapper fullscreen com backdrop
+    local Wrapper = Instance.new("Frame")
+    Wrapper.Name = "InfoModalWrapper"
+    Wrapper.Size = UDim2.fromScale(1, 1)
+    Wrapper.Position = UDim2.fromScale(0, 0)
+    Wrapper.BackgroundColor3 = Color3.new(0, 0, 0)
+    Wrapper.BackgroundTransparency = 1
+    Wrapper.BorderSizePixel = 0
+    Wrapper.ZIndex = 500
+    Wrapper.Parent = Gui
+    InfoModalAtivo = Wrapper
+
+    TweenService:Create(Wrapper, TweenInfo.new(0.22), {BackgroundTransparency = 0.5}):Play()
+
+    local Backdrop = Instance.new("TextButton")
+    Backdrop.Size = UDim2.fromScale(1, 1)
+    Backdrop.BackgroundTransparency = 1
+    Backdrop.Text = ""
+    Backdrop.AutoButtonColor = false
+    Backdrop.ZIndex = 500
+    Backdrop.Parent = Wrapper
+    Backdrop.MouseButton1Click:Connect(FecharInfoModal)
+
+    -- Caixa do modal
+    local ModalBox = Instance.new("Frame")
+    ModalBox.Name = "ModalBox"
+    ModalBox.Size = UDim2.fromOffset(280, 400)
+    ModalBox.AnchorPoint = Vector2.new(0.5, 0.5)
+    ModalBox.Position = UDim2.fromScale(0.5, 0.5)
+    ModalBox.BackgroundColor3 = COLORS.Background
+    ModalBox.BorderSizePixel = 0
+    ModalBox.ClipsDescendants = true
+    ModalBox.ZIndex = 501
+    ModalBox.Parent = Wrapper
+
+    local ModalScale = Instance.new("UIScale")
+    ModalScale.Scale = 0.7
+    ModalScale.Parent = ModalBox
+    TweenService:Create(ModalScale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
+
+    local ModalCorner = Instance.new("UICorner")
+    ModalCorner.CornerRadius = UDim.new(0, 12)
+    ModalCorner.Parent = ModalBox
+
+    local ModalStroke = Instance.new("UIStroke")
+    ModalStroke.Color = Accent
+    ModalStroke.Thickness = 1
+    ModalStroke.Transparency = 0.3
+    ModalStroke.Parent = ModalBox
+
+    -- ========= HEADER =========
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, 36)
+    Header.BackgroundColor3 = COLORS.Panel
+    Header.BorderSizePixel = 0
+    Header.ZIndex = 502
+    Header.Parent = ModalBox
+
+    local HeaderGradient = Instance.new("UIGradient")
+    HeaderGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COLORS.Panel),
+        ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+    })
+    HeaderGradient.Rotation = 45
+    HeaderGradient.Parent = Header
+
+    local HeaderAccent = Instance.new("Frame")
+    HeaderAccent.Size = UDim2.fromOffset(3, 16)
+    HeaderAccent.Position = UDim2.fromOffset(8, 10)
+    HeaderAccent.BackgroundColor3 = Accent
+    HeaderAccent.BorderSizePixel = 0
+    HeaderAccent.ZIndex = 503
+    HeaderAccent.Parent = Header
+
+    local HeaderAccentCorner = Instance.new("UICorner")
+    HeaderAccentCorner.CornerRadius = UDim.new(1, 0)
+    HeaderAccentCorner.Parent = HeaderAccent
+
+    local HeaderTitle = Instance.new("TextLabel")
+    HeaderTitle.Size = UDim2.new(1, -80, 1, 0)
+    HeaderTitle.Position = UDim2.fromOffset(18, 0)
+    HeaderTitle.BackgroundTransparency = 1
+    HeaderTitle.Text = "INFORMAÇÕES DO JOGADOR"
+    HeaderTitle.TextColor3 = COLORS.Text
+    HeaderTitle.TextSize = 10
+    HeaderTitle.Font = Enum.Font.GothamBold
+    HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+    HeaderTitle.ZIndex = 503
+    HeaderTitle.Parent = Header
+
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Size = UDim2.fromOffset(22, 22)
+    CloseBtn.Position = UDim2.new(1, -28, 0.5, -11)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+    CloseBtn.Text = "×"
+    CloseBtn.TextColor3 = COLORS.Text
+    CloseBtn.TextSize = 16
+    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.AutoButtonColor = false
+    CloseBtn.ZIndex = 503
+    CloseBtn.Parent = Header
+
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(0, 5)
+    CloseCorner.Parent = CloseBtn
+
+    CloseBtn.MouseEnter:Connect(function()
+        TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(190, 60, 60)}):Play()
+    end)
+    CloseBtn.MouseLeave:Connect(function()
+        TweenService:Create(CloseBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(120, 40, 40)}):Play()
+    end)
+    CloseBtn.MouseButton1Click:Connect(FecharInfoModal)
+
+    -- ========= CARD DE AVATAR =========
+    local AvatarCard = Instance.new("Frame")
+    AvatarCard.Size = UDim2.new(1, -20, 0, 90)
+    AvatarCard.Position = UDim2.fromOffset(10, 44)
+    AvatarCard.BackgroundColor3 = COLORS.Panel
+    AvatarCard.BorderSizePixel = 0
+    AvatarCard.ZIndex = 502
+    AvatarCard.Parent = ModalBox
+
+    local AvatarCardCorner = Instance.new("UICorner")
+    AvatarCardCorner.CornerRadius = UDim.new(0, 10)
+    AvatarCardCorner.Parent = AvatarCard
+
+    local AvatarCardGradient = Instance.new("UIGradient")
+    AvatarCardGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, COLORS.Panel),
+        ColorSequenceKeypoint.new(1, COLORS.OliveDark)
+    })
+    AvatarCardGradient.Rotation = 45
+    AvatarCardGradient.Parent = AvatarCard
+
+    local AvatarCardStroke = Instance.new("UIStroke")
+    AvatarCardStroke.Color = Accent
+    AvatarCardStroke.Thickness = 1
+    AvatarCardStroke.Transparency = 0.7
+    AvatarCardStroke.Parent = AvatarCard
+
+    local AvatarFrame = Instance.new("Frame")
+    AvatarFrame.Size = UDim2.fromOffset(66, 66)
+    AvatarFrame.Position = UDim2.fromOffset(12, 12)
+    AvatarFrame.BackgroundColor3 = COLORS.Panel2
+    AvatarFrame.BorderSizePixel = 0
+    AvatarFrame.ZIndex = 503
+    AvatarFrame.Parent = AvatarCard
+
+    local AvatarCorner = Instance.new("UICorner")
+    AvatarCorner.CornerRadius = UDim.new(0, 10)
+    AvatarCorner.Parent = AvatarFrame
+
+    local AvatarStroke = Instance.new("UIStroke")
+    AvatarStroke.Color = Accent
+    AvatarStroke.Thickness = 1.5
+    AvatarStroke.Transparency = 0.2
+    AvatarStroke.Parent = AvatarFrame
+
+    local AvatarImg = Instance.new("ImageLabel")
+    AvatarImg.Size = UDim2.fromScale(1, 1)
+    AvatarImg.BackgroundTransparency = 1
+    AvatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. Player.UserId .. "&w=150&h=150"
+    AvatarImg.ZIndex = 504
+    AvatarImg.Parent = AvatarFrame
+
+    local AvatarImgCorner = Instance.new("UICorner")
+    AvatarImgCorner.CornerRadius = UDim.new(0, 10)
+    AvatarImgCorner.Parent = AvatarImg
+
+    local NomeLabel = Instance.new("TextLabel")
+    NomeLabel.Size = UDim2.new(1, -92, 0, 20)
+    NomeLabel.Position = UDim2.fromOffset(88, 18)
+    NomeLabel.BackgroundTransparency = 1
+    NomeLabel.Text = Player.DisplayName ~= "" and Player.DisplayName or Player.Name
+    NomeLabel.TextColor3 = COLORS.Text
+    NomeLabel.TextSize = 13
+    NomeLabel.Font = Enum.Font.GothamBold
+    NomeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    NomeLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    NomeLabel.ZIndex = 503
+    NomeLabel.Parent = AvatarCard
+
+    local UserLabel = Instance.new("TextLabel")
+    UserLabel.Size = UDim2.new(1, -92, 0, 14)
+    UserLabel.Position = UDim2.fromOffset(88, 38)
+    UserLabel.BackgroundTransparency = 1
+    UserLabel.Text = "@" .. Player.Name
+    UserLabel.TextColor3 = COLORS.Muted
+    UserLabel.TextSize = 10
+    UserLabel.Font = Enum.Font.GothamMedium
+    UserLabel.TextXAlignment = Enum.TextXAlignment.Left
+    UserLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    UserLabel.ZIndex = 503
+    UserLabel.Parent = AvatarCard
+
+    local IdLabel = Instance.new("TextLabel")
+    IdLabel.Size = UDim2.new(1, -92, 0, 14)
+    IdLabel.Position = UDim2.fromOffset(88, 55)
+    IdLabel.BackgroundTransparency = 1
+    IdLabel.Text = "🆔 " .. Player.UserId
+    IdLabel.TextColor3 = COLORS.Muted
+    IdLabel.TextSize = 9
+    IdLabel.Font = Enum.Font.Code
+    IdLabel.TextXAlignment = Enum.TextXAlignment.Left
+    IdLabel.ZIndex = 503
+    IdLabel.Parent = AvatarCard
+
+    -- ========= LISTA DE INFO =========
+    local InfoList = Instance.new("Frame")
+    InfoList.Size = UDim2.new(1, -20, 1, -145)
+    InfoList.Position = UDim2.fromOffset(10, 142)
+    InfoList.BackgroundTransparency = 1
+    InfoList.ZIndex = 502
+    InfoList.Parent = ModalBox
+
+    local InfoLayout = Instance.new("UIListLayout")
+    InfoLayout.Padding = UDim.new(0, 4)
+    InfoLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    InfoLayout.Parent = InfoList
+
+    local function CriarLinha(ordem, icone, label, valorInicial, corValor)
+        local Row = Instance.new("Frame")
+        Row.Size = UDim2.new(1, 0, 0, 22)
+        Row.BackgroundColor3 = COLORS.Panel
+        Row.BorderSizePixel = 0
+        Row.LayoutOrder = ordem
+        Row.ZIndex = 502
+        Row.Parent = InfoList
+
+        local RowCorner = Instance.new("UICorner")
+        RowCorner.CornerRadius = UDim.new(0, 5)
+        RowCorner.Parent = Row
+
+        local Icon = Instance.new("TextLabel")
+        Icon.Size = UDim2.fromOffset(20, 22)
+        Icon.Position = UDim2.fromOffset(6, 0)
+        Icon.BackgroundTransparency = 1
+        Icon.Text = icone
+        Icon.TextColor3 = Accent
+        Icon.TextSize = 11
+        Icon.Font = Enum.Font.GothamBold
+        Icon.ZIndex = 503
+        Icon.Parent = Row
+
+        local LblLabel = Instance.new("TextLabel")
+        LblLabel.Size = UDim2.new(0.45, -26, 1, 0)
+        LblLabel.Position = UDim2.fromOffset(30, 0)
+        LblLabel.BackgroundTransparency = 1
+        LblLabel.Text = label
+        LblLabel.TextColor3 = COLORS.Muted
+        LblLabel.TextSize = 8
+        LblLabel.Font = Enum.Font.GothamMedium
+        LblLabel.TextXAlignment = Enum.TextXAlignment.Left
+        LblLabel.ZIndex = 503
+        LblLabel.Parent = Row
+
+        local LblValor = Instance.new("TextLabel")
+        LblValor.Size = UDim2.new(0.55, -8, 1, 0)
+        LblValor.Position = UDim2.new(0.45, 0, 0, 0)
+        LblValor.BackgroundTransparency = 1
+        LblValor.Text = tostring(valorInicial)
+        LblValor.TextColor3 = corValor or COLORS.Text
+        LblValor.TextSize = 9
+        LblValor.Font = Enum.Font.GothamBold
+        LblValor.TextXAlignment = Enum.TextXAlignment.Right
+        LblValor.TextTruncate = Enum.TextTruncate.AtEnd
+        LblValor.ZIndex = 503
+        LblValor.Parent = Row
+
+        return LblValor
+    end
+
+    local corTime = (Player.Team and Player.Team.TeamColor) and Player.Team.TeamColor.Color or nil
+    local valorConta   = CriarLinha(1, "📅", "Conta",    FormatarIdade(Player.AccountAge))
+    local valorTime    = CriarLinha(2, "🎖️", "Time",     Player.Team and Player.Team.Name or "Sem time", corTime)
+    local valorVida    = CriarLinha(3, "❤️", "Vida",     "—", Color3.fromRGB(220, 80, 80))
+    local valorPing    = CriarLinha(4, "📶", "Ping",     "—", Color3.fromRGB(120, 200, 100))
+    local valorPos     = CriarLinha(5, "📍", "Posição",  "—")
+    local valorPlace   = CriarLinha(6, "🗺️", "Place ID", tostring(game.PlaceId))
+    local valorPlayers = CriarLinha(7, "👥", "Jogadores", #Players:GetPlayers() .. " online")
+
+    -- ========= ATUALIZAÇÃO EM TEMPO REAL =========
+    InfoConexao = RunService.RenderStepped:Connect(function()
+        if not InfoModalAtivo then return end
+        pcall(function()
+            local char = Player.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                valorVida.Text = math.floor(hum.Health) .. " / " .. math.floor(hum.MaxHealth)
+                valorVida.TextColor3 = hum.Health > hum.MaxHealth * 0.5
+                    and Color3.fromRGB(120, 200, 100)
+                    or (hum.Health > hum.MaxHealth * 0.25
+                        and Color3.fromRGB(220, 180, 80)
+                        or Color3.fromRGB(220, 80, 80))
+            else
+                valorVida.Text = "—"
+            end
+
+            local ping = Player:GetNetworkPing()
+            valorPing.Text = math.floor(ping * 1000) .. " ms"
+            valorPing.TextColor3 = ping < 0.1
+                and Color3.fromRGB(120, 200, 100)
+                or (ping < 0.2
+                    and Color3.fromRGB(220, 180, 80)
+                    or Color3.fromRGB(220, 80, 80))
+
+            local root = char and char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local p = root.Position
+                valorPos.Text = string.format("%.0f, %.0f, %.0f", p.X, p.Y, p.Z)
+            else
+                valorPos.Text = "—"
+            end
+
+            valorPlayers.Text = #Players:GetPlayers() .. " online"
+            valorTime.Text = Player.Team and Player.Team.Name or "Sem time"
+        end)
+    end)
+end
+
+InfoButton.MouseButton1Click:Connect(AbrirInfoModal)
+
+--========================================================--
 -- FUNÇÕES ESP
 --========================================================--
 
