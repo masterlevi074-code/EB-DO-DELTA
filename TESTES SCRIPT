@@ -660,6 +660,194 @@ MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
 --========================================================--
+-- BOTÃO INFO
+--========================================================--
+
+local InfoButton = Instance.new("TextButton")
+InfoButton.Name = "InfoButton"
+InfoButton.Size = UDim2.fromOffset(38, 26)
+InfoButton.Position = UDim2.new(1, -76, 0, 9)
+InfoButton.BackgroundColor3 = COLORS.Panel2
+InfoButton.BorderSizePixel = 0
+InfoButton.Text = "INFO"
+InfoButton.TextColor3 = COLORS.Text
+InfoButton.TextSize = 7
+InfoButton.Font = Enum.Font.GothamBold
+InfoButton.AutoButtonColor = false
+InfoButton.ZIndex = 110
+InfoButton.Parent = Top
+
+local InfoCorner = Instance.new("UICorner")
+InfoCorner.CornerRadius = UDim.new(0, 6)
+InfoCorner.Parent = InfoButton
+
+local InfoStroke = Instance.new("UIStroke")
+InfoStroke.Color = Accent
+InfoStroke.Thickness = 1
+InfoStroke.Transparency = 0.35
+InfoStroke.Parent = InfoButton
+
+--========================================================--
+-- PAINEL DE INFORMAÇÕES DO JOGADOR
+--========================================================--
+
+local InfoPanel = Instance.new("Frame")
+InfoPanel.Name = "InfoPanel"
+InfoPanel.Size = UDim2.fromOffset(220, 190)
+InfoPanel.AnchorPoint = Vector2.new(0.5, 0.5)
+InfoPanel.Position = UDim2.fromScale(0.5, 0.5)
+InfoPanel.BackgroundColor3 = COLORS.Panel
+InfoPanel.BorderSizePixel = 0
+InfoPanel.Visible = false
+InfoPanel.ZIndex = 200
+InfoPanel.Parent = Gui
+
+local InfoPanelCorner = Instance.new("UICorner")
+InfoPanelCorner.CornerRadius = UDim.new(0, 10)
+InfoPanelCorner.Parent = InfoPanel
+
+local InfoPanelStroke = Instance.new("UIStroke")
+InfoPanelStroke.Color = Accent
+InfoPanelStroke.Thickness = 1
+InfoPanelStroke.Transparency = 0.15
+InfoPanelStroke.Parent = InfoPanel
+
+-- Título
+local InfoTitle = Instance.new("TextLabel")
+InfoTitle.Size = UDim2.new(1, -45, 0, 30)
+InfoTitle.Position = UDim2.fromOffset(12, 5)
+InfoTitle.BackgroundTransparency = 1
+InfoTitle.Text = "INFORMAÇÕES"
+InfoTitle.TextColor3 = COLORS.Text
+InfoTitle.TextSize = 10
+InfoTitle.Font = Enum.Font.GothamBold
+InfoTitle.TextXAlignment = Enum.TextXAlignment.Left
+InfoTitle.ZIndex = 201
+InfoTitle.Parent = InfoPanel
+
+-- Botão fechar
+local InfoClose = Instance.new("TextButton")
+InfoClose.Size = UDim2.fromOffset(25, 25)
+InfoClose.Position = UDim2.new(1, -32, 0, 7)
+InfoClose.BackgroundColor3 = COLORS.Panel2
+InfoClose.BorderSizePixel = 0
+InfoClose.Text = "×"
+InfoClose.TextColor3 = COLORS.Text
+InfoClose.TextSize = 14
+InfoClose.Font = Enum.Font.GothamBold
+InfoClose.AutoButtonColor = false
+InfoClose.ZIndex = 202
+InfoClose.Parent = InfoPanel
+
+local InfoCloseCorner = Instance.new("UICorner")
+InfoCloseCorner.CornerRadius = UDim.new(0, 6)
+InfoCloseCorner.Parent = InfoClose
+
+-- Avatar
+local Avatar = Instance.new("ImageLabel")
+Avatar.Size = UDim2.fromOffset(64, 64)
+Avatar.Position = UDim2.fromOffset(12, 42)
+Avatar.BackgroundColor3 = COLORS.Panel2
+Avatar.BorderSizePixel = 0
+Avatar.ZIndex = 202
+Avatar.Parent = InfoPanel
+
+local AvatarCorner = Instance.new("UICorner")
+AvatarCorner.CornerRadius = UDim.new(0, 10)
+AvatarCorner.Parent = Avatar
+
+local AvatarStroke = Instance.new("UIStroke")
+AvatarStroke.Color = Accent
+AvatarStroke.Thickness = 1
+AvatarStroke.Parent = Avatar
+
+-- Nome
+local PlayerName = Instance.new("TextLabel")
+PlayerName.Size = UDim2.new(1, -90, 0, 20)
+PlayerName.Position = UDim2.fromOffset(85, 44)
+PlayerName.BackgroundTransparency = 1
+PlayerName.Text = Player.DisplayName
+PlayerName.TextColor3 = COLORS.Text
+PlayerName.TextSize = 10
+PlayerName.Font = Enum.Font.GothamBold
+PlayerName.TextXAlignment = Enum.TextXAlignment.Left
+PlayerName.TextTruncate = Enum.TextTruncate.AtEnd
+PlayerName.ZIndex = 202
+PlayerName.Parent = InfoPanel
+
+-- Username
+local Username = Instance.new("TextLabel")
+Username.Size = UDim2.new(1, -90, 0, 18)
+Username.Position = UDim2.fromOffset(85, 64)
+Username.BackgroundTransparency = 1
+Username.Text = "@" .. Player.Name
+Username.TextColor3 = COLORS.Muted
+Username.TextSize = 8
+Username.Font = Enum.Font.GothamMedium
+Username.TextXAlignment = Enum.TextXAlignment.Left
+Username.TextTruncate = Enum.TextTruncate.AtEnd
+Username.ZIndex = 202
+Username.Parent = InfoPanel
+
+-- Linha de informações
+local InfoText = Instance.new("TextLabel")
+InfoText.Size = UDim2.new(1, -24, 0, 55)
+InfoText.Position = UDim2.fromOffset(12, 115)
+InfoText.BackgroundTransparency = 1
+InfoText.TextColor3 = COLORS.Muted
+InfoText.TextSize = 7
+InfoText.Font = Enum.Font.GothamMedium
+InfoText.TextXAlignment = Enum.TextXAlignment.Left
+InfoText.TextYAlignment = Enum.TextYAlignment.Top
+InfoText.TextWrapped = true
+InfoText.ZIndex = 202
+InfoText.Parent = InfoPanel
+
+InfoText.Text =
+    "USER ID: " .. tostring(Player.UserId) ..
+    "\nDISPLAY NAME: " .. Player.DisplayName ..
+    "\nACCOUNT: @" .. Player.Name
+
+-- Avatar do Roblox
+task.spawn(function()
+    local success, image = pcall(function()
+        return Players:GetUserThumbnailAsync(
+            Player.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size150x150
+        )
+    end)
+
+    if success and image then
+        Avatar.Image = image
+    end
+end)
+
+-- Abrir
+InfoButton.MouseButton1Click:Connect(function()
+    InfoPanel.Visible = not InfoPanel.Visible
+
+    if InfoPanel.Visible then
+        InfoPanel.Size = UDim2.fromOffset(200, 170)
+        InfoPanel.BackgroundTransparency = 1
+
+        TweenService:Create(
+            InfoPanel,
+            TweenInfo.new(0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+            {
+                Size = UDim2.fromOffset(220, 190),
+                BackgroundTransparency = 0
+            }
+        ):Play()
+    end
+end)
+
+-- Fechar
+InfoClose.MouseButton1Click:Connect(function()
+    InfoPanel.Visible = false
+end)
+
+--========================================================--
 -- EFEITOS DECORATIVOS
 --========================================================--
 
@@ -3123,394 +3311,5 @@ task.delay(6.3, function()
        end)
     end
 end)
-
---========================================================--
--- BOTÃO INFO + MODAL (autossuficiente)
---========================================================--
-
--- Botão INFO no header (ao lado do Minimize)
-local InfoButton = Instance.new("TextButton")
-InfoButton.Name = "InfoButton"
-InfoButton.Size = UDim2.fromOffset(22, 18)
-InfoButton.Position = UDim2.new(1, -60, 0, 13)
-InfoButton.BackgroundColor3 = COLORS.Panel2
-InfoButton.Text = "i"
-InfoButton.TextColor3 = COLORS.Muted
-InfoButton.TextSize = 11
-InfoButton.Font = Enum.Font.GothamBlack
-InfoButton.AutoButtonColor = false
-InfoButton.ZIndex = 100
-InfoButton.Parent = Top
-
-local InfoCorner = Instance.new("UICorner")
-InfoCorner.CornerRadius = UDim.new(0, 5)
-InfoCorner.Parent = InfoButton
-
-local InfoStroke = Instance.new("UIStroke")
-InfoStroke.Color = COLORS.Stroke
-InfoStroke.Thickness = 1
-InfoStroke.Parent = InfoButton
-
-InfoButton.MouseEnter:Connect(function()
-    TweenService:Create(InfoButton, TweenInfo.new(0.15), {
-        BackgroundColor3 = COLORS.OliveDark,
-        TextColor3 = COLORS.Text
-    }):Play()
-    TweenService:Create(InfoStroke, TweenInfo.new(0.15), {Color = Accent}):Play()
-end)
-
-InfoButton.MouseLeave:Connect(function()
-    TweenService:Create(InfoButton, TweenInfo.new(0.15), {
-        BackgroundColor3 = COLORS.Panel2,
-        TextColor3 = COLORS.Muted
-    }):Play()
-    TweenService:Create(InfoStroke, TweenInfo.new(0.15), {Color = COLORS.Stroke}):Play()
-end)
-
--- Modal de informações
-local InfoModalAtivo = nil
-local InfoConexao = nil
-
-local function FormatarIdadeInfo(dias)
-    if dias >= 365 then
-        local anos = math.floor(dias / 365)
-        return anos .. (anos == 1 and " ano" or " anos")
-    elseif dias >= 30 then
-        local meses = math.floor(dias / 30)
-        return meses .. (meses == 1 and " mês" or " meses")
-    elseif dias >= 1 then
-        return dias .. (dias == 1 and " dia" or " dias")
-    end
-    return "hoje"
-end
-
-local function FecharInfoModal()
-    if not InfoModalAtivo then return end
-    if InfoConexao then InfoConexao:Disconnect(); InfoConexao = nil end
-    local wrapper = InfoModalAtivo
-    InfoModalAtivo = nil
-
-    local modal = wrapper:FindFirstChild("ModalBox")
-    if modal then
-        local scale = modal:FindFirstChildOfClass("UIScale")
-        if scale then
-            TweenService:Create(scale, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Scale = 0.75}):Play()
-        end
-    end
-
-    local fade = TweenService:Create(wrapper, TweenInfo.new(0.18), {BackgroundTransparency = 1})
-    fade:Play()
-    fade.Completed:Connect(function() wrapper:Destroy() end)
-end
-
-local function AbrirInfoModal()
-    if InfoModalAtivo then return end
-
-    local Wrapper = Instance.new("Frame")
-    Wrapper.Name = "InfoModalWrapper"
-    Wrapper.Size = UDim2.fromScale(1, 1)
-    Wrapper.Position = UDim2.fromScale(0, 0)
-    Wrapper.BackgroundColor3 = Color3.new(0, 0, 0)
-    Wrapper.BackgroundTransparency = 1
-    Wrapper.BorderSizePixel = 0
-    Wrapper.ZIndex = 500
-    Wrapper.Parent = Gui
-    InfoModalAtivo = Wrapper
-
-    TweenService:Create(Wrapper, TweenInfo.new(0.22), {BackgroundTransparency = 0.5}):Play()
-
-    local Backdrop = Instance.new("TextButton")
-    Backdrop.Size = UDim2.fromScale(1, 1)
-    Backdrop.BackgroundTransparency = 1
-    Backdrop.Text = ""
-    Backdrop.AutoButtonColor = false
-    Backdrop.ZIndex = 500
-    Backdrop.Parent = Wrapper
-    Backdrop.MouseButton1Click:Connect(FecharInfoModal)
-
-    local ModalBox = Instance.new("Frame")
-    ModalBox.Name = "ModalBox"
-    ModalBox.Size = UDim2.fromOffset(280, 400)
-    ModalBox.AnchorPoint = Vector2.new(0.5, 0.5)
-    ModalBox.Position = UDim2.fromScale(0.5, 0.5)
-    ModalBox.BackgroundColor3 = COLORS.Background
-    ModalBox.BorderSizePixel = 0
-    ModalBox.ClipsDescendants = true
-    ModalBox.ZIndex = 501
-    ModalBox.Parent = Wrapper
-
-    local ModalScale = Instance.new("UIScale")
-    ModalScale.Scale = 0.7
-    ModalScale.Parent = ModalBox
-    TweenService:Create(ModalScale, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Scale = 1}):Play()
-
-    local ModalCorner = Instance.new("UICorner")
-    ModalCorner.CornerRadius = UDim.new(0, 12)
-    ModalCorner.Parent = ModalBox
-
-    local ModalStroke = Instance.new("UIStroke")
-    ModalStroke.Color = Accent
-    ModalStroke.Thickness = 1
-    ModalStroke.Transparency = 0.3
-    ModalStroke.Parent = ModalBox
-
-    -- Header
-    local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1, 0, 0, 36)
-    Header.BackgroundColor3 = COLORS.Panel
-    Header.BorderSizePixel = 0
-    Header.ZIndex = 502
-    Header.Parent = ModalBox
-
-    local HeaderGradient = Instance.new("UIGradient")
-    HeaderGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, COLORS.Panel),
-        ColorSequenceKeypoint.new(1, COLORS.OliveDark)
-    })
-    HeaderGradient.Rotation = 45
-    HeaderGradient.Parent = Header
-
-    local HeaderAccent = Instance.new("Frame")
-    HeaderAccent.Size = UDim2.fromOffset(3, 16)
-    HeaderAccent.Position = UDim2.fromOffset(8, 10)
-    HeaderAccent.BackgroundColor3 = Accent
-    HeaderAccent.BorderSizePixel = 0
-    HeaderAccent.ZIndex = 503
-    HeaderAccent.Parent = Header
-
-    local HeaderAccentCorner = Instance.new("UICorner")
-    HeaderAccentCorner.CornerRadius = UDim.new(1, 0)
-    HeaderAccentCorner.Parent = HeaderAccent
-
-    local HeaderTitle = Instance.new("TextLabel")
-    HeaderTitle.Size = UDim2.new(1, -80, 1, 0)
-    HeaderTitle.Position = UDim2.fromOffset(18, 0)
-    HeaderTitle.BackgroundTransparency = 1
-    HeaderTitle.Text = "INFORMAÇÕES DO JOGADOR"
-    HeaderTitle.TextColor3 = COLORS.Text
-    HeaderTitle.TextSize = 10
-    HeaderTitle.Font = Enum.Font.GothamBold
-    HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
-    HeaderTitle.ZIndex = 503
-    HeaderTitle.Parent = Header
-
-    local CloseBtn = Instance.new("TextButton")
-    CloseBtn.Size = UDim2.fromOffset(22, 22)
-    CloseBtn.Position = UDim2.new(1, -28, 0.5, -11)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
-    CloseBtn.Text = "×"
-    CloseBtn.TextColor3 = COLORS.Text
-    CloseBtn.TextSize = 16
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.AutoButtonColor = false
-    CloseBtn.ZIndex = 503
-    CloseBtn.Parent = Header
-
-    local CloseCorner = Instance.new("UICorner")
-    CloseCorner.CornerRadius = UDim.new(0, 5)
-    CloseCorner.Parent = CloseBtn
-
-    CloseBtn.MouseButton1Click:Connect(FecharInfoModal)
-
-    -- Card de avatar
-    local AvatarCard = Instance.new("Frame")
-    AvatarCard.Size = UDim2.new(1, -20, 0, 90)
-    AvatarCard.Position = UDim2.fromOffset(10, 44)
-    AvatarCard.BackgroundColor3 = COLORS.Panel
-    AvatarCard.BorderSizePixel = 0
-    AvatarCard.ZIndex = 502
-    AvatarCard.Parent = ModalBox
-
-    local AvatarCardCorner = Instance.new("UICorner")
-    AvatarCardCorner.CornerRadius = UDim.new(0, 10)
-    AvatarCardCorner.Parent = AvatarCard
-
-    local AvatarCardGradient = Instance.new("UIGradient")
-    AvatarCardGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, COLORS.Panel),
-        ColorSequenceKeypoint.new(1, COLORS.OliveDark)
-    })
-    AvatarCardGradient.Rotation = 45
-    AvatarCardGradient.Parent = AvatarCard
-
-    local AvatarCardStroke = Instance.new("UIStroke")
-    AvatarCardStroke.Color = Accent
-    AvatarCardStroke.Thickness = 1
-    AvatarCardStroke.Transparency = 0.7
-    AvatarCardStroke.Parent = AvatarCard
-
-    local AvatarFrame = Instance.new("Frame")
-    AvatarFrame.Size = UDim2.fromOffset(66, 66)
-    AvatarFrame.Position = UDim2.fromOffset(12, 12)
-    AvatarFrame.BackgroundColor3 = COLORS.Panel2
-    AvatarFrame.BorderSizePixel = 0
-    AvatarFrame.ZIndex = 503
-    AvatarFrame.Parent = AvatarCard
-
-    local AvatarCorner = Instance.new("UICorner")
-    AvatarCorner.CornerRadius = UDim.new(0, 10)
-    AvatarCorner.Parent = AvatarFrame
-
-    local AvatarStroke = Instance.new("UIStroke")
-    AvatarStroke.Color = Accent
-    AvatarStroke.Thickness = 1.5
-    AvatarStroke.Transparency = 0.2
-    AvatarStroke.Parent = AvatarFrame
-
-    local AvatarImg = Instance.new("ImageLabel")
-    AvatarImg.Size = UDim2.fromScale(1, 1)
-    AvatarImg.BackgroundTransparency = 1
-    AvatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. Player.UserId .. "&w=150&h=150"
-    AvatarImg.ZIndex = 504
-    AvatarImg.Parent = AvatarFrame
-
-    local AvatarImgCorner = Instance.new("UICorner")
-    AvatarImgCorner.CornerRadius = UDim.new(0, 10)
-    AvatarImgCorner.Parent = AvatarImg
-
-    local NomeLabel = Instance.new("TextLabel")
-    NomeLabel.Size = UDim2.new(1, -92, 0, 20)
-    NomeLabel.Position = UDim2.fromOffset(88, 18)
-    NomeLabel.BackgroundTransparency = 1
-    NomeLabel.Text = Player.DisplayName ~= "" and Player.DisplayName or Player.Name
-    NomeLabel.TextColor3 = COLORS.Text
-    NomeLabel.TextSize = 13
-    NomeLabel.Font = Enum.Font.GothamBold
-    NomeLabel.TextXAlignment = Enum.TextXAlignment.Left
-    NomeLabel.TextTruncate = Enum.TextTruncate.AtEnd
-    NomeLabel.ZIndex = 503
-    NomeLabel.Parent = AvatarCard
-
-    local UserLabel = Instance.new("TextLabel")
-    UserLabel.Size = UDim2.new(1, -92, 0, 14)
-    UserLabel.Position = UDim2.fromOffset(88, 38)
-    UserLabel.BackgroundTransparency = 1
-    UserLabel.Text = "@" .. Player.Name
-    UserLabel.TextColor3 = COLORS.Muted
-    UserLabel.TextSize = 10
-    UserLabel.Font = Enum.Font.GothamMedium
-    UserLabel.TextXAlignment = Enum.TextXAlignment.Left
-    UserLabel.TextTruncate = Enum.TextTruncate.AtEnd
-    UserLabel.ZIndex = 503
-    UserLabel.Parent = AvatarCard
-
-    local IdLabel = Instance.new("TextLabel")
-    IdLabel.Size = UDim2.new(1, -92, 0, 14)
-    IdLabel.Position = UDim2.fromOffset(88, 55)
-    IdLabel.BackgroundTransparency = 1
-    IdLabel.Text = "ID: " .. Player.UserId
-    IdLabel.TextColor3 = COLORS.Muted
-    IdLabel.TextSize = 9
-    IdLabel.Font = Enum.Font.Code
-    IdLabel.TextXAlignment = Enum.TextXAlignment.Left
-    IdLabel.ZIndex = 503
-    IdLabel.Parent = AvatarCard
-
-    -- Lista de informações
-    local InfoList = Instance.new("Frame")
-    InfoList.Size = UDim2.new(1, -20, 1, -145)
-    InfoList.Position = UDim2.fromOffset(10, 142)
-    InfoList.BackgroundTransparency = 1
-    InfoList.ZIndex = 502
-    InfoList.Parent = ModalBox
-
-    local InfoLayout = Instance.new("UIListLayout")
-    InfoLayout.Padding = UDim.new(0, 4)
-    InfoLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    InfoLayout.Parent = InfoList
-
-    local function CriarLinha(ordem, label, valorInicial, corValor)
-        local Row = Instance.new("Frame")
-        Row.Size = UDim2.new(1, 0, 0, 22)
-        Row.BackgroundColor3 = COLORS.Panel
-        Row.BorderSizePixel = 0
-        Row.LayoutOrder = ordem
-        Row.ZIndex = 502
-        Row.Parent = InfoList
-
-        local RowCorner = Instance.new("UICorner")
-        RowCorner.CornerRadius = UDim.new(0, 5)
-        RowCorner.Parent = Row
-
-        local LblLabel = Instance.new("TextLabel")
-        LblLabel.Size = UDim2.new(0.45, -10, 1, 0)
-        LblLabel.Position = UDim2.fromOffset(10, 0)
-        LblLabel.BackgroundTransparency = 1
-        LblLabel.Text = label
-        LblLabel.TextColor3 = COLORS.Muted
-        LblLabel.TextSize = 8
-        LblLabel.Font = Enum.Font.GothamMedium
-        LblLabel.TextXAlignment = Enum.TextXAlignment.Left
-        LblLabel.ZIndex = 503
-        LblLabel.Parent = Row
-
-        local LblValor = Instance.new("TextLabel")
-        LblValor.Size = UDim2.new(0.55, -10, 1, 0)
-        LblValor.Position = UDim2.new(0.45, 0, 0, 0)
-        LblValor.BackgroundTransparency = 1
-        LblValor.Text = tostring(valorInicial)
-        LblValor.TextColor3 = corValor or COLORS.Text
-        LblValor.TextSize = 9
-        LblValor.Font = Enum.Font.GothamBold
-        LblValor.TextXAlignment = Enum.TextXAlignment.Right
-        LblValor.TextTruncate = Enum.TextTruncate.AtEnd
-        LblValor.ZIndex = 503
-        LblValor.Parent = Row
-
-        return LblValor
-    end
-
-    local corTime = (Player.Team and Player.Team.TeamColor) and Player.Team.TeamColor.Color or nil
-    local valorConta   = CriarLinha(1, "Conta",    FormatarIdadeInfo(Player.AccountAge))
-    local valorTime    = CriarLinha(2, "Time",     Player.Team and Player.Team.Name or "Sem time", corTime)
-    local valorVida    = CriarLinha(3, "Vida",     "-", Color3.fromRGB(220, 80, 80))
-    local valorPing    = CriarLinha(4, "Ping",     "-", Color3.fromRGB(120, 200, 100))
-    local valorPos     = CriarLinha(5, "Posição",  "-")
-    local valorPlace   = CriarLinha(6, "Place ID", tostring(game.PlaceId))
-    local valorPlayers = CriarLinha(7, "Jogadores", #Players:GetPlayers() .. " online")
-
-    InfoConexao = RunService.RenderStepped:Connect(function()
-        if not InfoModalAtivo then return end
-        pcall(function()
-            local char = Player.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                valorVida.Text = math.floor(hum.Health) .. " / " .. math.floor(hum.MaxHealth)
-                if hum.Health > hum.MaxHealth * 0.5 then
-                    valorVida.TextColor3 = Color3.fromRGB(120, 200, 100)
-                elseif hum.Health > hum.MaxHealth * 0.25 then
-                    valorVida.TextColor3 = Color3.fromRGB(220, 180, 80)
-                else
-                    valorVida.TextColor3 = Color3.fromRGB(220, 80, 80)
-                end
-            else
-                valorVida.Text = "-"
-            end
-
-            local ping = Player:GetNetworkPing()
-            valorPing.Text = math.floor(ping * 1000) .. " ms"
-            if ping < 0.1 then
-                valorPing.TextColor3 = Color3.fromRGB(120, 200, 100)
-            elseif ping < 0.2 then
-                valorPing.TextColor3 = Color3.fromRGB(220, 180, 80)
-            else
-                valorPing.TextColor3 = Color3.fromRGB(220, 80, 80)
-            end
-
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if root then
-                local p = root.Position
-                valorPos.Text = string.format("%.0f, %.0f, %.0f", p.X, p.Y, p.Z)
-            else
-                valorPos.Text = "-"
-            end
-
-            valorPlayers.Text = #Players:GetPlayers() .. " online"
-            valorTime.Text = Player.Team and Player.Team.Name or "Sem time"
-        end)
-    end)
-end
-
-InfoButton.MouseButton1Click:Connect(AbrirInfoModal)
 
 print("[NOXYS HUB] Tactical Mobile Edition carregada.")
