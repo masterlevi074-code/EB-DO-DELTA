@@ -659,6 +659,43 @@ local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
+-- BOTÃO INFO
+local InfoButton = Instance.new("TextButton")
+InfoButton.Size = UDim2.fromOffset(22, 18)
+InfoButton.Position = UDim2.new(1, -60, 0, 13)
+InfoButton.BackgroundColor3 = COLORS.Panel2
+InfoButton.Text = "i"
+InfoButton.TextColor3 = COLORS.Muted
+InfoButton.TextSize = 11
+InfoButton.Font = Enum.Font.GothamBlack
+InfoButton.AutoButtonColor = false
+InfoButton.Parent = Top
+
+local InfoCorner = Instance.new("UICorner")
+InfoCorner.CornerRadius = UDim.new(0, 5)
+InfoCorner.Parent = InfoButton
+
+local InfoStroke = Instance.new("UIStroke")
+InfoStroke.Color = COLORS.Stroke
+InfoStroke.Thickness = 1
+InfoStroke.Parent = InfoButton
+
+InfoButton.MouseEnter:Connect(function()
+    TweenService:Create(InfoButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = COLORS.OliveDark,
+        TextColor3 = COLORS.Text
+    }):Play()
+    TweenService:Create(InfoStroke, TweenInfo.new(0.15), {Color = Accent}):Play()
+end)
+
+InfoButton.MouseLeave:Connect(function()
+    TweenService:Create(InfoButton, TweenInfo.new(0.15), {
+        BackgroundColor3 = COLORS.Panel2,
+        TextColor3 = COLORS.Muted
+    }):Play()
+    TweenService:Create(InfoStroke, TweenInfo.new(0.15), {Color = COLORS.Stroke}):Play()
+end)
+
 --========================================================--
 -- EFEITOS DECORATIVOS
 --========================================================--
