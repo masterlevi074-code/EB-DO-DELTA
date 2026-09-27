@@ -54,6 +54,7 @@ local TimesMarcados = {
     ["[BAC]"] = false, ["[BPE]"] = false, ["[BFE]"] = false,
     ["[CIE]"] = false, ["[BIP]"] = false, ["[CAAT]"] = false,
     ["[CIGS]"] = false, ["[MD]"] = false, ["[REC MEC]"] = false,
+    ["[CYBER]"] = false,
 }
 
 local Aimbot_Ativado = false
@@ -2518,7 +2519,7 @@ Toggle(TimesSection, "FILTRAR POR TIMES", false, function(State)
     ESP_TimesAtivado = State
     AtualizarESP()
 end)
-local timesNomes = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]"}
+local timesNomes = {"[CI]", "[EB]", "[OF]", "[BAC]", "[BPE]", "[BFE]", "[CIE]", "[BIP]", "[CAAT]", "[CIGS]", "[MD]", "[REC MEC]", "[CYBER]"}
 for _, time in ipairs(timesNomes) do
     Toggle(TimesSection, time, TimesMarcados[time], function(State)
         TimesMarcados[time] = State
