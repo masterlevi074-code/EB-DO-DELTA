@@ -1323,7 +1323,7 @@ local function Input(Container, LabelText, Placeholder, Callback)
 end
 
 --========================================================--
--- COLOR PICKER (MODERNO)
+-- COLOR PICKER (CORRIGIDO)
 --========================================================--
 
 local function ColorPicker(Container, Category, DefaultColor)
@@ -1343,6 +1343,7 @@ local function ColorPicker(Container, Category, DefaultColor)
     Button.Text = ""
     Button.ZIndex = 21
     Button.Parent = Holder
+
     local ButtonCorner = Instance.new("UICorner")
     ButtonCorner.CornerRadius = UDim.new(0, 6)
     ButtonCorner.Parent = Button
@@ -1366,9 +1367,11 @@ local function ColorPicker(Container, Category, DefaultColor)
     Preview.BorderSizePixel = 0
     Preview.ZIndex = 22
     Preview.Parent = Button
+
     local PreviewCorner = Instance.new("UICorner")
     PreviewCorner.CornerRadius = UDim.new(1, 0)
     PreviewCorner.Parent = Preview
+
     local PreviewStroke = Instance.new("UIStroke")
     PreviewStroke.Color = COLORS.Text
     PreviewStroke.Transparency = 0.35
@@ -1383,13 +1386,16 @@ local function ColorPicker(Container, Category, DefaultColor)
     Popup.Visible = false
     Popup.ZIndex = 50
     Popup.Parent = Holder
+
     local PopupCorner = Instance.new("UICorner")
     PopupCorner.CornerRadius = UDim.new(0, 8)
     PopupCorner.Parent = Popup
+
     local PopupStroke = Instance.new("UIStroke")
     PopupStroke.Color = Accent
     PopupStroke.Transparency = 0.35
     PopupStroke.Parent = Popup
+
     local Modal = nil
     local ModalInputConnection = nil
 
@@ -1397,76 +1403,128 @@ local function ColorPicker(Container, Category, DefaultColor)
     local draggingSV = false
     local draggingHue = false
 
+    -- =================================================
+    -- SV PICKER — base = hue, overlays controlam s e v
+    -- =================================================
     local SV = Instance.new("Frame")
     SV.Size = UDim2.new(1, -16, 0, 108)
     SV.Position = UDim2.fromOffset(8, 32)
     SV.BorderSizePixel = 0
     SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
     SV.ZIndex = 51
+    SV.ClipsDescendants = false
     SV.Parent = Popup
+
     local SVCorner = Instance.new("UICorner")
     SVCorner.CornerRadius = UDim.new(0, 5)
     SVCorner.Parent = SV
+
+    -- Overlay BRANCO: opaco à esquerda (s=0), transparente à direita (s=1)
+    local WhiteOverlay = Instance.new("Frame")
+    WhiteOverlay.Size = UDim2.fromScale(1, 1)
+    WhiteOverlay.BackgroundColor3 = Color3.new(1, 1, 1)
+    WhiteOverlay.BorderSizePixel = 0
+    WhiteOverlay.ZIndex = 52
+    WhiteOverlay.Parent = SV
+
+    local WhiteOverlayCorner = Instance.new("UICorner")
+    WhiteOverlayCorner.CornerRadius = UDim.new(0, 5)
+    WhiteOverlayCorner.Parent = WhiteOverlay
+
     local WhiteGradient = Instance.new("UIGradient")
+    WhiteGradient.Rotation = 0
     WhiteGradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.new(1,1,1))
-    WhiteGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
-    WhiteGradient.Parent = SV
-    local Black = Instance.new("Frame")
-    Black.Size = UDim2.fromScale(1, 1)
-    Black.BackgroundColor3 = Color3.new(0, 0, 0)
-    Black.BackgroundTransparency = 1
-    Black.BorderSizePixel = 0
-    Black.ZIndex = 52
-    Black.Parent = SV
+    WhiteGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),  -- esquerda: branco opaco
+        NumberSequenceKeypoint.new(1, 1),  -- direita: transparente
+    })
+    WhiteGradient.Parent = WhiteOverlay
+
+    -- Overlay PRETO: transparente em cima (v=1), opaco embaixo (v=0)
+    local BlackOverlay = Instance.new("Frame")
+    BlackOverlay.Size = UDim2.fromScale(1, 1)
+    BlackOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+    BlackOverlay.BorderSizePixel = 0
+    BlackOverlay.ZIndex = 53
+    BlackOverlay.Parent = SV
+
+    local BlackOverlayCorner = Instance.new("UICorner")
+    BlackOverlayCorner.CornerRadius = UDim.new(0, 5)
+    BlackOverlayCorner.Parent = BlackOverlay
+
     local BlackGradient = Instance.new("UIGradient")
     BlackGradient.Rotation = 90
-    BlackGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
-    BlackGradient.Parent = Black
+    BlackGradient.Color = ColorSequence.new(Color3.new(0,0,0), Color3.new(0,0,0))
+    BlackGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),  -- topo: transparente
+        NumberSequenceKeypoint.new(1, 0),  -- baixo: preto opaco
+    })
+    BlackGradient.Parent = BlackOverlay
+
+    -- Marcador do SV
     local SVMarker = Instance.new("Frame")
     SVMarker.Size = UDim2.fromOffset(10, 10)
     SVMarker.AnchorPoint = Vector2.new(0.5, 0.5)
-    SVMarker.BackgroundColor3 = Color3.new(1,1,1)
+    SVMarker.BackgroundColor3 = Color3.new(1, 1, 1)
     SVMarker.BorderSizePixel = 0
     SVMarker.ZIndex = 54
     SVMarker.Parent = SV
+
     local SVMarkerCorner = Instance.new("UICorner")
     SVMarkerCorner.CornerRadius = UDim.new(1, 0)
     SVMarkerCorner.Parent = SVMarker
+
     local SVMarkerStroke = Instance.new("UIStroke")
-    SVMarkerStroke.Color = Color3.new(0,0,0)
+    SVMarkerStroke.Color = Color3.new(0, 0, 0)
     SVMarkerStroke.Thickness = 1
     SVMarkerStroke.Parent = SVMarker
 
+    -- =================================================
+    -- HUE SLIDER
+    -- =================================================
     local Hue = Instance.new("Frame")
     Hue.Size = UDim2.new(1, -16, 0, 14)
     Hue.Position = UDim2.fromOffset(8, 148)
     Hue.BorderSizePixel = 0
     Hue.ZIndex = 51
+    Hue.ClipsDescendants = false
     Hue.Parent = Popup
+
     local HueCorner = Instance.new("UICorner")
     HueCorner.CornerRadius = UDim.new(1, 0)
     HueCorner.Parent = Hue
+
     local HueGradient = Instance.new("UIGradient")
+    HueGradient.Rotation = 0
     HueGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHSV(0,1,1)),
-        ColorSequenceKeypoint.new(0.17, Color3.fromHSV(0.17,1,1)),
-        ColorSequenceKeypoint.new(0.34, Color3.fromHSV(0.34,1,1)),
-        ColorSequenceKeypoint.new(0.51, Color3.fromHSV(0.51,1,1)),
-        ColorSequenceKeypoint.new(0.68, Color3.fromHSV(0.68,1,1)),
-        ColorSequenceKeypoint.new(0.85, Color3.fromHSV(0.85,1,1)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(1,1,1)),
+        ColorSequenceKeypoint.new(0.000, Color3.fromHSV(0/6, 1, 1)),
+        ColorSequenceKeypoint.new(1/6,   Color3.fromHSV(1/6, 1, 1)),
+        ColorSequenceKeypoint.new(2/6,   Color3.fromHSV(2/6, 1, 1)),
+        ColorSequenceKeypoint.new(3/6,   Color3.fromHSV(3/6, 1, 1)),
+        ColorSequenceKeypoint.new(4/6,   Color3.fromHSV(4/6, 1, 1)),
+        ColorSequenceKeypoint.new(5/6,   Color3.fromHSV(5/6, 1, 1)),
+        ColorSequenceKeypoint.new(1.000, Color3.fromHSV(6/6, 1, 1)),
     })
     HueGradient.Parent = Hue
+
     local HueMarker = Instance.new("Frame")
     HueMarker.Size = UDim2.fromOffset(6, 18)
     HueMarker.AnchorPoint = Vector2.new(0.5, 0.5)
-    HueMarker.BackgroundColor3 = Color3.new(1,1,1)
+    HueMarker.BackgroundColor3 = Color3.new(1, 1, 1)
     HueMarker.BorderSizePixel = 0
     HueMarker.ZIndex = 53
     HueMarker.Parent = Hue
+
     local HueMarkerCorner = Instance.new("UICorner")
     HueMarkerCorner.CornerRadius = UDim.new(1, 0)
     HueMarkerCorner.Parent = HueMarker
+
+    local HueMarkerStroke = Instance.new("UIStroke")
+    HueMarkerStroke.Color = Color3.new(0, 0, 0)
+    HueMarkerStroke.Thickness = 1
+    HueMarkerStroke.Parent = HueMarker
+
+    -- Texto informativo
     local ValueText = Instance.new("TextLabel")
     ValueText.BackgroundTransparency = 1
     ValueText.Position = UDim2.fromOffset(8, 8)
@@ -1480,10 +1538,11 @@ local function ColorPicker(Container, Category, DefaultColor)
 
     local function ApplyColor(color)
         Preview.BackgroundColor3 = color
-        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)  -- base = hue atual
         SVMarker.Position = UDim2.new(s, 0, 1 - v, 0)
         HueMarker.Position = UDim2.new(h, 0, 0.5, 0)
-        ValueText.Text = string.format("H %.0f°   S %.0f%%   V %.0f%%", h * 360, s * 100, v * 100)
+        ValueText.Text = string.format("H %.0f°  S %.0f%%  V %.0f%%", h * 360, s * 100, v * 100)
+
         if Category == "FOV" then
             Aimbot_CorFOV = color
             if FOVCircle then FOVCircle.Color = color end
@@ -1494,33 +1553,49 @@ local function ColorPicker(Container, Category, DefaultColor)
             if type(AtualizarESP) == "function" then AtualizarESP() end
         end
     end
+
     local function SetSV(position)
         local x = math.clamp((position.X - SV.AbsolutePosition.X) / SV.AbsoluteSize.X, 0, 1)
         local y = math.clamp((position.Y - SV.AbsolutePosition.Y) / SV.AbsoluteSize.Y, 0, 1)
         s, v = x, 1 - y
         ApplyColor(Color3.fromHSV(h, s, v))
     end
+
     local function SetHue(position)
         h = math.clamp((position.X - Hue.AbsolutePosition.X) / Hue.AbsoluteSize.X, 0, 1)
         ApplyColor(Color3.fromHSV(h, s, v))
     end
+
     SV.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingSV = true; SetSV(input.Position)
+            draggingSV = true
+            SetSV(input.Position)
         end
     end)
+
     Hue.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingHue = true; SetHue(input.Position)
+            draggingHue = true
+            SetHue(input.Position)
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
-        if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then SetSV(input.Position) end
-        if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then SetHue(input.Position) end
+        if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            SetSV(input.Position)
+        end
+        if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            SetHue(input.Position)
+        end
     end)
+
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false; draggingHue = false end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSV = false
+            draggingHue = false
+        end
     end)
+
     local function FecharPaleta()
         if not Modal or not Popup.Visible then return end
         local fechar = TweenService:Create(Popup, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.fromOffset(260, 0)})
@@ -1534,6 +1609,7 @@ local function ColorPicker(Container, Category, DefaultColor)
             if Modal then Modal:Destroy(); Modal = nil end
         end)
     end
+
     local function AbrirPaleta()
         if Modal then return end
         Modal = Instance.new("Frame")
@@ -1544,6 +1620,7 @@ local function ColorPicker(Container, Category, DefaultColor)
         Modal.BorderSizePixel = 0
         Modal.ZIndex = 100
         Modal.Parent = Gui
+
         local Backdrop = Instance.new("TextButton")
         Backdrop.Name = "ColorPickerBackdrop"
         Backdrop.Size = UDim2.fromScale(1, 1)
@@ -1555,6 +1632,7 @@ local function ColorPicker(Container, Category, DefaultColor)
         Backdrop.AutoButtonColor = false
         Backdrop.ZIndex = 100
         Backdrop.Parent = Modal
+
         ModalInputConnection = UserInputService.InputBegan:Connect(function(input)
             if not Modal or not Popup.Visible then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -1566,23 +1644,28 @@ local function ColorPicker(Container, Category, DefaultColor)
                 if not dentro then FecharPaleta() end
             end
         end)
+
         Popup.Parent = Modal
         Popup.Visible = true
         Popup.Size = UDim2.fromOffset(260, 0)
         Popup.ZIndex = 200
         SV.ZIndex = 201
-        Black.ZIndex = 202
+        WhiteOverlay.ZIndex = 202
+        BlackOverlay.ZIndex = 203
         SVMarker.ZIndex = 204
         Hue.ZIndex = 201
         HueMarker.ZIndex = 204
         ValueText.ZIndex = 201
+
         local abrir = TweenService:Create(Popup, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(300, 180)})
         abrir:Play()
     end
+
     Button.MouseButton1Click:Connect(function()
         if Modal then FecharPaleta() else AbrirPaleta() end
         ApplyColor(Color3.fromHSV(h, s, v))
     end)
+
     ApplyColor(DefaultColor)
     return Holder
 end
