@@ -92,7 +92,6 @@ local Hitboxes = {}
 local SpeedHack_Ativado = false
 local SpeedHack_Velocidade = 50
 local SpeedHack_Conexao = nil
-local MainLoop_Conexao = nil
 
 local Underground_Ativado = false
 local Underground_Conexao = nil
@@ -135,15 +134,12 @@ local ArmasPermitidasAIM = {
     ["HK416"] = true,
 }
 
-local FOVCircle = nil
-pcall(function()
-    FOVCircle = Drawing.new("Circle")
-    FOVCircle.Visible = false
-    FOVCircle.Color = Aimbot_CorFOV
-    FOVCircle.Thickness = Aimbot_EspessuraFOV
-    FOVCircle.Radius = Aimbot_RaioFOV
-    FOVCircle.Filled = false
-end)
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
+FOVCircle.Color = Aimbot_CorFOV
+FOVCircle.Thickness = Aimbot_EspessuraFOV
+FOVCircle.Radius = Aimbot_RaioFOV
+FOVCircle.Filled = false
 
 --========================================================--
 -- TAMANHO
@@ -1327,7 +1323,7 @@ local function Input(Container, LabelText, Placeholder, Callback)
 end
 
 --========================================================--
--- COLOR PICKER (MODERNO)
+-- COLOR PICKER (CORRIGIDO)
 --========================================================--
 
 local function ColorPicker(Container, Category, DefaultColor)
@@ -1347,6 +1343,7 @@ local function ColorPicker(Container, Category, DefaultColor)
     Button.Text = ""
     Button.ZIndex = 21
     Button.Parent = Holder
+
     local ButtonCorner = Instance.new("UICorner")
     ButtonCorner.CornerRadius = UDim.new(0, 6)
     ButtonCorner.Parent = Button
@@ -1370,9 +1367,11 @@ local function ColorPicker(Container, Category, DefaultColor)
     Preview.BorderSizePixel = 0
     Preview.ZIndex = 22
     Preview.Parent = Button
+
     local PreviewCorner = Instance.new("UICorner")
     PreviewCorner.CornerRadius = UDim.new(1, 0)
     PreviewCorner.Parent = Preview
+
     local PreviewStroke = Instance.new("UIStroke")
     PreviewStroke.Color = COLORS.Text
     PreviewStroke.Transparency = 0.35
@@ -1387,13 +1386,16 @@ local function ColorPicker(Container, Category, DefaultColor)
     Popup.Visible = false
     Popup.ZIndex = 50
     Popup.Parent = Holder
+
     local PopupCorner = Instance.new("UICorner")
     PopupCorner.CornerRadius = UDim.new(0, 8)
     PopupCorner.Parent = Popup
+
     local PopupStroke = Instance.new("UIStroke")
     PopupStroke.Color = Accent
     PopupStroke.Transparency = 0.35
     PopupStroke.Parent = Popup
+
     local Modal = nil
     local ModalInputConnection = nil
 
@@ -1401,76 +1403,128 @@ local function ColorPicker(Container, Category, DefaultColor)
     local draggingSV = false
     local draggingHue = false
 
+    -- =================================================
+    -- SV PICKER — base = hue, overlays controlam s e v
+    -- =================================================
     local SV = Instance.new("Frame")
     SV.Size = UDim2.new(1, -16, 0, 108)
     SV.Position = UDim2.fromOffset(8, 32)
     SV.BorderSizePixel = 0
     SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
     SV.ZIndex = 51
+    SV.ClipsDescendants = false
     SV.Parent = Popup
+
     local SVCorner = Instance.new("UICorner")
     SVCorner.CornerRadius = UDim.new(0, 5)
     SVCorner.Parent = SV
+
+    -- Overlay BRANCO: opaco à esquerda (s=0), transparente à direita (s=1)
+    local WhiteOverlay = Instance.new("Frame")
+    WhiteOverlay.Size = UDim2.fromScale(1, 1)
+    WhiteOverlay.BackgroundColor3 = Color3.new(1, 1, 1)
+    WhiteOverlay.BorderSizePixel = 0
+    WhiteOverlay.ZIndex = 52
+    WhiteOverlay.Parent = SV
+
+    local WhiteOverlayCorner = Instance.new("UICorner")
+    WhiteOverlayCorner.CornerRadius = UDim.new(0, 5)
+    WhiteOverlayCorner.Parent = WhiteOverlay
+
     local WhiteGradient = Instance.new("UIGradient")
+    WhiteGradient.Rotation = 0
     WhiteGradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.new(1,1,1))
-    WhiteGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(1, 1)})
-    WhiteGradient.Parent = SV
-    local Black = Instance.new("Frame")
-    Black.Size = UDim2.fromScale(1, 1)
-    Black.BackgroundColor3 = Color3.new(0, 0, 0)
-    Black.BackgroundTransparency = 1
-    Black.BorderSizePixel = 0
-    Black.ZIndex = 52
-    Black.Parent = SV
+    WhiteGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),  -- esquerda: branco opaco
+        NumberSequenceKeypoint.new(1, 1),  -- direita: transparente
+    })
+    WhiteGradient.Parent = WhiteOverlay
+
+    -- Overlay PRETO: transparente em cima (v=1), opaco embaixo (v=0)
+    local BlackOverlay = Instance.new("Frame")
+    BlackOverlay.Size = UDim2.fromScale(1, 1)
+    BlackOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+    BlackOverlay.BorderSizePixel = 0
+    BlackOverlay.ZIndex = 53
+    BlackOverlay.Parent = SV
+
+    local BlackOverlayCorner = Instance.new("UICorner")
+    BlackOverlayCorner.CornerRadius = UDim.new(0, 5)
+    BlackOverlayCorner.Parent = BlackOverlay
+
     local BlackGradient = Instance.new("UIGradient")
     BlackGradient.Rotation = 90
-    BlackGradient.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
-    BlackGradient.Parent = Black
+    BlackGradient.Color = ColorSequence.new(Color3.new(0,0,0), Color3.new(0,0,0))
+    BlackGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),  -- topo: transparente
+        NumberSequenceKeypoint.new(1, 0),  -- baixo: preto opaco
+    })
+    BlackGradient.Parent = BlackOverlay
+
+    -- Marcador do SV
     local SVMarker = Instance.new("Frame")
     SVMarker.Size = UDim2.fromOffset(10, 10)
     SVMarker.AnchorPoint = Vector2.new(0.5, 0.5)
-    SVMarker.BackgroundColor3 = Color3.new(1,1,1)
+    SVMarker.BackgroundColor3 = Color3.new(1, 1, 1)
     SVMarker.BorderSizePixel = 0
     SVMarker.ZIndex = 54
     SVMarker.Parent = SV
+
     local SVMarkerCorner = Instance.new("UICorner")
     SVMarkerCorner.CornerRadius = UDim.new(1, 0)
     SVMarkerCorner.Parent = SVMarker
+
     local SVMarkerStroke = Instance.new("UIStroke")
-    SVMarkerStroke.Color = Color3.new(0,0,0)
+    SVMarkerStroke.Color = Color3.new(0, 0, 0)
     SVMarkerStroke.Thickness = 1
     SVMarkerStroke.Parent = SVMarker
 
+    -- =================================================
+    -- HUE SLIDER
+    -- =================================================
     local Hue = Instance.new("Frame")
     Hue.Size = UDim2.new(1, -16, 0, 14)
     Hue.Position = UDim2.fromOffset(8, 148)
     Hue.BorderSizePixel = 0
     Hue.ZIndex = 51
+    Hue.ClipsDescendants = false
     Hue.Parent = Popup
+
     local HueCorner = Instance.new("UICorner")
     HueCorner.CornerRadius = UDim.new(1, 0)
     HueCorner.Parent = Hue
+
     local HueGradient = Instance.new("UIGradient")
+    HueGradient.Rotation = 0
     HueGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromHSV(0,1,1)),
-        ColorSequenceKeypoint.new(0.17, Color3.fromHSV(0.17,1,1)),
-        ColorSequenceKeypoint.new(0.34, Color3.fromHSV(0.34,1,1)),
-        ColorSequenceKeypoint.new(0.51, Color3.fromHSV(0.51,1,1)),
-        ColorSequenceKeypoint.new(0.68, Color3.fromHSV(0.68,1,1)),
-        ColorSequenceKeypoint.new(0.85, Color3.fromHSV(0.85,1,1)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(1,1,1)),
+        ColorSequenceKeypoint.new(0.000, Color3.fromHSV(0/6, 1, 1)),
+        ColorSequenceKeypoint.new(1/6,   Color3.fromHSV(1/6, 1, 1)),
+        ColorSequenceKeypoint.new(2/6,   Color3.fromHSV(2/6, 1, 1)),
+        ColorSequenceKeypoint.new(3/6,   Color3.fromHSV(3/6, 1, 1)),
+        ColorSequenceKeypoint.new(4/6,   Color3.fromHSV(4/6, 1, 1)),
+        ColorSequenceKeypoint.new(5/6,   Color3.fromHSV(5/6, 1, 1)),
+        ColorSequenceKeypoint.new(1.000, Color3.fromHSV(6/6, 1, 1)),
     })
     HueGradient.Parent = Hue
+
     local HueMarker = Instance.new("Frame")
     HueMarker.Size = UDim2.fromOffset(6, 18)
     HueMarker.AnchorPoint = Vector2.new(0.5, 0.5)
-    HueMarker.BackgroundColor3 = Color3.new(1,1,1)
+    HueMarker.BackgroundColor3 = Color3.new(1, 1, 1)
     HueMarker.BorderSizePixel = 0
     HueMarker.ZIndex = 53
     HueMarker.Parent = Hue
+
     local HueMarkerCorner = Instance.new("UICorner")
     HueMarkerCorner.CornerRadius = UDim.new(1, 0)
     HueMarkerCorner.Parent = HueMarker
+
+    local HueMarkerStroke = Instance.new("UIStroke")
+    HueMarkerStroke.Color = Color3.new(0, 0, 0)
+    HueMarkerStroke.Thickness = 1
+    HueMarkerStroke.Parent = HueMarker
+
+    -- Texto informativo
     local ValueText = Instance.new("TextLabel")
     ValueText.BackgroundTransparency = 1
     ValueText.Position = UDim2.fromOffset(8, 8)
@@ -1484,10 +1538,11 @@ local function ColorPicker(Container, Category, DefaultColor)
 
     local function ApplyColor(color)
         Preview.BackgroundColor3 = color
-        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)  -- base = hue atual
         SVMarker.Position = UDim2.new(s, 0, 1 - v, 0)
         HueMarker.Position = UDim2.new(h, 0, 0.5, 0)
-        ValueText.Text = string.format("H %.0f°   S %.0f%%   V %.0f%%", h * 360, s * 100, v * 100)
+        ValueText.Text = string.format("H %.0f°  S %.0f%%  V %.0f%%", h * 360, s * 100, v * 100)
+
         if Category == "FOV" then
             Aimbot_CorFOV = color
             if FOVCircle then FOVCircle.Color = color end
@@ -1498,33 +1553,49 @@ local function ColorPicker(Container, Category, DefaultColor)
             if type(AtualizarESP) == "function" then AtualizarESP() end
         end
     end
+
     local function SetSV(position)
         local x = math.clamp((position.X - SV.AbsolutePosition.X) / SV.AbsoluteSize.X, 0, 1)
         local y = math.clamp((position.Y - SV.AbsolutePosition.Y) / SV.AbsoluteSize.Y, 0, 1)
         s, v = x, 1 - y
         ApplyColor(Color3.fromHSV(h, s, v))
     end
+
     local function SetHue(position)
         h = math.clamp((position.X - Hue.AbsolutePosition.X) / Hue.AbsoluteSize.X, 0, 1)
         ApplyColor(Color3.fromHSV(h, s, v))
     end
+
     SV.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingSV = true; SetSV(input.Position)
+            draggingSV = true
+            SetSV(input.Position)
         end
     end)
+
     Hue.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingHue = true; SetHue(input.Position)
+            draggingHue = true
+            SetHue(input.Position)
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
-        if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then SetSV(input.Position) end
-        if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then SetHue(input.Position) end
+        if draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            SetSV(input.Position)
+        end
+        if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            SetHue(input.Position)
+        end
     end)
+
     UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSV = false; draggingHue = false end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            draggingSV = false
+            draggingHue = false
+        end
     end)
+
     local function FecharPaleta()
         if not Modal or not Popup.Visible then return end
         local fechar = TweenService:Create(Popup, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.fromOffset(260, 0)})
@@ -1538,6 +1609,7 @@ local function ColorPicker(Container, Category, DefaultColor)
             if Modal then Modal:Destroy(); Modal = nil end
         end)
     end
+
     local function AbrirPaleta()
         if Modal then return end
         Modal = Instance.new("Frame")
@@ -1548,6 +1620,7 @@ local function ColorPicker(Container, Category, DefaultColor)
         Modal.BorderSizePixel = 0
         Modal.ZIndex = 100
         Modal.Parent = Gui
+
         local Backdrop = Instance.new("TextButton")
         Backdrop.Name = "ColorPickerBackdrop"
         Backdrop.Size = UDim2.fromScale(1, 1)
@@ -1559,6 +1632,7 @@ local function ColorPicker(Container, Category, DefaultColor)
         Backdrop.AutoButtonColor = false
         Backdrop.ZIndex = 100
         Backdrop.Parent = Modal
+
         ModalInputConnection = UserInputService.InputBegan:Connect(function(input)
             if not Modal or not Popup.Visible then return end
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -1570,23 +1644,28 @@ local function ColorPicker(Container, Category, DefaultColor)
                 if not dentro then FecharPaleta() end
             end
         end)
+
         Popup.Parent = Modal
         Popup.Visible = true
         Popup.Size = UDim2.fromOffset(260, 0)
         Popup.ZIndex = 200
         SV.ZIndex = 201
-        Black.ZIndex = 202
+        WhiteOverlay.ZIndex = 202
+        BlackOverlay.ZIndex = 203
         SVMarker.ZIndex = 204
         Hue.ZIndex = 201
         HueMarker.ZIndex = 204
         ValueText.ZIndex = 201
+
         local abrir = TweenService:Create(Popup, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(300, 180)})
         abrir:Play()
     end
+
     Button.MouseButton1Click:Connect(function()
         if Modal then FecharPaleta() else AbrirPaleta() end
         ApplyColor(Color3.fromHSV(h, s, v))
     end)
+
     ApplyColor(DefaultColor)
     return Holder
 end
@@ -1860,13 +1939,8 @@ local function CriarESP(p)
         tlDistancia.TextStrokeTransparency = 0
         tlDistancia.Parent = bgDistancia
         if not LinhasTracers[p] then
-            local okTracer, tracer = pcall(function() return Drawing.new("Line") end)
-            if okTracer and tracer then
-                tracer.Visible = false
-                pcall(function() tracer.Color = CorESP end)
-                tracer.Thickness = 1.2
-                LinhasTracers[p] = tracer
-            end
+            local tracer = Drawing.new("Line"); tracer.Visible = false
+            pcall(function() tracer.Color = CorESP end); tracer.Thickness = 1.2; LinhasTracers[p] = tracer
         end
         task.spawn(AtualizarESP)
     end
@@ -1876,14 +1950,9 @@ end
 
 for _, p in pairs(Players:GetPlayers()) do CriarESP(p) end
 Players.PlayerAdded:Connect(CriarESP)
-Players.PlayerRemoving:Connect(function(p)
-    local tracer = LinhasTracers[p]
-    if tracer then pcall(function() if type(tracer.Remove) == "function" then tracer:Remove() elseif type(tracer.Destroy) == "function" then tracer:Destroy() end end); LinhasTracers[p] = nil end
-    RemoverCaixaESP2D(p)
-end)
+Players.PlayerRemoving:Connect(function(p) if LinhasTracers[p] then LinhasTracers[p]:Destroy(); LinhasTracers[p] = nil end; RemoverCaixaESP2D(p) end)
 
 local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
-    if not camera or not alvoPosicao or camera.ViewportSize.Y <= 0 then return 0 end
     local distancia = (alvoPosicao - camera.CFrame.Position).Magnitude
     local fovVertical = math.rad(camera.FieldOfView)
     local alturaTelaStuds = 2 * distancia * math.tan(fovVertical / 2)
@@ -1891,9 +1960,7 @@ local function CalcularOffset3D_Dinamico(camera, alvoPosicao)
 end
 
 local function EstaVisivel(alvoParte)
-    local camera = Workspace.CurrentCamera
-    if not camera or not alvoParte then return false end
-    local cameraPos = camera.CFrame.Position
+    local camera = Workspace.CurrentCamera; local cameraPos = camera.CFrame.Position
     local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {Player.Character}; params.IgnoreWater = true
     local resultado = Workspace:Raycast(cameraPos, (alvoParte.Position - cameraPos), params)
@@ -1926,10 +1993,7 @@ end
 local function ObterJogadorMaisProximoDaMira()
     if Aimbot_SoComItem and not TemItemEquipado() then return nil end
     local melhorAlvo = nil; local melhorPontuacao = math.huge
-    local camera = Workspace.CurrentCamera
-    if not camera then return nil end
-    local viewportTamanho = camera.ViewportSize
-    if not viewportTamanho or viewportTamanho.Y <= 0 then return nil end
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     local pontoMiraTela = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY)
     local cameraPos = camera.CFrame.Position
     for _, p in pairs(Players:GetPlayers()) do
@@ -2010,27 +2074,7 @@ local function DestruirPainelJJ()
     end)
     AutoJJ_Script = nil
 end
-local function IniciarAutoJJ() CarregarScriptJJ(); if type(AutoJJ_Script) == "function" then pcall(function() AutoJJ_Script() end) end end
-
---========================================================--
--- NO COOLDOWN
---========================================================--
-
-local function IniciarNoCooldown()
-    local function removeHoldDuration(obj)
-        if obj:IsA("ProximityPrompt") then
-            obj.HoldDuration = 0
-        end
-    end
-
-    for _, obj in ipairs(game:GetDescendants()) do
-        removeHoldDuration(obj)
-    end
-
-    game.DescendantAdded:Connect(function(obj)
-        removeHoldDuration(obj)
-    end)
-end
+local function IniciarAutoJJ() CarregarScriptJJ(); if AutoJJ_Script then pcall(function() AutoJJ_Script() end) end end
 
 --========================================================--
 -- BLOCOS PARKOUR
@@ -2169,11 +2213,8 @@ local function RemoveHitboxes() for _, v in pairs(Hitboxes) do if v then v:Destr
 -- LOOP PRINCIPAL
 --========================================================--
 
-MainLoop_Conexao = RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera
-    if not camera then return end
-    local viewportTamanho = camera.ViewportSize
-    if not viewportTamanho or viewportTamanho.Y <= 0 then return end
+RunService.RenderStepped:Connect(function()
+    local camera = Workspace.CurrentCamera; local viewportTamanho = camera.ViewportSize
     AtualizarCaixasESP2D(camera)
     if Aimbot_UsarFOV and FOVCircle then FOVCircle.Position = Vector2.new(viewportTamanho.X / 2, (viewportTamanho.Y / 2) + Aimbot_OffsetTelaY); FOVCircle.Radius = Aimbot_RaioFOV; FOVCircle.Thickness = Aimbot_EspessuraFOV end
     local alvoAimbot = nil
@@ -2290,7 +2331,7 @@ end
 
 local function ExecutarComandoAdmin(mensagem)
     if not Admin_Ativado then return end
-    if type(mensagem) ~= "string" or mensagem:sub(1, #Admin_Prefixo) ~= Admin_Prefixo then return end
+    if not mensagem:sub(1, #Admin_Prefixo) == Admin_Prefixo then return end
     
     local comando = mensagem:sub(#Admin_Prefixo + 1)
     local args = comando:split(" ")
@@ -2318,11 +2359,9 @@ local function ExecutarComandoAdmin(mensagem)
         if Player.Character then for _, part in pairs(Player.Character:GetDescendants()) do if part:IsA("BasePart") then part.Transparency = 0 end end; Admin_Invisivel = false end
     elseif cmd == "view" then
         local alvo = EncontrarJogadorAdmin(resto)
-        local camera = Workspace.CurrentCamera
-        if camera and alvo and alvo.Character then camera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
+        if alvo and alvo.Character then Workspace.CurrentCamera.CameraSubject = alvo.Character:FindFirstChild("Humanoid") or alvo.Character end
     elseif cmd == "unview" then
-        local camera = Workspace.CurrentCamera
-        if camera then camera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character end
+        Workspace.CurrentCamera.CameraSubject = Player.Character and Player.Character:FindFirstChild("Humanoid") or Player.Character
     elseif cmd == "sit" then
         local alvo = EncontrarJogadorAdmin(resto)
         if alvo and alvo.Character and alvo.Character:FindFirstChild("Humanoid") then alvo.Character.Humanoid.Sit = true end
@@ -2399,11 +2438,6 @@ Toggle(BlocosSection, "BLOCOS PARKOUR", false, function(State)
     if State then CreateHitboxes() else RemoveHitboxes() end
 end)
 
-local NoCooldownSection = Section(MainPage, "NO COOLDOWN")
-Button(NoCooldownSection, "NO COOLDOWN", function()
-    IniciarNoCooldown()
-end)
-
 --========================================================--
 -- COMBAT PAGE
 --========================================================--
@@ -2412,7 +2446,7 @@ local CombatPage = Pages.Combat
 
 local AimbotSection = Section(CombatPage, "AIMBOT")
 Toggle(AimbotSection, "AIMBOT", false, function(State) Aimbot_Ativado = State end)
-Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; if FOVCircle then FOVCircle.Visible = State end end)
+Toggle(AimbotSection, "SHOW FOV", false, function(State) Aimbot_UsarFOV = State; FOVCircle.Visible = State end)
 Toggle(AimbotSection, "TEAM CHECK", false, function(State) Aimbot_TeamCheck = State end)
 Toggle(AimbotSection, "WALL CHECK", false, function(State) Aimbot_WallCheck = State end)
 MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "Menor vida"}, Aimbot_Prioridades, function(Selected)
@@ -2420,11 +2454,11 @@ MultiDropdown(AimbotSection, "PRIORIZAR ALVO", {"Perto da mira", "Distância", "
 end)
 Toggle(AimbotSection, "DESTACAR ALVO", false, function(State) Aimbot_DestacarAlvo = State; AtualizarHighlightAlvo(State and AimbotAlvoAtual or nil) end)
 Toggle(AimbotSection, "AIM GUN", false, function(State) Aimbot_SoComItem = State end)
-Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; if FOVCircle then FOVCircle.Radius = Value end end)
+Slider(AimbotSection, "FOV RADIUS", 20, 300, 100, function(Value) Aimbot_RaioFOV = Value; FOVCircle.Radius = Value end)
 Slider(AimbotSection, "SMOOTHNESS", 1, 70, 15, function(Value) Aimbot_Suavidade = Value / 100 end)
 Slider(AimbotSection, "FOV THICKNESS", 1, 10, 2, function(Value)
     Aimbot_EspessuraFOV = Value
-    if FOVCircle then FOVCircle.Thickness = Value end
+    FOVCircle.Thickness = Value
 end)
 
 local BodyTargetSection = Section(CombatPage, "CORPO ALVO")
@@ -2601,10 +2635,8 @@ Toggle(SpecialSection, "UNDERGROUND", false, function(State)
             end
         end)
         local camera = Workspace.CurrentCamera
-        if camera then
-            camera.CameraSubject = Underground_CameraPart
-            camera.CameraType = Enum.CameraType.Follow
-        end
+        camera.CameraSubject = Underground_CameraPart
+        camera.CameraType = Enum.CameraType.Follow
     else
         Underground_Voltando = true
         if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
@@ -2709,42 +2741,18 @@ local ActionsSection = Section(ConfigPage, "ACTIONS")
 Button(ActionsSection, "DESTRUIR", function()
     AutoJJ_Ativado = false; BlocosAtivado = false; SpeedHack_Ativado = false
     if SpeedHack_Conexao then SpeedHack_Conexao:Disconnect(); SpeedHack_Conexao = nil end
-    if MainLoop_Conexao then MainLoop_Conexao:Disconnect(); MainLoop_Conexao = nil end
     Underground_Ativado = false; if Underground_Conexao then Underground_Conexao:Disconnect(); Underground_Conexao = nil end
     if Underground_CameraPart then Underground_CameraPart:Destroy(); Underground_CameraPart = nil end
     if UndergroundFloor then UndergroundFloor:Destroy(); UndergroundFloor = nil end
     PasseLivre_Ativado = false; if PasseLivre_Conexao then PasseLivre_Conexao:Disconnect(); PasseLivre_Conexao = nil end
     Admin_Ativado = false; ChatWindow_Ativado = false; DesativarChatWindow()
     RemoveHitboxes(); DestruirPainelJJ(); RemoverBotaoDash()
-    if FOVCircle then
-        pcall(function()
-            if type(FOVCircle.Remove) == "function" then FOVCircle:Remove() elseif type(FOVCircle.Destroy) == "function" then FOVCircle:Destroy() end
-        end)
-        FOVCircle = nil
-    end
+    if FOVCircle then FOVCircle:Destroy() end
     AtualizarHighlightAlvo(nil)
     for _, p in pairs(Players:GetPlayers()) do if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1); p.Character.HumanoidRootPart.Transparency = 1 end end
-    for _, t in pairs(LinhasTracers) do
-        if t then pcall(function() if type(t.Remove) == "function" then t:Remove() elseif type(t.Destroy) == "function" then t:Destroy() end end) end
-    end
-    LinhasTracers = {}
+    for _, t in pairs(LinhasTracers) do if t then t:Destroy() end end
     for p in pairs(CaixasESP2D) do RemoverCaixaESP2D(p) end
-    for _, plr in pairs(Players:GetPlayers()) do
-        local character = plr.Character
-        if character then
-            local head = character:FindFirstChild("Head")
-            for _, name in ipairs({"NoahzinESP", "NoahzinBox"}) do
-                local object = character:FindFirstChild(name)
-                if object then object:Destroy() end
-            end
-            if head then
-                for _, name in ipairs({"NoahzinName", "NoahzinDistancia", "NoahzinTime", "NoahzinVida", "NoahzinArma"}) do
-                    local object = head:FindFirstChild(name)
-                    if object then object:Destroy() end
-                end
-            end
-        end
-    end
+    for _, plr in pairs(Players:GetPlayers()) do if plr.Character then local e = plr.Character:FindFirstChild("NoahzinESP") if e then e:Destroy() end; local b = plr.Character:FindFirstChild("NoahzinBox") if b then b:Destroy() end; local h = plr.Character:FindFirstChild("Head") if h and h:FindFirstChild("NoahzinName") then h.NoahzinName:Destroy() end; local d = plr.Character:FindFirstChild("Head") if d and d:FindFirstChild("NoahzinDistancia") then d.NoahzinDistancia:Destroy() end; local tm = plr.Character:FindFirstChild("Head") if tm and tm:FindFirstChild("NoahzinTime") then tm.NoahzinTime:Destroy() end; local v = plr.Character:FindFirstChild("Head") if v and v:FindFirstChild("NoahzinVida") then v.NoahzinVida:Destroy() end; local ar = plr.Character:FindFirstChild("Head") if ar and ar:FindFirstChild("NoahzinArma") then ar.NoahzinArma:Destroy() end end end
     Gui:Destroy()
 end)
 
@@ -2816,8 +2824,6 @@ end)
 -- REDIMENSIONAMENTO
 --========================================================--
 
-local NormalSize = Main.Size
-
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Size = UDim2.fromOffset(20, 20)
@@ -2881,8 +2887,8 @@ end)
 --========================================================--
 
 local Minimized = false
+local NormalSize = Main.Size
 local MiniSize = UDim2.fromOffset(UI_WIDTH, 46)
-local MiniMoved = false
 
 local MiniButton = Instance.new("TextButton")
 MiniButton.Name = "MiniButton"
@@ -3055,6 +3061,7 @@ end)
 local MiniDragging = false
 local MiniDragStart
 local MiniStartPosition
+local MiniMoved = false
 
 MiniButton.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
