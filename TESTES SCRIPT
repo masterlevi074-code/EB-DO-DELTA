@@ -660,6 +660,269 @@ MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
 --========================================================--
+-- BOTÃO INFO (AO LADO DO MINIMIZAR)
+--========================================================--
+
+local InfoButton = Instance.new("TextButton")
+InfoButton.Size = UDim2.fromOffset(32, 26)
+InfoButton.Position = UDim2.new(1, -70, 0, 9) -- fica à esquerda do minimizar
+InfoButton.BackgroundColor3 = COLORS.Panel2
+InfoButton.Text = "ℹ"
+InfoButton.TextColor3 = COLORS.Text
+InfoButton.TextSize = 14
+InfoButton.Font = Enum.Font.GothamBold
+InfoButton.AutoButtonColor = false
+InfoButton.Parent = Top
+
+local InfoCorner = Instance.new("UICorner")
+InfoCorner.CornerRadius = UDim.new(0, 6)
+InfoCorner.Parent = InfoButton
+
+local InfoStroke = Instance.new("UIStroke")
+InfoStroke.Color = Accent
+InfoStroke.Thickness = 1
+InfoStroke.Transparency = 0.4
+InfoStroke.Parent = InfoButton
+
+--========================================================--
+-- PAINEL DE INFORMAÇÕES
+--========================================================--
+
+local InfoOverlay = Instance.new("Frame")
+InfoOverlay.Name = "InfoOverlay"
+InfoOverlay.Size = UDim2.fromScale(1, 1)
+InfoOverlay.Position = UDim2.fromScale(0, 0)
+InfoOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+InfoOverlay.BackgroundTransparency = 1
+InfoOverlay.BorderSizePixel = 0
+InfoOverlay.Visible = false
+InfoOverlay.ZIndex = 400
+InfoOverlay.Parent = Main
+
+local InfoPanel = Instance.new("Frame")
+InfoPanel.Name = "InfoPanel"
+InfoPanel.Size = UDim2.new(1, -20, 0, 0)
+InfoPanel.Position = UDim2.fromOffset(10, 10)
+InfoPanel.BackgroundColor3 = COLORS.Panel
+InfoPanel.BorderSizePixel = 0
+InfoPanel.ClipsDescendants = true
+InfoPanel.ZIndex = 401
+InfoPanel.Parent = InfoOverlay
+
+local InfoPanelCorner = Instance.new("UICorner")
+InfoPanelCorner.CornerRadius = UDim.new(0, 10)
+InfoPanelCorner.Parent = InfoPanel
+
+local InfoPanelStroke = Instance.new("UIStroke")
+InfoPanelStroke.Color = Accent
+InfoPanelStroke.Thickness = 1
+InfoPanelStroke.Parent = InfoPanel
+
+local InfoTitle = Instance.new("TextLabel")
+InfoTitle.Size = UDim2.new(1, -50, 0, 22)
+InfoTitle.Position = UDim2.fromOffset(10, 6)
+InfoTitle.BackgroundTransparency = 1
+InfoTitle.Text = "INFORMAÇÕES DO JOGADOR"
+InfoTitle.TextColor3 = COLORS.Text
+InfoTitle.TextSize = 10
+InfoTitle.Font = Enum.Font.GothamBold
+InfoTitle.TextXAlignment = Enum.TextXAlignment.Left
+InfoTitle.ZIndex = 402
+InfoTitle.Parent = InfoPanel
+
+local InfoClose = Instance.new("TextButton")
+InfoClose.Size = UDim2.fromOffset(24, 24)
+InfoClose.Position = UDim2.new(1, -30, 0, 5)
+InfoClose.BackgroundColor3 = COLORS.Panel2
+InfoClose.Text = "✕"
+InfoClose.TextColor3 = COLORS.Text
+InfoClose.TextSize = 12
+InfoClose.Font = Enum.Font.GothamBold
+InfoClose.AutoButtonColor = false
+InfoClose.ZIndex = 403
+InfoClose.Parent = InfoPanel
+
+local InfoCloseCorner = Instance.new("UICorner")
+InfoCloseCorner.CornerRadius = UDim.new(0, 6)
+InfoCloseCorner.Parent = InfoClose
+
+local AvatarFrame = Instance.new("Frame")
+AvatarFrame.Size = UDim2.fromOffset(80, 80)
+AvatarFrame.Position = UDim2.new(0.5, -40, 0, 36)
+AvatarFrame.BackgroundColor3 = COLORS.Panel2
+AvatarFrame.BorderSizePixel = 0
+AvatarFrame.ZIndex = 402
+AvatarFrame.Parent = InfoPanel
+
+local AvatarCorner = Instance.new("UICorner")
+AvatarCorner.CornerRadius = UDim.new(1, 0)
+AvatarCorner.Parent = AvatarFrame
+
+local AvatarStroke = Instance.new("UIStroke")
+AvatarStroke.Color = Accent
+AvatarStroke.Thickness = 2
+AvatarStroke.Parent = AvatarFrame
+
+local AvatarImage = Instance.new("ImageLabel")
+AvatarImage.Size = UDim2.fromScale(1, 1)
+AvatarImage.BackgroundTransparency = 1
+AvatarImage.Image = ""
+AvatarImage.ZIndex = 403
+AvatarImage.Parent = AvatarFrame
+
+local AvatarImageCorner = Instance.new("UICorner")
+AvatarImageCorner.CornerRadius = UDim.new(1, 0)
+AvatarImageCorner.Parent = AvatarImage
+
+local InfoRows = Instance.new("Frame")
+InfoRows.Size = UDim2.new(1, -20, 0, 150)
+InfoRows.Position = UDim2.fromOffset(10, 124)
+InfoRows.BackgroundTransparency = 1
+InfoRows.ZIndex = 402
+InfoRows.Parent = InfoPanel
+
+local InfoRowsLayout = Instance.new("UIListLayout")
+InfoRowsLayout.Padding = UDim.new(0, 4)
+InfoRowsLayout.Parent = InfoRows
+
+local function CreateInfoRow(label, value)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 20)
+    row.BackgroundColor3 = COLORS.Panel2
+    row.BackgroundTransparency = 0.25
+    row.BorderSizePixel = 0
+    row.ZIndex = 402
+    row.Parent = InfoRows
+
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.CornerRadius = UDim.new(0, 4)
+    rowCorner.Parent = row
+
+    local labelText = Instance.new("TextLabel")
+    labelText.Size = UDim2.new(0.4, -6, 1, 0)
+    labelText.Position = UDim2.fromOffset(6, 0)
+    labelText.BackgroundTransparency = 1
+    labelText.Text = label
+    labelText.TextColor3 = COLORS.Muted
+    labelText.TextSize = 8
+    labelText.Font = Enum.Font.GothamBold
+    labelText.TextXAlignment = Enum.TextXAlignment.Left
+    labelText.ZIndex = 403
+    labelText.Parent = row
+
+    local valueText = Instance.new("TextLabel")
+    valueText.Size = UDim2.new(0.6, -6, 1, 0)
+    valueText.Position = UDim2.new(0.4, 0, 0, 0)
+    valueText.BackgroundTransparency = 1
+    valueText.Text = value
+    valueText.TextColor3 = COLORS.Text
+    valueText.TextSize = 8
+    valueText.Font = Enum.Font.GothamMedium
+    valueText.TextXAlignment = Enum.TextXAlignment.Right
+    valueText.TextTruncate = Enum.TextTruncate.AtEnd
+    valueText.ZIndex = 403
+    valueText.Parent = row
+
+    return valueText
+end
+
+local NameValue    = CreateInfoRow("NOME:", Player.Name)
+local DisplayValue = CreateInfoRow("DISPLAY:", Player.DisplayName)
+local IdValue      = CreateInfoRow("ID:", tostring(Player.UserId))
+local AgeValue     = CreateInfoRow("CONTA:", Player.AccountAge .. " dias")
+local TeamValue    = CreateInfoRow("TIME:", Player.Team and Player.Team.Name or "Nenhum")
+local HealthValue  = CreateInfoRow("VIDA:", "100/100")
+local ServerValue  = CreateInfoRow("SERVIDOR:", "—")
+local PingValue    = CreateInfoRow("PING:", "—")
+
+-- Carrega a foto do jogador (HeadShot)
+task.spawn(function()
+    local ok, image = pcall(function()
+        return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
+    end)
+    if ok and image then
+        AvatarImage.Image = image
+    else
+        AvatarImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    end
+end)
+
+-- ID do servidor
+pcall(function()
+    ServerValue.Text = game.JobId ~= "" and game.JobId:sub(1, 12) .. "..." or "Studio"
+end)
+
+-- Atualiza vida, time e ping em tempo real
+task.spawn(function()
+    while InfoPanel and InfoPanel.Parent do
+        local char = Player.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum and HealthValue then
+            local cor = hum.Health / hum.MaxHealth > 0.5 and COLORS.Green or COLORS.Yellow
+            if hum.Health / hum.MaxHealth < 0.25 then cor = Color3.fromRGB(220, 70, 70) end
+            HealthValue.Text = string.format("%d/%d", math.floor(hum.Health), math.floor(hum.MaxHealth))
+            HealthValue.TextColor3 = cor
+        end
+        if TeamValue then
+            TeamValue.Text = Player.Team and Player.Team.Name or "Nenhum"
+            TeamValue.TextColor3 = Player.Team and Player.Team.TeamColor.Color or COLORS.Text
+        end
+        if PingValue then
+            local ok, ping = pcall(function() return Player:GetNetworkPing() * 1000 end)
+            if ok and ping then
+                PingValue.Text = string.format("%d ms", math.floor(ping))
+                PingValue.TextColor3 = ping < 100 and COLORS.Green or (ping < 200 and COLORS.Yellow or Color3.fromRGB(220, 70, 70))
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
+-- Abrir / fechar
+local InfoOpen = false
+
+local function SetInfoOpen(open)
+    InfoOpen = open
+    if open then
+        InfoOverlay.Visible = true
+        InfoOverlay.BackgroundTransparency = 1
+        InfoPanel.Size = UDim2.new(1, -20, 0, 0)
+        InfoPanel.Position = UDim2.new(0, 10, 0.5, 0)
+        TweenService:Create(InfoOverlay, TweenInfo.new(0.2), {BackgroundTransparency = 0.4}):Play()
+        local targetH = math.max(Main.AbsoluteSize.Y - 20, 300)
+        TweenService:Create(InfoPanel, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, -20, 0, targetH),
+            Position = UDim2.fromOffset(10, 10)
+        }):Play()
+    else
+        local t = TweenService:Create(InfoOverlay, TweenInfo.new(0.16), {BackgroundTransparency = 1})
+        t:Play()
+        t.Completed:Connect(function()
+            InfoOverlay.Visible = false
+        end)
+    end
+end
+
+InfoButton.MouseButton1Click:Connect(function()
+    SetInfoOpen(not InfoOpen)
+    if not InfoOpen then
+        InfoButton.BackgroundColor3 = COLORS.Panel2
+    else
+        InfoButton.BackgroundColor3 = Accent
+    end
+end)
+
+InfoClose.MouseButton1Click:Connect(function()
+    SetInfoOpen(false)
+    InfoButton.BackgroundColor3 = COLORS.Panel2
+end)
+
+-- Fecha automaticamente quando minimizar o hub
+Minimize.MouseButton1Click:Connect(function()
+    if InfoOpen then SetInfoOpen(false); InfoButton.BackgroundColor3 = COLORS.Panel2 end
+end)
+
+--========================================================--
 -- EFEITOS DECORATIVOS
 --========================================================--
 
