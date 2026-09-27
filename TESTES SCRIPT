@@ -659,12 +659,7 @@ local MinCorner = Instance.new("UICorner")
 MinCorner.CornerRadius = UDim.new(0, 6)
 MinCorner.Parent = Minimize
 
---========================================================--
--- BOTÃO INFO
---========================================================--
-
 local InfoButton = Instance.new("TextButton")
-InfoButton.Name = "InfoButton"
 InfoButton.Size = UDim2.fromOffset(38, 26)
 InfoButton.Position = UDim2.new(1, -76, 0, 9)
 InfoButton.BackgroundColor3 = COLORS.Panel2
@@ -676,16 +671,6 @@ InfoButton.Font = Enum.Font.GothamBold
 InfoButton.AutoButtonColor = false
 InfoButton.ZIndex = 110
 InfoButton.Parent = Top
-
-local InfoCorner = Instance.new("UICorner")
-InfoCorner.CornerRadius = UDim.new(0, 6)
-InfoCorner.Parent = InfoButton
-
-local InfoStroke = Instance.new("UIStroke")
-InfoStroke.Color = Accent
-InfoStroke.Thickness = 1
-InfoStroke.Transparency = 0.35
-InfoStroke.Parent = InfoButton
 
 --========================================================--
 -- EFEITOS DECORATIVOS
