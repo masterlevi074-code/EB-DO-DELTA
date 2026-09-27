@@ -185,7 +185,7 @@ local Config = {
 }
 
 --========================================================--
--- SCREEN GUI (COREGUI PARA SOBREPOR TUDO)
+-- SCREEN GUI
 --========================================================--
 
 local Gui = Instance.new("ScreenGui")
@@ -230,7 +230,6 @@ LoadingGradient.Color = ColorSequence.new({
 LoadingGradient.Rotation = 45
 LoadingGradient.Parent = LoadingOverlay
 
--- Logo central
 local LoadingLogo = Instance.new("Frame")
 LoadingLogo.Size = UDim2.fromOffset(80, 80)
 LoadingLogo.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -260,7 +259,6 @@ LoadingLogoText.Font = Enum.Font.GothamBlack
 LoadingLogoText.ZIndex = 1003
 LoadingLogoText.Parent = LoadingLogo
 
--- Título
 local LoadingTitle = Instance.new("TextLabel")
 LoadingTitle.Size = UDim2.new(1, -40, 0, 30)
 LoadingTitle.Position = UDim2.new(0, 20, 0.62, 0)
@@ -272,7 +270,6 @@ LoadingTitle.Font = Enum.Font.GothamBlack
 LoadingTitle.ZIndex = 1004
 LoadingTitle.Parent = LoadingScreen
 
--- Subtítulo
 local LoadingSubtitle = Instance.new("TextLabel")
 LoadingSubtitle.Size = UDim2.new(1, -40, 0, 20)
 LoadingSubtitle.Position = UDim2.new(0, 20, 0.68, 0)
@@ -284,7 +281,6 @@ LoadingSubtitle.Font = Enum.Font.GothamMedium
 LoadingSubtitle.ZIndex = 1004
 LoadingSubtitle.Parent = LoadingScreen
 
--- Barra de progresso
 local LoadingBarBg = Instance.new("Frame")
 LoadingBarBg.Size = UDim2.new(0.6, 0, 0, 4)
 LoadingBarBg.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -309,7 +305,6 @@ local LoadingBarFillCorner = Instance.new("UICorner")
 LoadingBarFillCorner.CornerRadius = UDim.new(1, 0)
 LoadingBarFillCorner.Parent = LoadingBarFill
 
--- Texto de status
 local LoadingStatus = Instance.new("TextLabel")
 LoadingStatus.Size = UDim2.new(1, -40, 0, 14)
 LoadingStatus.Position = UDim2.new(0, 20, 0.81, 0)
@@ -321,7 +316,6 @@ LoadingStatus.Font = Enum.Font.GothamMedium
 LoadingStatus.ZIndex = 1007
 LoadingStatus.Parent = LoadingScreen
 
--- Pontos decorativos flutuantes
 task.spawn(function()
     local random = Random.new()
     while LoadingScreen and LoadingScreen.Parent do
@@ -351,7 +345,6 @@ task.spawn(function()
     end
 end)
 
--- Animações de entrada
 LoadingLogo.Rotation = -15
 LoadingLogo.Size = UDim2.fromOffset(0, 0)
 TweenService:Create(LoadingLogo, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
@@ -367,7 +360,6 @@ TweenService:Create(LoadingTitle, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum
 TweenService:Create(LoadingSubtitle, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 TweenService:Create(LoadingStatus, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0}):Play()
 
--- Animação da barra de progresso
 local statusTexts = {"Carregando...", "Inicializando...", "Preparando interface...", "Concluído!"}
 local function UpdateLoadingStatus(index)
     if index <= #statusTexts then
@@ -381,10 +373,8 @@ task.spawn(function() UpdateLoadingStatus(1) end)
 local loadingBarTween = TweenService:Create(LoadingBarFill, TweenInfo.new(6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)})
 loadingBarTween:Play()
 
--- Remover tela de carregamento após 6 segundos com animação 
 task.delay(6, function()
     if LoadingScreen then
-        -- Fade out com zoom e rotação
         local fadeOut = TweenService:Create(LoadingScreen, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
             BackgroundTransparency = 1,
             Size = UDim2.fromScale(1.2, 1.2),
@@ -393,7 +383,6 @@ task.delay(6, function()
         })
         fadeOut:Play()
 
-        -- Fade out dos textos internos
         for _, child in pairs(LoadingScreen:GetDescendants()) do
             if child:IsA("TextLabel") or child:IsA("TextButton") then
                 TweenService:Create(child, TweenInfo.new(0.8), {TextTransparency = 1}):Play()
@@ -480,6 +469,7 @@ local function AdicionarDescricao(object, nome)
     label.ZIndex = (object.ZIndex or 1) + 1
     label.Parent = object
 end
+
 --========================================================--
 -- MAIN
 --========================================================--
@@ -505,7 +495,6 @@ MainStroke.Thickness = 1
 MainStroke.Transparency = 0.1
 MainStroke.Parent = Main
 
--- Oculta o painel até a animação de entrada
 Main.Visible = false
 Main.BackgroundTransparency = 1
 Main.Size = UDim2.fromOffset(UI_WIDTH * 0.7, UI_HEIGHT * 0.7)
@@ -527,7 +516,6 @@ local TopLineCorner = Instance.new("UICorner")
 TopLineCorner.CornerRadius = UDim.new(1, 0)
 TopLineCorner.Parent = TopLine
 
--- Efeito visual: brilho animado na linha superior
 local TopGradient = Instance.new("UIGradient")
 TopGradient.Color = ColorSequence.new({
     ColorSequenceKeypoint.new(0, COLORS.OliveDark),
@@ -609,7 +597,6 @@ local StatusCorner = Instance.new("UICorner")
 StatusCorner.CornerRadius = UDim.new(1, 0)
 StatusCorner.Parent = StatusDot
 
--- Pulso suave do indicador online
 local StatusScale = Instance.new("UIScale")
 StatusScale.Scale = 1
 StatusScale.Parent = StatusDot
@@ -644,6 +631,10 @@ Subtitle.Font = Enum.Font.GothamMedium
 Subtitle.TextXAlignment = Enum.TextXAlignment.Left
 Subtitle.Parent = Top
 
+--========================================================--
+-- BOTÃO MINIMIZAR
+--========================================================--
+
 local Minimize = Instance.new("TextButton")
 Minimize.Size = UDim2.fromOffset(26, 26)
 Minimize.Position = UDim2.new(1, -34, 0, 9)
@@ -665,7 +656,7 @@ MinCorner.Parent = Minimize
 
 local InfoButton = Instance.new("TextButton")
 InfoButton.Size = UDim2.fromOffset(32, 26)
-InfoButton.Position = UDim2.new(1, -70, 0, 9) -- fica à esquerda do minimizar
+InfoButton.Position = UDim2.new(1, -70, 0, 9)
 InfoButton.BackgroundColor3 = COLORS.Panel2
 InfoButton.Text = "ℹ"
 InfoButton.TextColor3 = COLORS.Text
@@ -766,7 +757,7 @@ AvatarStroke.Parent = AvatarFrame
 local AvatarImage = Instance.new("ImageLabel")
 AvatarImage.Size = UDim2.fromScale(1, 1)
 AvatarImage.BackgroundTransparency = 1
-AvatarImage.Image = ""
+AvatarImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
 AvatarImage.ZIndex = 403
 AvatarImage.Parent = AvatarFrame
 
@@ -774,9 +765,32 @@ local AvatarImageCorner = Instance.new("UICorner")
 AvatarImageCorner.CornerRadius = UDim.new(1, 0)
 AvatarImageCorner.Parent = AvatarImage
 
+-- Nome e Display abaixo do avatar
+local InfoNameBig = Instance.new("TextLabel")
+InfoNameBig.Size = UDim2.new(1, -20, 0, 18)
+InfoNameBig.Position = UDim2.fromOffset(10, 120)
+InfoNameBig.BackgroundTransparency = 1
+InfoNameBig.Text = Player.DisplayName
+InfoNameBig.TextColor3 = COLORS.Text
+InfoNameBig.TextSize = 12
+InfoNameBig.Font = Enum.Font.GothamBold
+InfoNameBig.ZIndex = 402
+InfoNameBig.Parent = InfoPanel
+
+local InfoUserTag = Instance.new("TextLabel")
+InfoUserTag.Size = UDim2.new(1, -20, 0, 14)
+InfoUserTag.Position = UDim2.fromOffset(10, 138)
+InfoUserTag.BackgroundTransparency = 1
+InfoUserTag.Text = "@" .. Player.Name
+InfoUserTag.TextColor3 = COLORS.Muted
+InfoUserTag.TextSize = 9
+InfoUserTag.Font = Enum.Font.GothamMedium
+InfoUserTag.ZIndex = 402
+InfoUserTag.Parent = InfoPanel
+
 local InfoRows = Instance.new("Frame")
-InfoRows.Size = UDim2.new(1, -20, 0, 150)
-InfoRows.Position = UDim2.fromOffset(10, 124)
+InfoRows.Size = UDim2.new(1, -20, 1, -190)
+InfoRows.Position = UDim2.fromOffset(10, 158)
 InfoRows.BackgroundTransparency = 1
 InfoRows.ZIndex = 402
 InfoRows.Parent = InfoPanel
@@ -826,40 +840,38 @@ local function CreateInfoRow(label, value)
     return valueText
 end
 
-local NameValue    = CreateInfoRow("NOME:", Player.Name)
-local DisplayValue = CreateInfoRow("DISPLAY:", Player.DisplayName)
 local IdValue      = CreateInfoRow("ID:", tostring(Player.UserId))
 local AgeValue     = CreateInfoRow("CONTA:", Player.AccountAge .. " dias")
 local TeamValue    = CreateInfoRow("TIME:", Player.Team and Player.Team.Name or "Nenhum")
 local HealthValue  = CreateInfoRow("VIDA:", "100/100")
-local ServerValue  = CreateInfoRow("SERVIDOR:", "—")
 local PingValue    = CreateInfoRow("PING:", "—")
+local ServerValue  = CreateInfoRow("SERVIDOR:", "—")
 
--- Carrega a foto do jogador (HeadShot)
+-- Carrega foto do jogador
 task.spawn(function()
-    local ok, image = pcall(function()
+    local sucesso, imagem = pcall(function()
         return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
     end)
-    if ok and image then
-        AvatarImage.Image = image
-    else
-        AvatarImage.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    if sucesso and imagem then
+        AvatarImage.Image = imagem
     end
 end)
 
--- ID do servidor
+-- Server JobId
 pcall(function()
     ServerValue.Text = game.JobId ~= "" and game.JobId:sub(1, 12) .. "..." or "Studio"
 end)
 
--- Atualiza vida, time e ping em tempo real
+-- Atualiza em tempo real
 task.spawn(function()
     while InfoPanel and InfoPanel.Parent do
         local char = Player.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
         if hum and HealthValue then
-            local cor = hum.Health / hum.MaxHealth > 0.5 and COLORS.Green or COLORS.Yellow
-            if hum.Health / hum.MaxHealth < 0.25 then cor = Color3.fromRGB(220, 70, 70) end
+            local cor = COLORS.Green
+            local ratio = hum.Health / math.max(hum.MaxHealth, 1)
+            if ratio < 0.25 then cor = Color3.fromRGB(220, 70, 70)
+            elseif ratio < 0.5 then cor = COLORS.Yellow end
             HealthValue.Text = string.format("%d/%d", math.floor(hum.Health), math.floor(hum.MaxHealth))
             HealthValue.TextColor3 = cor
         end
@@ -871,14 +883,16 @@ task.spawn(function()
             local ok, ping = pcall(function() return Player:GetNetworkPing() * 1000 end)
             if ok and ping then
                 PingValue.Text = string.format("%d ms", math.floor(ping))
-                PingValue.TextColor3 = ping < 100 and COLORS.Green or (ping < 200 and COLORS.Yellow or Color3.fromRGB(220, 70, 70))
+                if ping < 100 then PingValue.TextColor3 = COLORS.Green
+                elseif ping < 200 then PingValue.TextColor3 = COLORS.Yellow
+                else PingValue.TextColor3 = Color3.fromRGB(220, 70, 70) end
             end
         end
         task.wait(0.5)
     end
 end)
 
--- Abrir / fechar
+-- Abrir / Fechar
 local InfoOpen = false
 
 local function SetInfoOpen(open)
@@ -905,21 +919,14 @@ end
 
 InfoButton.MouseButton1Click:Connect(function()
     SetInfoOpen(not InfoOpen)
-    if not InfoOpen then
-        InfoButton.BackgroundColor3 = COLORS.Panel2
-    else
-        InfoButton.BackgroundColor3 = Accent
-    end
+    InfoButton.BackgroundColor3 = InfoOpen and Accent or COLORS.Panel2
+    InfoButton.TextColor3 = InfoOpen and COLORS.Background or COLORS.Text
 end)
 
 InfoClose.MouseButton1Click:Connect(function()
     SetInfoOpen(false)
     InfoButton.BackgroundColor3 = COLORS.Panel2
-end)
-
--- Fecha automaticamente quando minimizar o hub
-Minimize.MouseButton1Click:Connect(function()
-    if InfoOpen then SetInfoOpen(false); InfoButton.BackgroundColor3 = COLORS.Panel2 end
+    InfoButton.TextColor3 = COLORS.Text
 end)
 
 --========================================================--
@@ -1027,10 +1034,6 @@ local function CreatePage(Name)
 	return Page
 end
 
---========================================================--
--- CRIAR ABA
---========================================================--
-
 local function CreateTab(Name, Icon)
 	local Button = Instance.new("TextButton")
 	Button.Size = UDim2.fromOffset(52, 22)
@@ -1076,7 +1079,7 @@ CreateTab("Movement", "■")
 CreateTab("Config", "▲")
 
 --========================================================--
--- SECTION (COM CONTAINER PRÓPRIO - CORRIGIDO)
+-- SECTION
 --========================================================--
 
 local SectionContainers = {}
@@ -1173,7 +1176,6 @@ local function Section(Page, Text)
     HeaderLine.BorderSizePixel = 0
     HeaderLine.Parent = Header
 
-    -- Brilho e partículas discretas passando no cabeçalho da seção
     local SectionShine = Instance.new("Frame")
     SectionShine.Size = UDim2.new(0, 2, 1, 0)
     SectionShine.Position = UDim2.new(0, -8, 0, 0)
@@ -1227,7 +1229,7 @@ local function Section(Page, Text)
 end
 
 --========================================================--
--- TOGGLE (DENTRO DO CONTAINER)
+-- TOGGLE
 --========================================================--
 
 local function Toggle(Container, Text, Default, Callback)
@@ -1298,6 +1300,7 @@ end
 --========================================================--
 -- DROPDOWN MULTI-SELEÇÃO
 --========================================================--
+
 local function MultiDropdown(Container, Text, Options, Defaults, Callback)
     local selected = {}
     for _, option in ipairs(Options) do selected[option] = Defaults[option] == true end
@@ -1396,7 +1399,7 @@ local function MultiDropdown(Container, Text, Options, Defaults, Callback)
 end
 
 --========================================================--
--- SLIDER (DENTRO DO CONTAINER)
+-- SLIDER
 --========================================================--
 
 local function Slider(Container, Text, Min, Max, Default, Callback)
@@ -1504,7 +1507,7 @@ local function Slider(Container, Text, Min, Max, Default, Callback)
 end
 
 --========================================================--
--- BOTÃO (DENTRO DO CONTAINER)
+-- BOTÃO
 --========================================================--
 
 local function Button(Container, Text, Callback)
@@ -1533,7 +1536,7 @@ local function Button(Container, Text, Callback)
 end
 
 --========================================================--
--- INPUT (DENTRO DO CONTAINER)
+-- INPUT
 --========================================================--
 
 local function Input(Container, LabelText, Placeholder, Callback)
@@ -1586,7 +1589,7 @@ local function Input(Container, LabelText, Placeholder, Callback)
 end
 
 --========================================================--
--- COLOR PICKER (CORRIGIDO)
+-- COLOR PICKER
 --========================================================--
 
 local function ColorPicker(Container, Category, DefaultColor)
@@ -1666,9 +1669,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     local draggingSV = false
     local draggingHue = false
 
-    -- =================================================
-    -- SV PICKER — base = hue, overlays controlam s e v
-    -- =================================================
     local SV = Instance.new("Frame")
     SV.Size = UDim2.new(1, -16, 0, 108)
     SV.Position = UDim2.fromOffset(8, 32)
@@ -1682,7 +1682,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     SVCorner.CornerRadius = UDim.new(0, 5)
     SVCorner.Parent = SV
 
-    -- Overlay BRANCO: opaco à esquerda (s=0), transparente à direita (s=1)
     local WhiteOverlay = Instance.new("Frame")
     WhiteOverlay.Size = UDim2.fromScale(1, 1)
     WhiteOverlay.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -1698,12 +1697,11 @@ local function ColorPicker(Container, Category, DefaultColor)
     WhiteGradient.Rotation = 0
     WhiteGradient.Color = ColorSequence.new(Color3.new(1,1,1), Color3.new(1,1,1))
     WhiteGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),  -- esquerda: branco opaco
-        NumberSequenceKeypoint.new(1, 1),  -- direita: transparente
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 1),
     })
     WhiteGradient.Parent = WhiteOverlay
 
-    -- Overlay PRETO: transparente em cima (v=1), opaco embaixo (v=0)
     local BlackOverlay = Instance.new("Frame")
     BlackOverlay.Size = UDim2.fromScale(1, 1)
     BlackOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
@@ -1719,12 +1717,11 @@ local function ColorPicker(Container, Category, DefaultColor)
     BlackGradient.Rotation = 90
     BlackGradient.Color = ColorSequence.new(Color3.new(0,0,0), Color3.new(0,0,0))
     BlackGradient.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),  -- topo: transparente
-        NumberSequenceKeypoint.new(1, 0),  -- baixo: preto opaco
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(1, 0),
     })
     BlackGradient.Parent = BlackOverlay
 
-    -- Marcador do SV
     local SVMarker = Instance.new("Frame")
     SVMarker.Size = UDim2.fromOffset(10, 10)
     SVMarker.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1742,9 +1739,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     SVMarkerStroke.Thickness = 1
     SVMarkerStroke.Parent = SVMarker
 
-    -- =================================================
-    -- HUE SLIDER
-    -- =================================================
     local Hue = Instance.new("Frame")
     Hue.Size = UDim2.new(1, -16, 0, 14)
     Hue.Position = UDim2.fromOffset(8, 148)
@@ -1787,7 +1781,6 @@ local function ColorPicker(Container, Category, DefaultColor)
     HueMarkerStroke.Thickness = 1
     HueMarkerStroke.Parent = HueMarker
 
-    -- Texto informativo
     local ValueText = Instance.new("TextLabel")
     ValueText.BackgroundTransparency = 1
     ValueText.Position = UDim2.fromOffset(8, 8)
@@ -1801,7 +1794,7 @@ local function ColorPicker(Container, Category, DefaultColor)
 
     local function ApplyColor(color)
         Preview.BackgroundColor3 = color
-        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)  -- base = hue atual
+        SV.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
         SVMarker.Position = UDim2.new(s, 0, 1 - v, 0)
         HueMarker.Position = UDim2.new(h, 0, 0.5, 0)
         ValueText.Text = string.format("H %.0f°  S %.0f%%  V %.0f%%", h * 360, s * 100, v * 100)
@@ -1932,6 +1925,7 @@ local function ColorPicker(Container, Category, DefaultColor)
     ApplyColor(DefaultColor)
     return Holder
 end
+
 --========================================================--
 -- NOTIFICAÇÕES
 --========================================================--
@@ -2038,7 +2032,6 @@ AtualizarESP = function()
                 if nameGui then nameGui.Enabled = ESP_GlobalAtivado and ESP_Names and mostrarESP
                     if nameGui:FindFirstChild("TextLabel") then pcall(function() nameGui.TextLabel.TextColor3 = espColor end) end
                 end
-                -- Nome do time
                 local timeGui = head:FindFirstChild("NoahzinTime")
                 if timeGui then
                     timeGui.Enabled = ESP_GlobalAtivado and ESP_TimesNomes and mostrarESP
@@ -2048,7 +2041,6 @@ AtualizarESP = function()
                         pcall(function() timeLabel.TextColor3 = espColor end)
                     end
                 end
-                -- Distância
                 local distanciaGui = head:FindFirstChild("NoahzinDistancia")
                 if distanciaGui then
                     distanciaGui.Enabled = ESP_GlobalAtivado and ESP_Distancia and mostrarESP
@@ -2059,7 +2051,6 @@ AtualizarESP = function()
                         pcall(function() distanciaLabel.TextColor3 = espColor end)
                     end
                 end
-                -- Arma equipada
                 local armaGui = head:FindFirstChild("NoahzinArma")
                 if armaGui then
                     local nomeArma = ObterNomeArma(p.Character)
@@ -2070,7 +2061,6 @@ AtualizarESP = function()
                         pcall(function() armaLabel.TextColor3 = espColor end)
                     end
                 end
-                -- Vida
                 local vidaGui = head:FindFirstChild("NoahzinVida")
                 if vidaGui then
                     vidaGui.Enabled = ESP_GlobalAtivado and ESP_Vida and mostrarESP
@@ -2130,7 +2120,6 @@ local function CriarESP(p)
         tl.Size = UDim2.new(1, 0, 1, 0); tl.BackgroundTransparency = 1; tl.Text = p.Name
         pcall(function() tl.TextColor3 = GetESPColor(p) end)
         tl.Font = Enum.Font.GothamBold; tl.TextSize = 12; tl.TextStrokeTransparency = 0; tl.Parent = bg
-        -- Nome do time
         local bgTime = head:FindFirstChild("NoahzinTime") or Instance.new("BillboardGui")
         bgTime.Name = "NoahzinTime"
         bgTime.Size = UDim2.new(0, 150, 0, 20)
@@ -2148,7 +2137,6 @@ local function CriarESP(p)
         tlTime.TextSize = 11
         tlTime.TextStrokeTransparency = 0
         tlTime.Parent = bgTime
-        -- Arma equipada
         local bgArma = head:FindFirstChild("NoahzinArma") or Instance.new("BillboardGui")
         bgArma.Name = "NoahzinArma"
         bgArma.Size = UDim2.new(0, 130, 0, 20)
@@ -2167,7 +2155,6 @@ local function CriarESP(p)
         tlArma.TextSize = 10
         tlArma.TextStrokeTransparency = 0
         tlArma.Parent = bgArma
-        -- Vida
         local bgVida = head:FindFirstChild("NoahzinVida") or Instance.new("BillboardGui")
         bgVida.Name = "NoahzinVida"
         bgVida.Size = UDim2.new(0, 100, 0, 20)
@@ -2684,7 +2671,7 @@ local function DesativarChatWindow()
 end
 
 --========================================================--
--- MAIN PAGE (PRINCIPAL)
+-- MAIN PAGE
 --========================================================--
 
 local MainPage = Pages.Main
@@ -3141,7 +3128,7 @@ UserInputService.InputEnded:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
         Resizing = false
         ResizeHandle.BackgroundColor3 = COLORS.OliveDark
-        NormalSize = Main.Size  -- salva novo tamanho
+        NormalSize = Main.Size
     end
 end)
 
@@ -3306,7 +3293,13 @@ Minimize.MouseButton1Click:Connect(function()
     if Minimized then return end
     Minimized = true
     Minimize.Text = "+"
-    NormalSize = Main.Size  -- salva o tamanho atual antes de minimizar
+    NormalSize = Main.Size
+    -- Fecha painel info se estiver aberto
+    if InfoOpen then
+        SetInfoOpen(false)
+        InfoButton.BackgroundColor3 = COLORS.Panel2
+        InfoButton.TextColor3 = COLORS.Text
+    end
     local shrink = TweenService:Create(Main, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = MiniSize})
     shrink:Play()
     shrink.Completed:Wait()
@@ -3320,7 +3313,6 @@ MiniButton.MouseButton1Click:Connect(function()
     AtualizarEstadoMinimizado()
 end)
 
--- Arraste independente do botão flutuante (mouse e toque)
 local MiniDragging = false
 local MiniDragStart
 local MiniStartPosition
@@ -3371,7 +3363,6 @@ task.delay(7, function()
     Notify("Exército Brásileiro 🇧🇷")
 end)
 
--- Animação de entrada do painel principal
 task.delay(6.3, function()
     if Main and Main.Parent and not Minimized then
         Main.Visible = true
